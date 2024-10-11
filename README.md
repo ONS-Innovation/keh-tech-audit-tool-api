@@ -177,3 +177,17 @@ Example RESPONSE:
   "jscript"
 ]
 ```
+
+
+## Authorization with Cognito and API Gateway
+
+Visiting the [Cognito UI](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/authorize?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https%3A%2F%2Fdutwj6q915.execute-api.eu-west-2.amazonaws.com%2Fdev%2Fapi%2Fverify), and successfully logging in, will redirect you to:
+
+```bash
+/api/verify?code=<code>
+```
+
+This returns your token, which you can use in testing the authentication on the API. Use this token in the Authorization header to authenticate your requests.
+
+The /api/verify route get's the client keys and redirect uri from the bucket.
+

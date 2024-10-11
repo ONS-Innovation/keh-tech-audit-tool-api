@@ -1,9 +1,11 @@
 from flask_restx import Resource, Namespace, reqparse, abort
 from .api_models import get_project_model
-from .utils import read_data, write_data, read_array_data, write_array_data, verify_cognito_token
+from .utils import read_data, write_data, read_array_data, write_array_data, verify_cognito_token, read_client_keys
 import boto3
 from botocore.exceptions import ClientError
 import logging
+import os
+import requests
 
 
 ns = Namespace('/api/', path="/api/", description="")
@@ -141,3 +143,58 @@ class Autocomplete(Resource):
             abort(404, description="No matches found")
         
         return results, 200
+
+cognito_settings = read_client_keys()
+COGNITO_CLIENT_ID = cognito_settings["AWS_COGNITO_CLIENT_ID"]
+COGNITO_CLIENT_SECRET = cognito_settings["AWS_COGNITO_CLIENT_SECRET"]
+REDIRECT_URI = cognito_settings["REDIRECT_URI"]
+
+verifyParser = reqparse.RequestParser()
+verifyParser.add_argument('code', location='args', required=True, help='Authorization code is required')
+@ns.route("/verify")
+class VerifyToken(Resource):
+    # Route for handling the callback from Cognito
+    def get(self):
+        # Get the code from the query params
+        code = verifyParser.parse_args()['code']
+        if not code:
+            logger.error("Authorization code not found")
+            return {"error": "Authorization code not found"}, 400
+
+        # Exchange the code for tokens
+        token_response = self.exchange_code_for_tokens(code)
+
+        if 'id_token' not in token_response:
+            logger.error("Failed to retrieve ID Token")
+            return {"error": "Failed to retrieve ID Token"}, 400
+
+        # Return the ID token to the client
+        id_token = token_response['id_token']
+        return {"id_token": id_token}, 200
+
+
+    def exchange_code_for_tokens(self, code):
+        token_url = f"https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token"
+        payload = {
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': f'{REDIRECT_URI}/api/verify'
+        }
+
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+
+        auth = (COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET)
+
+        response = requests.post(token_url, data=payload, headers=headers, auth=auth)
+    
+        if response.status_code != 200:
+            if response.json()['error'] == 'invalid_grant':
+                logger.error("Invalid authorization code")
+                return {"error": "Invalid authorization code"}, 404
+            logger.error(f"Error: {response.status_code}, {response.text}")
+            raise Exception(f"Error: {response.status_code}, {response.text}")
+
+        # Return the parsed JSON response
+        return response.json()

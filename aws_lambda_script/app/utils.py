@@ -16,6 +16,19 @@ region_name = os.getenv("AWS_DEFAULT_REGION")
 
 s3 = boto3.client('s3', region_name=region_name)
 
+def read_client_keys():
+    client_keys_object_name = "client_keys.json"
+    try:
+        response = s3.get_object(Bucket=bucket_name, Key=client_keys_object_name)
+        client_keys = json.loads(response['Body'].read().decode('utf-8'))
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            client_keys = {}
+        else:
+            abort(500, description=f"Error reading client keys: {e}")
+    return client_keys
+
+
 def read_data():
     try:
         response = s3.get_object(Bucket=bucket_name, Key=object_name)
