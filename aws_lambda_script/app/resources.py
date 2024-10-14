@@ -102,6 +102,9 @@ class ProjectDetail(Resource):
     def get(self, project_name):
         owner_email = get_user_email(parser.parse_args())
 
+        # Sanitize project_name by replacing '%20' with spaces
+        project_name = project_name.replace('%20', ' ')
+
         data = read_data()
         project = next((proj for proj in data['projects'] if proj["details"]['name'] == project_name and proj["user"][0]['email'] == owner_email), None)
         if not project:
