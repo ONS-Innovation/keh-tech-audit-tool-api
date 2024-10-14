@@ -82,9 +82,7 @@ Please read the description or README to understand how to use this workspace. Y
 
 ## API Reference
 
-Before testing the API, you need to use Postman to get your ID token. Follow this [guide](https://medium.com/@shivkaundal/secure-your-apis-with-cognito-authorizers-for-aws-api-gateway-ba15914b64b2#1422) to get your token. Make sure to use the ID token, instead of Access Token.
-
-You need to authenticate with the `keh-tech-audit-tool-pool` to get the correct, authorized token.
+Before testing the API, you need to use the above instructions at **Testing** to get a mock token.
 
 ### Get user email
 
