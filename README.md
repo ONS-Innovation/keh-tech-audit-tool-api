@@ -44,27 +44,28 @@ Run the project locally
 poetry run python3 -m app
 ```
 
- ## Testing
- 
- This repo utilises PyTest for the testing. Please make sure you have installed dev dependencies before running tests.
 
- To test you need a mock token. Visit this [link](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/login?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https://dutwj6q915.execute-api.eu-west-2.amazonaws.com/dev/api/verify) and copy the `id_token`.
+## Testing
 
- Then import the token into your environment:
+This repo utilises PyTest for the testing. Please make sure you have installed dev dependencies before running tests.
 
- ```bash
+To test you need a mock token. Visit this [link](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/login?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https://dutwj6q915.execute-api.eu-west-2.amazonaws.com/dev/api/verify) and copy the `id_token`.
+
+Then import the token into your environment:
+
+```bash
 export MOCK_TOKEN=<id_token>
- ```
+```
 
 Make sure dev dependencies are installed:
- ```bash
+```bash
 make install-dev
- ```
+```
 
- When in root directory, run the testing command. If you are in `aws_lambda_script` it will fail.
- ```bash
+When in root directory, run the testing command. If you are in `aws_lambda_script` it will fail.
+```bash
 make pytest
- ```
+```
 
 If all tests fail, please relogin [here](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/login?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https://dutwj6q915.execute-api.eu-west-2.amazonaws.com/dev/api/verify) to the Cognito and use a new token.
 
@@ -72,6 +73,12 @@ Once you have finished testing, clean the temp files with:
 ```bash
 make clean
 ```
+
+## Testing with Postman
+
+View the Postman workspace for this project [here](https://www.postman.com/science-pilot-55892832/workspace/keh-tech-audit-tool-api/collection/38871441-e42f661e-6430-4f46-8182-083e9e0fd4ad?action=share&creator=38871441&active-environment=38871441-7c5e3795-74f5-46b3-9034-637561aba746).
+
+Please read the description or README to understand how to use this workspace. You need to get a mock_token to authenticate yourself in each request.
 
 ## API Reference
 
@@ -82,7 +89,7 @@ You need to authenticate with the `keh-tech-audit-tool-pool` to get the correct,
 ### Get user email
 
 ```http
-  GET /api/user
+GET /api/user
 ```
 
 | Header | Type     | Description                |
@@ -94,7 +101,7 @@ Get's the users email.
 ### Get all user projects
 
 ```http
-  GET /api/projects
+GET /api/projects
 ```
 
 | Header | Type     | Description                |
@@ -106,7 +113,7 @@ Get's the projects associated with the users email.
 ### Get a specific user project
 
 ```http
-  GET /api/projects/<project_name>
+GET /api/projects/<project_name>
 ```
 
 | Header | Type     | Description                |
@@ -123,7 +130,7 @@ Get's a specific project from the user.
 ### Create a new project
 
 ```http
-  POST /api/projects/
+POST /api/projects/
 ```
 
 
@@ -135,37 +142,37 @@ Get's a specific project from the user.
 Send JSON in this format:
 ```JSON
 {"projects": [
-        {
-            "user": [ 
-                {
-                    "email": "",
-                    "roles": [
-                        "owner"
-                    ]
-                }
-            ],
-            "details": {
-                "name": "Project1",
-                "short_name": "This is project 1",
-                "documentation_link": ""
-            },
-            "developed":[  
-                "Partnership",
-                ["ONS", "GDS"]
-            ],
-            "source_control":[
-                "GitHub"
-            ],
-            "architecture": {
-                "hosting": {"type": "Hybrid", "detail": []},
-                "database": {"main": "MongoDB", "others": []},
-                "languages": {"main": "Python", "others": ["JavaScript", "Java"]},
-                "frameworks": {"main": "React", "others": []},
-                "CICD": {"main": "Python", "others": ["JavaScript", "Java"]},
-                "infrastructure": {"main": "Python", "others": []}
-            }
-        }
-    ]
+      {
+          "user": [ 
+              {
+                  "email": "",
+                  "roles": [
+                      "owner"
+                  ]
+              }
+          ],
+          "details": {
+              "name": "Project1",
+              "short_name": "This is project 1",
+              "documentation_link": ""
+          },
+          "developed":[  
+              "Partnership",
+              ["ONS", "GDS"]
+          ],
+          "source_control":[
+              "GitHub"
+          ],
+          "architecture": {
+              "hosting": {"type": "Hybrid", "detail": []},
+              "database": {"main": "MongoDB", "others": []},
+              "languages": {"main": "Python", "others": ["JavaScript", "Java"]},
+              "frameworks": {"main": "React", "others": []},
+              "CICD": {"main": "Python", "others": ["JavaScript", "Java"]},
+              "infrastructure": {"main": "Python", "others": []}
+          }
+      }
+  ]
 }
 ```
 Create's a project. If the language is not in the array_data.json bucket then it is added.
@@ -174,7 +181,7 @@ Create's a project. If the language is not in the array_data.json bucket then it
 ### Get autocomplete from string
 
 ```http
-  GET /api/autocomplete
+GET /api/autocomplete
 ```
 
 | Header | Type     | Description                |
@@ -196,11 +203,11 @@ GET http://localhost:5000/api/autocomplete?type=languages&search=script
 Example RESPONSE:
 ```JSON
 [
-  "javascript",
-  "typescript",
-  "actionscript",
-  "postscript",
-  "jscript"
+"javascript",
+"typescript",
+"actionscript",
+"postscript",
+"jscript"
 ]
 ```
 
