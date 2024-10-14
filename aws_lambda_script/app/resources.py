@@ -148,6 +148,7 @@ cognito_settings = read_client_keys()
 COGNITO_CLIENT_ID = cognito_settings["AWS_COGNITO_CLIENT_ID"]
 COGNITO_CLIENT_SECRET = cognito_settings["AWS_COGNITO_CLIENT_SECRET"]
 REDIRECT_URI = cognito_settings["REDIRECT_URI"]
+# REDIRECT_URI = 'http://localhost:8000/api/verify'
 
 verifyParser = reqparse.RequestParser()
 verifyParser.add_argument('code', location='args', required=True, help='Authorization code is required')
@@ -162,7 +163,7 @@ class VerifyToken(Resource):
             return {"error": "Authorization code not found"}, 400
 
         # Exchange the code for tokens
-        token_response = self.exchange_code_for_tokens(code)
+        token_response = exchange_code_for_tokens(code)
 
         if 'id_token' not in token_response:
             logger.error("Failed to retrieve ID Token")
@@ -173,28 +174,28 @@ class VerifyToken(Resource):
         return {"id_token": id_token}, 200
 
 
-    def exchange_code_for_tokens(self, code):
-        token_url = f"https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token"
-        payload = {
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': f'{REDIRECT_URI}/api/verify'
-        }
+def exchange_code_for_tokens(code):
+    token_url = f"https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token"
+    payload = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': f'{REDIRECT_URI}/api/verify'
+    }
 
-        headers = {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
 
-        auth = (COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET)
+    auth = (COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET)
 
-        response = requests.post(token_url, data=payload, headers=headers, auth=auth)
-    
-        if response.status_code != 200:
-            if response.json()['error'] == 'invalid_grant':
-                logger.error("Invalid authorization code")
-                return {"error": "Invalid authorization code"}, 404
-            logger.error(f"Error: {response.status_code}, {response.text}")
-            raise Exception(f"Error: {response.status_code}, {response.text}")
+    response = requests.post(token_url, data=payload, headers=headers, auth=auth)
 
-        # Return the parsed JSON response
-        return response.json()
+    if response.status_code != 200:
+        if response.json()['error'] == 'invalid_grant':
+            logger.error("Invalid authorization code")
+            return {"error": "Invalid authorization code"}, 404
+        logger.error(f"Error: {response.status_code}, {response.text}")
+        raise Exception(f"Error: {response.status_code}, {response.json()}")
+
+    # Return the parsed JSON response
+    return response.json()

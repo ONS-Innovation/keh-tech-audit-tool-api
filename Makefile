@@ -11,6 +11,7 @@ all: ## Show the available make targets.
 clean:  ## Clean the temporary files
 	rm -rf .mypy_cache
 	rm -rf .ruff_cache
+	rm -rf .pytest_cache
 
 .PHONY: format
 format:  ## Format the code
@@ -46,3 +47,7 @@ install:  ## Install the dependencies excluding dev
 .PHONY: install-dev
 install-dev:  ## Install the dependencies including dev
 	poetry install --no-root
+
+.PHONY: pytest
+pytest:  ## Run pytest
+	poetry run pytest

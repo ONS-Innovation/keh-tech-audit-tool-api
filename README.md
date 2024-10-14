@@ -8,19 +8,19 @@ A Flask and Flask_RestX API for the tech audit tool.
 Clone the project
 
 ```bash
-  git clone https://github.com/ONS-Innovation/keh-tech-audit-tool-api
+git clone https://github.com/ONS-Innovation/keh-tech-audit-tool-api
 ```
 
 Install dependencies
 
 ```bash
-  make install
+make install
 ```
 
 Install dev dependencies to run linting tools
 
 ```bash
-  make install-dev
+make install-dev
 ```
 
 Import secrets
@@ -35,17 +35,43 @@ export AWS_SECRET_NAME=github-tooling-suite/onsdigital
 Go to the aws_lambda_script directory
 
 ```bash
-  cd aws_lambda_script
+cd aws_lambda_script
 ```
 
 Run the project locally
 
 ```bash
-	poetry run python3 -m app
+poetry run python3 -m app
 ```
 
+ ## Testing
+ 
+ This repo utilises PyTest for the testing. Please make sure you have installed dev dependencies before running tests.
 
+ To test you need a mock token. Visit this [link](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/login?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https://dutwj6q915.execute-api.eu-west-2.amazonaws.com/dev/api/verify) and copy the `id_token`.
 
+ Then import the token into your environment:
+
+ ```bash
+export MOCK_TOKEN=<id_token>
+ ```
+
+Make sure dev dependencies are installed:
+ ```bash
+make install-dev
+ ```
+
+ When in root directory, run the testing command. If you are in `aws_lambda_script` it will fail.
+ ```bash
+make pytest
+ ```
+
+If all tests fail, please relogin [here](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/login?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https://dutwj6q915.execute-api.eu-west-2.amazonaws.com/dev/api/verify) to the Cognito and use a new token.
+
+Once you have finished testing, clean the temp files with:
+```bash
+make clean
+```
 
 ## API Reference
 
