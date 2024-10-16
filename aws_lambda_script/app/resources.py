@@ -74,22 +74,25 @@ class Projects(Resource):
         data['projects'].append(new_project)
         write_data(data)
         
-        # Check if the language is in the array_data, if not add it
-        if 'languages' in new_project["architecture"]:
-            array_data = read_array_data()
-            languages = []
-            if 'main' in new_project["architecture"]['languages']:
-                languages.append(new_project["architecture"]['languages']['main'])
-            if 'others' in new_project["architecture"]['languages']:
-                languages.extend(new_project["architecture"]['languages']['others'])
-            if 'languages' not in array_data:
-                array_data['languages'] = []
-            array_data['languages'] = [lang.lower() for lang in array_data['languages']]
-            for language in languages:
-                language = language.lower()
-                if language not in array_data['languages']:
-                    array_data['languages'].append(language)
-            write_array_data(array_data)
+        categories = ['languages', 'frameworks', 'cicd', 'infrastructure']
+        array_data = read_array_data()
+
+        for category in categories:
+            if category in new_project["architecture"]:
+                items = []
+                if 'main' in new_project["architecture"][category]:
+                    items.append(new_project["architecture"][category]['main'])
+                if 'others' in new_project["architecture"][category]:
+                    items.extend(new_project["architecture"][category]['others'])
+                if category not in array_data:
+                    array_data[category] = []
+                array_data[category] = [item.lower() for item in array_data[category]]
+                for item in items:
+                    item = item.lower()
+                    if item not in array_data[category]:
+                        array_data[category].append(item)
+        
+        write_array_data(array_data)
         
         return new_project, 201
 
@@ -129,7 +132,7 @@ class Autocomplete(Resource):
         if not search_type or not search_query:
             abort(400, description="type and search are required")
         
-        if search_type not in ['languages', 'IDEs', 'misc']:
+        if search_type not in ['languages', 'frameworks', 'source control', 'cicd', 'infrastructure', "architecture", "database"]:
             abort(406, description="Invalid type")
         
         if len(search_query) > 16:

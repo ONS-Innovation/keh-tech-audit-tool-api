@@ -82,17 +82,17 @@ Please read the description or README to understand how to use this workspace. Y
 
 ## API Reference
 
-Before testing the API, you need to use the above instructions at **Testing** to get a mock token.
+Before testing the API, you need to use the above instructions at **Testing** to get a mock token, as all requests need to be authenticated.
+
+| Header | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `Authorization` | `string` | **Required**. ID Token (Not access) |
 
 ### Get user email
 
 ```http
 GET /api/user
 ```
-
-| Header | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `Authorization` | `string` | **Required**. ID Token (Not access) |
 
 Get's the users email.
 
@@ -102,10 +102,6 @@ Get's the users email.
 GET /api/projects
 ```
 
-| Header | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `Authorization` | `string` | **Required**. ID Token (Not access) |
-
 Get's the projects associated with the users email.
 
 ### Get a specific user project
@@ -113,10 +109,6 @@ Get's the projects associated with the users email.
 ```http
 GET /api/projects/<project_name>
 ```
-
-| Header | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `Authorization` | `string` | **Required**. ID Token (Not access) |
 
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
@@ -131,15 +123,8 @@ Get's a specific project from the user.
 POST /api/projects/
 ```
 
-
-| Header | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `Authorization` | `string` | **Required**. ID Token (Not access) |
-
-
 Send JSON in this format:
 ```JSON
-{"projects": [
       {
           "user": [ 
               {
@@ -162,18 +147,16 @@ Send JSON in this format:
               "GitHub"
           ],
           "architecture": {
-              "hosting": {"type": "Hybrid", "detail": []},
-              "database": {"main": "MongoDB", "others": []},
+              "hosting": {"type": "Hybrid", "detail": ["AWS", "Local"]},
+              "database": {"main": "MongoDB", "others": ["DocumentDB"]},
               "languages": {"main": "Python", "others": ["JavaScript", "Java"]},
               "frameworks": {"main": "React", "others": []},
               "CICD": {"main": "Python", "others": ["JavaScript", "Java"]},
               "infrastructure": {"main": "Python", "others": []}
           }
       }
-  ]
-}
 ```
-Create's a project. If the language is not in the array_data.json bucket then it is added.
+Create's a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
 
 
 ### Get autocomplete from string
@@ -181,10 +164,6 @@ Create's a project. If the language is not in the array_data.json bucket then it
 ```http
 GET /api/autocomplete
 ```
-
-| Header | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `Authorization` | `string` | **Required**. ID Token (Not access) |
 
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
