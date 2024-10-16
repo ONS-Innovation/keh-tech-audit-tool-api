@@ -1,5 +1,3 @@
-.DEFAULT_GOAL := all
-
 .PHONY: all
 all: ## Show the available make targets.
 	@echo "Usage: make <target>"
@@ -8,44 +6,39 @@ all: ## Show the available make targets.
 	@fgrep "##" Makefile | fgrep -v fgrep
 
 .PHONY: clean
-clean:  ## Clean the temporary files
+clean: ## Clean the temporary files.
 	rm -rf .mypy_cache
 	rm -rf .ruff_cache
 	rm -rf .pytest_cache
 
-.PHONY: format
-format:  ## Format the code
-	poetry run black .
-	poetry run ruff check . --fix
-
 .PHONY: black
-black:  ## Run black
-	poetry run black aws_lambda_script
+black: ## Run black.
+	poetry run black src --check || true
 
 .PHONY: ruff
-ruff:  ## Run ruff
-	poetry run ruff check aws_lambda_script --fix
+ruff: ## Run ruff without fixing.
+	poetry run ruff check src || true
 
 .PHONY: pylint
-pylint:  ## Run pylint
-	poetry run pylint aws_lambda_script
+pylint: ## Run pylint.
+	poetry run pylint src || true
 
 .PHONY: lint
 lint:  ## Run Python linter
 	make black
-	make ruff || true
-	make pylint || true
+	make ruff
+	make pylint
 
 .PHONY: mypy
-mypy:  ## Run mypy
-	poetry run mypy aws_lambda_script
+mypy:  ## Run mypy.
+	poetry run mypy src
 
 .PHONY: install
-install:  ## Install the dependencies excluding dev
+install:  ## Install the dependencies excluding dev.
 	poetry install --only main --no-root
 
 .PHONY: install-dev
-install-dev:  ## Install the dependencies including dev
+install-dev:  ## Install the dependencies including dev.
 	poetry install --no-root
 
 .PHONY: pytest
