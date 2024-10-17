@@ -35,12 +35,12 @@ def get_user_email(args):
 
 
 @ns.route("/user")
-@ns.doc(params=required_param)
 class User(Resource):
     @ns.doc(responses={200: 'Success', 401: 'Authorization is required'})
     def get(self):
         owner_email = get_user_email(parser.parse_args())
         return {'email': owner_email}, 200
+
 filterParser = reqparse.RequestParser()
 filterParser.add_argument('email', location="args", action="split", required=False, help='User email to filter by')
 filterParser.add_argument('roles', location="args", action="split", required=False, help='Roles to filter by')
@@ -56,15 +56,16 @@ filterParser.add_argument('infrastructure', location="args", action="split", req
 filterParser.add_argument('return', location="args", action="split", required=False, help='Sections to return: user, details, developed, source_control, architecture, or whole project')
 
 @ns.route("/projects/filter")
-@ns.doc(params=required_param)
 class Filter(Resource):
-    @ns.doc(responses={200: 'Success', 401: 'Authorization is required'})
+    @ns.doc(params={'email':'User email to filter by', 'roles':'Roles to filter by', 'name':'Project name to filter by', 'developed':'Developed partners or "In house, partnership or outsourced" to filter by', 'languages':'Languages to filter by', 'source_control':'Source control to filter by', 'hosting':'Hosting type to filter by', 'database':'Database to filter by', 'frameworks':'Frameworks to filter by', 'CICD':'CI/CD tools to filter by', 'infrastructure':'Infrastructure to filter by', 'return':'Sections to return: user, details, developed, source_control, architecture, or whole project'},
+        responses={200: 'Success', 401: 'Authorization is required'})
     def get(self):
         owner_email = get_user_email(parser.parse_args())
         args = filterParser.parse_args()
 
         # Extract filter parameters from the request, ignoring missing/empty ones
         filter_params = {key: value for key, value in args.items() if key not in required_param and value}
+        print(filter_params)
 
         # Read all projects
         data = read_data()
@@ -176,7 +177,6 @@ class Filter(Resource):
 
 
 @ns.route("/projects")
-@ns.doc(params=required_param)
 class Projects(Resource):
     @ns.doc(responses={200: 'Success', 401: 'Authorization is required'})
     @ns.marshal_with(get_project_model(), as_list=True)
@@ -229,8 +229,7 @@ class Projects(Resource):
         return new_project, 201
 
 
-@ns.doc(params=required_param,
-responses={200: 'Success', 401: 'Authorization is required', 404: 'Project not found.'})
+@ns.doc(responses={200: 'Success', 401: 'Authorization is required', 404: 'Project not found.'})
 @ns.route("/projects/<string:project_name>")
 class ProjectDetail(Resource):
     @ns.marshal_list_with(get_project_model())
