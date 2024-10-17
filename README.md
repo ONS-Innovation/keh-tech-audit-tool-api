@@ -1,7 +1,7 @@
 
 # KEH | Tech Audit Tool - API
 
-A Flask and Flask_RestX API for the tech audit tool.
+A Flask and flask-restx API for the tech audit tool.
 
 ## Setting up & Running Locally
 
@@ -125,36 +125,36 @@ POST /api/projects/
 
 Send JSON in this format:
 ```JSON
-      {
-          "user": [ 
-              {
-                  "email": "",
-                  "roles": [
-                      "owner"
-                  ]
-              }
-          ],
-          "details": {
-              "name": "Project1",
-              "short_name": "This is project 1",
-              "documentation_link": ""
-          },
-          "developed":[  
-              "Partnership",
-              ["ONS", "GDS"]
-          ],
-          "source_control":[
-              "GitHub"
-          ],
-          "architecture": {
-              "hosting": {"type": "Hybrid", "detail": ["AWS", "Local"]},
-              "database": {"main": "MongoDB", "others": ["DocumentDB"]},
-              "languages": {"main": "Python", "others": ["JavaScript", "Java"]},
-              "frameworks": {"main": "React", "others": []},
-              "CICD": {"main": "Python", "others": ["JavaScript", "Java"]},
-              "infrastructure": {"main": "Python", "others": []}
-          }
-      }
+{
+    "user": [ 
+        {
+            "email": "",
+            "roles": [
+                "owner"
+            ]
+        }
+    ],
+    "details": {
+        "name": "Project1",
+        "short_name": "This is project 1",
+        "documentation_link": ""
+    },
+    "developed":[  
+        "Partnership",
+        ["ONS", "GDS"]
+    ],
+    "source_control":[
+        "GitHub"
+    ],
+    "architecture": {
+        "hosting": {"type": "Hybrid", "detail": ["AWS", "Local"]},
+        "database": {"main": "MongoDB", "others": ["DocumentDB"]},
+        "languages": {"main": "Python", "others": ["JavaScript", "Java"]},
+        "frameworks": {"main": "React", "others": []},
+        "CICD": {"main": "Python", "others": ["JavaScript", "Java"]},
+        "infrastructure": {"main": "Python", "others": []}
+    }
+}
 ```
 Create's a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
 
@@ -180,11 +180,11 @@ GET http://localhost:5000/api/autocomplete?type=languages&search=script
 Example RESPONSE:
 ```JSON
 [
-"javascript",
-"typescript",
-"actionscript",
-"postscript",
-"jscript"
+    "javascript",
+    "typescript",
+    "actionscript",
+    "postscript",
+    "jscript"
 ]
 ```
 
@@ -206,6 +206,52 @@ Get's projects using a filter.
 Filter can one or more of: email, roles, name, developed, source_control, hosting, database, languages, frameworks, cicd, infrastructure.
 
 Return can be one or more of: user, details, developed, source_control, architecture.
+
+
+### Edit a project
+
+```http
+PUT /api/projects/{project_name}
+
+| Parameter | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `<project_name>`      | `string` | **Required**. The project you want to get |
+```
+
+Send JSON in this format:
+```JSON
+{
+    "user": [ 
+        {
+            "email": "",
+            "roles": [
+                "owner"
+            ]
+        }
+    ],
+    "details": {
+        "name": "Project1",
+        "short_name": "This is project 1",
+        "documentation_link": ""
+    },
+    "developed":[  
+        "Partnership",
+        ["ONS", "GDS"]
+    ],
+    "source_control":[
+        "GitHub"
+    ],
+    "architecture": {
+        "hosting": {"type": "Hybrid", "detail": ["AWS", "Local"]},
+        "database": {"main": "MongoDB", "others": ["DocumentDB"]},
+        "languages": {"main": "Python", "others": ["JavaScript", "Java"]},
+        "frameworks": {"main": "React", "others": []},
+        "CICD": {"main": "Python", "others": ["JavaScript", "Java"]},
+        "infrastructure": {"main": "Python", "others": []}
+    }
+}
+```
+Create's a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
 
 
 ## Authorization with Cognito and API Gateway
