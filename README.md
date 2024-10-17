@@ -212,11 +212,12 @@ Return can be one or more of: user, details, developed, source_control, architec
 
 ```http
 PUT /api/projects/{project_name}
+```
 
 | Parameter | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
 | `<project_name>`      | `string` | **Required**. The project you want to get |
-```
+
 
 Send JSON in this format:
 ```JSON
