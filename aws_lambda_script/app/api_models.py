@@ -49,7 +49,8 @@ def get_project_model():
         'details': fields.List(fields.Nested(details_model), required=True, description="Details of project"),
         'developed': fields.List(fields.Raw, required=True, description="Development details"),
         'source_control': fields.List(fields.String, required=True, description="Source control platforms"),
-        'architecture': fields.Nested(architecture_model, required=True, description="Architecture details")
+        'architecture': fields.Nested(architecture_model, required=True, description="Architecture details"),
+        'archived': fields.Boolean(required=True, description="Archived status of the project")
     })
 
     return project_model
