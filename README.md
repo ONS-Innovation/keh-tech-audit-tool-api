@@ -189,6 +189,25 @@ Example RESPONSE:
 ```
 
 
+### Get filtered projects 
+
+```http
+GET /api/projects/filter
+```
+
+| Parameter | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `<filter>`      | `string` | **Required**. The specific filter. Multiple filter seperated by a comma (,) |
+| `<return>`      | `string` | What you want returned from the project. Multiple return filter seperated by a comma (,) |
+
+
+Get's projects using a filter.
+
+Filter can one or more of: email, roles, name, developed, source_control, hosting, database, languages, frameworks, cicd, infrastructure.
+
+Return can be one or more of: user, details, developed, source_control, architecture.
+
+
 ## Authorization with Cognito and API Gateway
 
 Visiting the [Cognito UI](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/authorize?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https%3A%2F%2Fdutwj6q915.execute-api.eu-west-2.amazonaws.com%2Fdev%2Fapi%2Fverify), and successfully logging in, will redirect you to:

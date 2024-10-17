@@ -16,7 +16,6 @@ parser.add_argument('Authorization', location='headers', required=True, help='Au
 
 required_param = {'Authorization': 'ID Token required'}
 
-# Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -42,6 +41,139 @@ class User(Resource):
     def get(self):
         owner_email = get_user_email(parser.parse_args())
         return {'email': owner_email}, 200
+filterParser = reqparse.RequestParser()
+filterParser.add_argument('email', location="args", action="split", required=False, help='User email to filter by')
+filterParser.add_argument('roles', location="args", action="split", required=False, help='Roles to filter by')
+filterParser.add_argument('name', location="args", action="split", required=False, help='Project name to filter by')
+filterParser.add_argument('developed', location="args", action="split", required=False, help='Developed partners to filter by')
+filterParser.add_argument('languages', location="args", action="split", required=False, help='Languages to filter by')
+filterParser.add_argument('source_control', location="args", action="split", required=False, help='Source control to filter by')
+filterParser.add_argument('hosting', location="args", action="split", required=False, help='Hosting type to filter by')
+filterParser.add_argument('database', location="args", action="split", required=False, help='Database to filter by')
+filterParser.add_argument('frameworks', location="args", action="split", required=False, help='Frameworks to filter by')
+filterParser.add_argument('CICD', location="args", action="split", required=False, help='CI/CD tools to filter by')
+filterParser.add_argument('infrastructure', location="args", action="split", required=False, help='Infrastructure to filter by')
+filterParser.add_argument('return', location="args", action="split", required=False, help='Sections to return: user, details, developed, source_control, architecture, or whole project')
+
+@ns.route("/projects/filter")
+@ns.doc(params=required_param)
+class Filter(Resource):
+    @ns.doc(responses={200: 'Success', 401: 'Authorization is required'})
+    def get(self):
+        owner_email = get_user_email(parser.parse_args())
+        args = filterParser.parse_args()
+
+        # Extract filter parameters from the request, ignoring missing/empty ones
+        filter_params = {key: value for key, value in args.items() if key not in required_param and value}
+
+        # Read all projects
+        data = read_data()
+        projects = data['projects']
+        
+        # Filter projects based on query params
+        filtered_projects = []
+        
+        for project in projects:
+            match = True
+
+            # Filter by email
+            if 'email' in filter_params:
+                project_emails = [user['email'].lower() for user in project['user']]
+                if not any(email.lower() in project_emails for email in filter_params['email']):
+                    match = False
+            
+            # Filter by roles
+            if 'roles' in filter_params:
+                project_roles = [role.lower() for user in project['user'] for role in user['roles']]
+                if not any(role.lower() in project_roles for role in filter_params['roles']):
+                    match = False
+
+            # Filter by project name (partial match)
+            if 'name' in filter_params:
+                if not any(name.lower() in project['details']['name'].lower() for name in filter_params['name']):
+                    match = False
+
+            # Filter by developed partners
+            if 'developed' in filter_params:
+                for dev_value in filter_params['developed']:
+                    dev_value_lower = dev_value.lower()
+                    
+                    # Check first part (In House, Partnership, Outsourced)
+                    developed_type = project['developed'][0].lower()
+                    if dev_value_lower == developed_type:
+                        continue
+                    
+                    # Check second part (list of company/partner names)
+                    developed_partners = project['developed'][1]
+                    if developed_partners:
+                        developed_partners_lower = [d.lower() for d in developed_partners if d]
+                        if any(dev_value_lower in partner for partner in developed_partners_lower):
+                            continue
+                    
+                    # If neither part matches, break out of loop
+                    match = False
+                    break
+
+            # Filter by source control
+            if 'source_control' in filter_params:
+                project_source_control = [sc.lower() for sc in project['source_control']]
+                if not any(sc.lower() in project_source_control for sc in filter_params['source_control']):
+                    match = False
+
+            # Filter by hosting type
+            if 'hosting' in filter_params:
+                hosting_types = [project['architecture']['hosting']['type'].lower()] + [h.lower() for h in project['architecture']['hosting']['detail']]
+                if not any(ht.lower() in hosting_types for ht in filter_params['hosting']):
+                    match = False
+
+            # Filter by database
+            if 'database' in filter_params:
+                databases = [project['architecture']['database']['main'].lower()] + [db.lower() for db in project['architecture']['database']['others']]
+                if not any(db.lower() in databases for db in filter_params['database']):
+                    match = False
+
+            # Filter by frameworks
+            if 'frameworks' in filter_params:
+                frameworks = [project['architecture']['frameworks']['main'].lower()] + [fw.lower() for fw in project['architecture']['frameworks']['others']]
+                if not any(fw.lower() in frameworks for fw in filter_params['frameworks']):
+                    match = False
+
+            # Filter by CICD tools
+            if 'CICD' in filter_params:
+                cicd_tools = [project['architecture']['CICD']['main'].lower()] + [c.lower() for c in project['architecture']['CICD']['others']]
+                if not any(c.lower() in cicd_tools for c in filter_params['CICD']):
+                    match = False
+
+            # Filter by infrastructure
+            if 'infrastructure' in filter_params:
+                infrastructure = [project['architecture']['infrastructure']['main'].lower()] + [inf.lower() for inf in project['architecture']['infrastructure']['others']]
+                if not any(inf.lower() in infrastructure for inf in filter_params['infrastructure']):
+                    match = False
+
+            if match:
+                if 'return' in filter_params:
+                    sections_to_return = filter_params['return']
+                    partial_project = {}
+                    
+                    for section in sections_to_return:
+                        section = section.lower()
+                        if section == 'user':
+                            partial_project['user'] = project['user']
+                        elif section == 'details':
+                            partial_project['details'] = project['details']
+                        elif section == 'developed':
+                            partial_project['developed'] = project['developed']
+                        elif section == 'source_control':
+                            partial_project['source_control'] = project['source_control']
+                        elif section == 'architecture':
+                            partial_project['architecture'] = project['architecture']
+                    
+                    filtered_projects.append(partial_project)
+                else:
+                    filtered_projects.append(project) 
+
+        return filtered_projects, 200
+
 
 @ns.route("/projects")
 @ns.doc(params=required_param)
@@ -112,6 +244,30 @@ class ProjectDetail(Resource):
         project = next((proj for proj in data['projects'] if proj["details"]['name'] == project_name and proj["user"][0]['email'] == owner_email), None)
         if not project:
             abort(404, description="Project not found")
+        return project, 200
+
+    @ns.expect(get_project_model())
+    @ns.doc(responses={200: 'Updated project', 401: 'Authorization is required', 404: 'Project not found', 406: 'Missing JSON data'})
+    def put(self, project_name):
+        owner_email = get_user_email(parser.parse_args())
+        updated_project = ns.payload
+
+        if 'user' not in updated_project or 'details' not in updated_project or 'email' not in updated_project['user'][0] or 'name' not in updated_project['details']:
+            abort(406, description="Missing JSON data")
+
+        # Ensure the email is set to owner_email
+        updated_project['user'][0]['email'] = owner_email
+
+        data = read_data()
+        project = next((proj for proj in data['projects'] if proj["details"]['name'] == project_name and proj["user"][0]['email'] == owner_email), None)
+
+        if not project:
+            abort(404, description="Project not found")
+
+        # Update the project details
+        project.update(updated_project)
+        write_data(data)
+
         return project, 200
 
 autoCompleteParser = reqparse.RequestParser()
