@@ -186,7 +186,7 @@ class Projects(Resource):
         user_projects = [proj for proj in data['projects'] if proj["user"][0]['email'] == owner_email]
         return user_projects, 200
     
-    @ns.expect(get_project_model())
+    @ns.marshal_list_with(get_project_model())
     @ns.doc(responses={201: 'Created project', 401: 'Authorization is required', 406: 'Missing JSON data', 409: 'Project with the same name and owner already exists'})
     def post(self):
         owner_email = get_user_email(parser.parse_args())
@@ -245,7 +245,7 @@ class ProjectDetail(Resource):
             abort(404, description="Project not found")
         return project, 200
 
-    @ns.expect(get_project_model())
+    @ns.marshal_list_with(get_project_model())
     @ns.doc(responses={200: 'Updated project', 401: 'Authorization is required', 404: 'Project not found', 406: 'Missing JSON data'})
     def put(self, project_name):
         owner_email = get_user_email(parser.parse_args())
