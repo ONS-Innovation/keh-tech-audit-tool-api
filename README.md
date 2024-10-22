@@ -126,34 +126,69 @@ POST /api/projects/
 Send JSON in this format:
 ```JSON
 {
-    "user": [ 
-        {
-            "email": "",
-            "roles": [
-                "owner"
-            ]
-        }
-    ],
-    "details": {
-        "name": "Project1",
-        "short_name": "This is project 1",
-        "documentation_link": ""
+  "user": [
+    {
+      "email": "String",
+      "roles": ["String"],
+      "grade": "String"
     },
-    "developed":[  
-        "Partnership",
-        ["ONS", "GDS"]
-    ],
-    "source_control":[
-        "GitHub"
-    ],
-    "architecture": {
-        "hosting": {"type": "Hybrid", "detail": ["AWS", "Local"]},
-        "database": {"main": "MongoDB", "others": ["DocumentDB"]},
-        "languages": {"main": "Python", "others": ["JavaScript", "Java"]},
-        "frameworks": {"main": "React", "others": []},
-        "CICD": {"main": "Python", "others": ["JavaScript", "Java"]},
-        "infrastructure": {"main": "Python", "others": []}
+    {
+      "email": "String",
+      "roles": ["String"],
+      "grade": "String"
     }
+  ],
+  "details": [
+    {
+      "name": "String",
+      "short_name": "String",
+      "documentation_link": ["String"],
+      "project_description": "String"
+    }
+  ],
+  "developed": ["String", ["String", "String"]],
+  "source_control": [
+    {
+      "type": "String",
+      "links": [
+        {
+          "description": "String",
+          "url": "String"
+        },
+        {
+          "description": "String",
+          "url": "String"
+        }
+      ]
+    }
+  ],
+  "architecture": {
+    "hosting": {
+      "type": "String",
+      "detail": ["String", "String"]
+    },
+    "database": {
+      "main": ["String", "String"],
+      "others": ["String"]
+    },
+    "languages": {
+      "main": ["String", "String"],
+      "others": ["String", "String"]
+    },
+    "frameworks": {
+      "main": ["String", "String"],
+      "others": ["String", "String"]
+    },
+    "CICD": {
+      "main": ["String", "String"],
+      "others": ["String", "String"]
+    },
+    "infrastructure": {
+      "main": ["String", "String"],
+      "others": ["String", "String"]
+    }
+  },
+  "archived": false
 }
 ```
 Create's a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.

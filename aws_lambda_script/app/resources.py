@@ -213,7 +213,7 @@ class Projects(Resource):
             if category in new_project["architecture"]:
                 items = []
                 if 'main' in new_project["architecture"][category]:
-                    items.append(new_project["architecture"][category]['main'])
+                    items.extend(new_project["architecture"][category]['main'])
                 if 'others' in new_project["architecture"][category]:
                     items.extend(new_project["architecture"][category]['others'])
                 if category not in array_data:

@@ -1,7 +1,7 @@
 # ns_models.py
 from flask_restx import fields
 
-def get_project_model():
+def get_old_project_model():
     from .resources import ns
 
     # Define all models globally
@@ -55,8 +55,7 @@ def get_project_model():
     })
 
     return project_model
-
-def get_new_project_model():
+def get_project_model():
     from .resources import ns
 
     user_model = ns.model('User', {
@@ -71,12 +70,11 @@ def get_new_project_model():
         'documentation_link': fields.List(fields.String, required=False, description="Link to the project documentation"),
         'project_description': fields.String(required=False, description="Description of the project")
     })
-
     source_control_model = ns.model('SourceControl', {
         'type': fields.String(required=True, description="Type of source control"),
         'links': fields.List(fields.Nested(ns.model('RepoLink', {
-            'repo_link_1': fields.String(required=False, description="Repository link 1"),
-            'repo_link_2': fields.String(required=False, description="Repository link 2")
+            'name': fields.String(required=True, description="Description of the repository link"),
+            'url': fields.String(required=True, description="URL of the repository link")
         })), required=True, description="Links to repositories")
     })
 
