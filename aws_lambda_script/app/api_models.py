@@ -80,8 +80,8 @@ def get_project_model():
 
     architecture_model = ns.model('Architecture', {
         'hosting': fields.Nested(ns.model('Hosting', {
-            'type': fields.String(required=True, description="Type of hosting"),
-            'detail': fields.List(fields.String, required=False, description="Details of hosting")
+            'main': fields.List(fields.String, required=True, description="Type of hosting"),
+            'others': fields.List(fields.String, required=False, description="Other hosting types")
         })),
         'database': fields.Nested(ns.model('Database', {
             'main': fields.List(fields.String, required=True, description="Main database"),

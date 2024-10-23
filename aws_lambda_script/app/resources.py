@@ -117,9 +117,23 @@ class Filter(Resource):
 
             # Filter by source control
             if 'source_control' in filter_params:
-                project_source_control = [sc.lower() for sc in project['source_control']]
-                if not any(sc.lower() in project_source_control for sc in filter_params['source_control']):
-                    match = False
+                project_source_control = project['source_control']
+                for sc_filter in filter_params['source_control']:
+                    sc_filter_lower = sc_filter.lower()
+                    match_found = False
+                    for sc in project_source_control:
+                        if sc_filter_lower in sc['type'].lower():
+                            match_found = True
+                            break
+                        for link in sc['links']:
+                            if sc_filter_lower in link['description'].lower() or sc_filter_lower in link['url'].lower():
+                                match_found = True
+                                break
+                        if match_found:
+                            break
+                    if not match_found:
+                        match = False
+                        break
 
             # Filter by hosting type
             if 'hosting' in filter_params:
@@ -129,25 +143,25 @@ class Filter(Resource):
 
             # Filter by database
             if 'database' in filter_params:
-                databases = [project['architecture']['database']['main'].lower()] + [db.lower() for db in project['architecture']['database']['others']]
+                databases = [db.lower() for db in project['architecture']['database']['main']] + [db.lower() for db in project['architecture']['database']['others']]
                 if not any(db.lower() in databases for db in filter_params['database']):
                     match = False
 
             # Filter by frameworks
             if 'frameworks' in filter_params:
-                frameworks = [project['architecture']['frameworks']['main'].lower()] + [fw.lower() for fw in project['architecture']['frameworks']['others']]
+                frameworks = [fw.lower() for fw in project['architecture']['frameworks']['main']] + [fw.lower() for fw in project['architecture']['frameworks']['others']]
                 if not any(fw.lower() in frameworks for fw in filter_params['frameworks']):
                     match = False
 
             # Filter by CICD tools
             if 'CICD' in filter_params:
-                cicd_tools = [project['architecture']['CICD']['main'].lower()] + [c.lower() for c in project['architecture']['CICD']['others']]
+                cicd_tools = [c.lower() for c in project['architecture']['CICD']['main']] + [c.lower() for c in project['architecture']['CICD']['others']]
                 if not any(c.lower() in cicd_tools for c in filter_params['CICD']):
                     match = False
 
             # Filter by infrastructure
             if 'infrastructure' in filter_params:
-                infrastructure = [project['architecture']['infrastructure']['main'].lower()] + [inf.lower() for inf in project['architecture']['infrastructure']['others']]
+                infrastructure = [inf.lower() for inf in project['architecture']['infrastructure']['main']] + [inf.lower() for inf in project['architecture']['infrastructure']['others']]
                 if not any(inf.lower() in infrastructure for inf in filter_params['infrastructure']):
                     match = False
 
@@ -192,17 +206,23 @@ class Projects(Resource):
         owner_email = get_user_email(parser.parse_args())
 
         new_project = ns.payload
-        if 'user' not in new_project or 'details' not in new_project or 'email' not in new_project['user'][0] or 'name' not in new_project['details'] or 'archived' not in new_project:
+        print(new_project)
+        if 'user' not in new_project or 'details' not in new_project or 'email' not in new_project['user'][0] or 'name' not in new_project['details'][0] or 'archived' not in new_project:
             abort(406, description="Missing JSON data")
         
         # Ensure the email is set to owner_email
-        new_project['user'][0]['email'] = owner_email
+        for user in new_project['user']:
+            if 'email' not in user or not user['email']:
+                user['email'] = owner_email
         
         data = read_data()
 
-        if any(proj['details']['name'] == new_project['details']['name'] and proj['user'][0]['email'] == new_project['user'][0]['email'] for proj in data['projects']):
-            abort(409, description="Project with the same name and owner already exists")
-        
+        for proj in data['projects']:
+            for new_proj_user in new_project['user']:
+                for proj_user in proj['user']:
+                    print(proj['details'])
+                    if proj['details'][0]['name'] == new_project['details'][0]['name'] and proj_user['email'] == new_proj_user['email']:
+                        abort(409, description=f"Project with the same name '{proj['details'][0]['name']}' and owner '{proj_user['email']}' already exists")
         data['projects'].append(new_project)
         write_data(data)
         
