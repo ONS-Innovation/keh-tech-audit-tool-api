@@ -165,7 +165,7 @@ Send JSON in this format:
   "architecture": {
     "hosting": {
       "type": "String",
-      "detail": ["String", "String"]
+      "details": ["String", "String"]
     },
     "database": {
       "main": ["String", "String"],

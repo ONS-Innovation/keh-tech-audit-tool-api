@@ -260,7 +260,7 @@ class ProjectDetail(Resource):
         project_name = project_name.replace('%20', ' ')
 
         data = read_data()
-        project = next((proj for proj in data['projects'] if proj["details"]['name'] == project_name and proj["user"][0]['email'] == owner_email), None)
+        project = next((proj for proj in data['projects'] if proj["details"][0]['name'] == project_name and any(user['email'] == owner_email for user in proj["user"])), None)
         if not project:
             abort(404, description="Project not found")
         return project, 200
@@ -278,7 +278,7 @@ class ProjectDetail(Resource):
         updated_project['user'][0]['email'] = owner_email
 
         data = read_data()
-        project = next((proj for proj in data['projects'] if proj["details"]['name'] == project_name and proj["user"][0]['email'] == owner_email), None)
+        project = next((proj for proj in data['projects'] if proj["details"]['name'] == project_name and any(user['email'] == owner_email for user in proj["user"])), None)
 
         if not project:
             abort(404, description="Project not found")
