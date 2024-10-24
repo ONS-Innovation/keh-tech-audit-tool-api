@@ -350,10 +350,46 @@ class VerifyToken(Resource):
             logger.error("Failed to retrieve ID Token")
             return {"error": "Failed to retrieve ID Token"}, 400
 
-        # Return the ID token to the client
-        id_token = token_response['id_token']
-        return {"id_token": id_token}, 200
+        return {"id_token": token_response['id_token'], "refresh_token": token_response["refresh_token"]}, 200
 
+refreshParser = reqparse.RequestParser()
+refreshParser.add_argument('refresh_token', location='json', required=True, help='Refresh token is required')
+
+@ns.route("/refresh")
+class RefreshToken(Resource):
+    def get(self):
+        refresh_token = refreshParser.parse_args()['refresh_token']
+        if not refresh_token:
+            logger.error("Refresh token not found")
+            return {"error": "Refresh token not found"}, 400
+
+        token_response = exchange_refresh_token_for_id_token(refresh_token)
+
+        if 'id_token' not in token_response:
+            logger.error("Failed to retrieve ID Token")
+            return {"error": "Failed to retrieve ID Token"}, 400
+
+        return {"id_token": token_response['id_token']}, 200
+    
+
+def exchange_refresh_token_for_id_token(refresh_token):
+    token_url = f"https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token"
+    payload = {
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token
+        }
+
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+
+    response = requests.post(token_url, data=payload, headers=headers, auth = (COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET))
+
+    if response.status_code != 200:
+        logger.error(f"Error: {response.status_code}, {response.text}")
+        raise Exception(f"Error: {response.status_code}, {response.json()}")
+
+    return response.json()
 
 def exchange_code_for_tokens(code):
     token_url = f"https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token"
