@@ -7,18 +7,20 @@ import logging
 import os
 import requests
 
-
+# Set namespace as /api/ - each request has to be localhost:3000/api/<endpoint>
 ns = Namespace('/api/', path="/api/", description="")
 
-
+# Create required authorization header
 parser = reqparse.RequestParser()
 parser.add_argument('Authorization', location='headers', required=True, help='Authorization header is required')
 
 required_param = {'Authorization': 'ID Token required'}
 
+# Set logger for AWS cloudwatch to return just errors
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Function to get the user email from the token
 def get_user_email(args):
     token = args['Authorization']    
     try:
@@ -29,11 +31,11 @@ def get_user_email(args):
             abort(401, description="Not authorized")
         
         return owner_email
-    except Exception as e:
-        logger.exception("Error verifying token")
+    except Exception as error:
+        logger.exception("Error verifying token", error)
         abort(401, description="Not authorized")
 
-
+# Route to return the user email from the token in authorization header
 @ns.route("/user")
 class User(Resource):
     @ns.doc(responses={200: 'Success', 401: 'Authorization is required'})
@@ -41,6 +43,7 @@ class User(Resource):
         owner_email = get_user_email(parser.parse_args())
         return {'email': owner_email}, 200
 
+# Route to return all projects with optional filters
 filterParser = reqparse.RequestParser()
 filterParser.add_argument('email', location="args", action="split", required=False, help='User email to filter by')
 filterParser.add_argument('roles', location="args", action="split", required=False, help='Roles to filter by')
@@ -189,9 +192,10 @@ class Filter(Resource):
 
         return filtered_projects, 200
 
-
 @ns.route("/projects")
 class Projects(Resource):
+
+    # Loop through all projects and return the ones that match the user email in the first user item in the user list
     @ns.doc(responses={200: 'Success', 401: 'Authorization is required'})
     @ns.marshal_with(get_project_model(), as_list=True)
     def get(self):
@@ -200,13 +204,14 @@ class Projects(Resource):
         user_projects = [proj for proj in data['projects'] if proj["user"][0]['email'] == owner_email]
         return user_projects, 200
     
+    # Add a new project to the list of projects - needs certain fields to be present in the JSON payload, the non required will be saved as null if string or emtpy if list
     @ns.marshal_list_with(get_project_model())
     @ns.doc(responses={201: 'Created project', 401: 'Authorization is required', 406: 'Missing JSON data', 409: 'Project with the same name and owner already exists'})
     def post(self):
         owner_email = get_user_email(parser.parse_args())
 
+        # Check that required fields are present in the JSON payload
         new_project = ns.payload
-        print(new_project)
         if 'user' not in new_project or 'details' not in new_project or 'email' not in new_project['user'][0] or 'name' not in new_project['details'][0] or 'stage' not in new_project:
             abort(406, description="Missing JSON data")
         
@@ -226,7 +231,8 @@ class Projects(Resource):
         data['projects'].append(new_project)
         write_data(data)
         
-        categories = ['languages', 'frameworks', 'cicd', 'infrastructure']
+        # Loop through the architecture and add any new items to the array data in S3
+        categories = ['languages', 'frameworks', 'cicd', 'infrastructure', 'database', 'hosting']
         array_data = read_array_data()
 
         for category in categories:
@@ -252,6 +258,7 @@ class Projects(Resource):
 @ns.doc(responses={200: 'Success', 401: 'Authorization is required', 404: 'Project not found.'})
 @ns.route("/projects/<string:project_name>")
 class ProjectDetail(Resource):
+    # Loop through all projects and return the one that matches the name and the user email in the first user item in the user list
     @ns.marshal_list_with(get_project_model())
     def get(self, project_name):
         owner_email = get_user_email(parser.parse_args())
@@ -265,6 +272,7 @@ class ProjectDetail(Resource):
             abort(404, description="Project not found")
         return project, 200
 
+    # Edit a project by taking the whole schema and replacing the existing project with the same name and owner
     @ns.marshal_list_with(get_project_model())
     @ns.doc(responses={200: 'Updated project', 401: 'Authorization is required', 404: 'Project not found', 406: 'Missing JSON data'})
     def put(self, project_name):
@@ -289,42 +297,7 @@ class ProjectDetail(Resource):
 
         return project, 200
 
-autoCompleteParser = reqparse.RequestParser()
-autoCompleteParser.add_argument('type', type=str, required=True, help='type is required')
-autoCompleteParser.add_argument('search', type=str, required=True, help='search is required')
-
-@ns.doc(params={'type':'Type of array', 'search':'Search query'}, 
-responses={200: 'Success', 400: 'type and search are required', 404: 'No matches found.', 406: 'Invalid type', 411: 'Search query is too long'})
-@ns.route("/autocomplete")
-class Autocomplete(Resource):
-    def get(self):
-        owner_email = get_user_email(parser.parse_args())
-
-        args = autoCompleteParser.parse_args()
-        search_type = args['type']
-        search_query = args['search']
-
-        if not search_type or not search_query:
-            abort(400, description="type and search are required")
-        
-        if search_type not in ['languages', 'frameworks', 'source control', 'cicd', 'infrastructure', "architecture", "database"]:
-            abort(406, description="Invalid type")
-        
-        if len(search_query) > 16:
-            abort(411, description="Search query is too long")
-        
-        array_data = read_array_data()
-        
-        if search_type not in array_data:
-            abort(406, description=f"Invalid type: {search_type}")
-        
-        results = [item for item in array_data[search_type] if search_query.lower() in item.lower()]
-
-        if not results:
-            abort(404, description="No matches found")
-        
-        return results, 200
-
+# Read the client keys from S3 bucket for Cognito
 cognito_settings = read_client_keys()
 COGNITO_CLIENT_ID = cognito_settings["AWS_COGNITO_CLIENT_ID"]
 COGNITO_CLIENT_SECRET = cognito_settings["AWS_COGNITO_CLIENT_SECRET"]
@@ -352,6 +325,7 @@ class VerifyToken(Resource):
 
         return {"id_token": token_response['id_token'], "refresh_token": token_response["refresh_token"]}, 200
 
+# First version of refreshing a token
 refreshParser = reqparse.RequestParser()
 refreshParser.add_argument('refresh_token', location='json', required=True, help='Refresh token is required')
 

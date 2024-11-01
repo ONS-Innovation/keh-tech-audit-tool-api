@@ -190,34 +190,12 @@ Send JSON in this format:
 Create's a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
 
 
-### Get autocomplete from string
+### Get autocomplete from string [REMOVED]
 
 ```http
 GET /api/autocomplete
 ```
-
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `type` | `string` | **Required**. The type of array ie. languages. |
-| `search` | `string` | **Required**. The string needing autocomplete. |
-
-Returns a list of potential autocomplete.
-
-Example REQUEST: 
-```bash
-GET http://localhost:5000/api/autocomplete?type=languages&search=script
-```
-
-Example RESPONSE:
-```JSON
-[
-    "javascript",
-    "typescript",
-    "actionscript",
-    "postscript",
-    "jscript"
-]
-```
+Removed as autocomplete is processed on front-end.
 
 
 ### Get filtered projects 
