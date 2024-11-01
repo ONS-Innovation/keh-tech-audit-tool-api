@@ -73,7 +73,7 @@ def get_project_model():
     source_control_model = ns.model('SourceControl', {
         'type': fields.String(required=True, description="Type of source control"),
         'links': fields.List(fields.Nested(ns.model('RepoLink', {
-            'name': fields.String(required=True, description="Description of the repository link"),
+            'description': fields.String(required=True, description="Description of the repository link"),
             'url': fields.String(required=True, description="URL of the repository link")
         })), required=True, description="Links to repositories")
     })
@@ -111,7 +111,6 @@ def get_project_model():
         'developed': fields.List(fields.Raw, required=True, description="Development details"),
         'source_control': fields.List(fields.Nested(source_control_model), required=True, description="Source control platforms"),
         'architecture': fields.Nested(architecture_model, required=True, description="Architecture details"),
-        'archived': fields.Boolean(required=True, description="Archived status of the project"),
         'stage': fields.String(required=True, description="Stage status of the project")
 
     })

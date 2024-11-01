@@ -207,7 +207,7 @@ class Projects(Resource):
 
         new_project = ns.payload
         print(new_project)
-        if 'user' not in new_project or 'details' not in new_project or 'email' not in new_project['user'][0] or 'name' not in new_project['details'][0] or 'archived' not in new_project:
+        if 'user' not in new_project or 'details' not in new_project or 'email' not in new_project['user'][0] or 'name' not in new_project['details'][0] or 'stage' not in new_project:
             abort(406, description="Missing JSON data")
         
         # Ensure the email is set to owner_email
