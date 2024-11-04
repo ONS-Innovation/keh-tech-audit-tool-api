@@ -82,10 +82,10 @@ def get_project_model():
                     "Database",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main database"
+                            fields.String, required=False, description="Main database"
                         ),
                         "others": fields.List(
-                            fields.String, required=False, description="Other databases"
+                            fields.String, required=True, description="Other databases"
                         ),
                     },
                 )
@@ -95,10 +95,10 @@ def get_project_model():
                     "Languages",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main language"
+                            fields.String, required=False, description="Main language"
                         ),
                         "others": fields.List(
-                            fields.String, required=False, description="Other languages"
+                            fields.String, required=True, description="Other languages"
                         ),
                     },
                 )
@@ -108,11 +108,11 @@ def get_project_model():
                     "Frameworks",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main framework"
+                            fields.String, required=False, description="Main framework"
                         ),
                         "others": fields.List(
                             fields.String,
-                            required=False,
+                            required=True,
                             description="Other frameworks",
                         ),
                     },
@@ -123,11 +123,11 @@ def get_project_model():
                     "CICD",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main CICD tool"
+                            fields.String, required=False, description="Main CICD tool"
                         ),
                         "others": fields.List(
                             fields.String,
-                            required=False,
+                            required=True,
                             description="Other CICD tools",
                         ),
                     },
@@ -139,12 +139,12 @@ def get_project_model():
                     {
                         "main": fields.List(
                             fields.String,
-                            required=True,
+                            required=False,
                             description="Main infrastructure tool",
                         ),
                         "others": fields.List(
                             fields.String,
-                            required=False,
+                            required=True,
                             description="Other infrastructure tools",
                         ),
                     },
