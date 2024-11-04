@@ -231,37 +231,68 @@ PUT /api/projects/{project_name}
 Send JSON in this format:
 ```JSON
 {
-    "user": [ 
-        {
-            "email": "",
-            "roles": [
-                "owner"
-            ]
-        }
+    "user": [
+      {
+        "email": "Email",
+        "roles": ["Technical Contact"],
+        "grade": "Grade"
+      },
+      {
+        "email": "Email",
+        "roles": ["Delivery Manager Contact"],
+        "grade": "Grade"
+      }
     ],
-    "details": {
-        "name": "Project1",
-        "short_name": "This is project 1",
-        "documentation_link": ""
-    },
-    "developed":[  
-        "Partnership",
-        ["ONS", "GDS"]
-    ],
-    "source_control":[
-        "GitHub"
+    "details":[ 
+      {
+        "name": "Name",
+        "short_name": "Short Name",
+        "documentation_link": ["List of strings"],
+        "project_description": "Description"
+      }]
+    ,
+    "developed": ["In-house", []],
+    "source_control": [
+      {
+        "type": "GitHub",
+        "links": [
+          {
+            "description": "Description",
+            "url": "URL"
+          }
+        ]
+      }
     ],
     "architecture": {
-        "hosting": {"type": "Hybrid", "detail": ["AWS", "Local"]},
-        "database": {"main": "MongoDB", "others": ["DocumentDB"]},
-        "languages": {"main": "Python", "others": ["JavaScript", "Java"]},
-        "frameworks": {"main": "React", "others": []},
-        "CICD": {"main": "Python", "others": ["JavaScript", "Java"]},
-        "infrastructure": {"main": "Python", "others": []}
-    }
-}
+      "hosting": {
+        "type": ["Hybrid"],
+        "details": ["List of strings"]
+      },
+      "database": {
+        "main": [],
+        "others": ["List of strings"]
+      },
+      "languages": {
+        "main": ["List of strings"],
+        "others": ["List of strings"]
+      },
+      "frameworks": {
+        "main": [],
+        "others": ["List of strings"]
+      },
+      "CICD": {
+        "main": [],
+        "others": ["List of strings"]
+      },
+      "infrastructure": {
+        "main": [],
+        "others": ["List of strings"]
+      }
+    },
+    "stage":"Development"
+  }
 ```
-Create's a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
+Edits a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
 
 
 ## Authorization with Cognito and API Gateway
