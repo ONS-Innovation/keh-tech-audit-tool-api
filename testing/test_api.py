@@ -7,10 +7,8 @@ from unittest.mock import patch
 # Mock verify_cognito_token for authentication
 mocked_user_email = "test@ons.gov.uk"
 
-
 def mock_verify_cognito_token(token):
     return {"email": mocked_user_email}
-
 
 # Mock reading data function
 def mock_read_data():
@@ -45,7 +43,6 @@ def client():
     with app.test_client() as client:
         yield client
 
-
 # Helper to get mock token from environment
 def get_mock_token():
     mock_token = os.getenv("MOCK_TOKEN")
@@ -55,7 +52,6 @@ def get_mock_token():
             "MOCK_TOKEN environment variable is not set. Please set it to run the tests."
         )
     return mock_token
-
 
 # Test for "/user" route
 @patch("app.utils.verify_cognito_token", side_effect=mock_verify_cognito_token)
