@@ -13,15 +13,15 @@ clean: ## Clean the temporary files.
 
 .PHONY: black
 black: ## Run black.
-	poetry run black src --check || true
+	poetry run black aws_lambda_script --check || true
 
 .PHONY: ruff
 ruff: ## Run ruff without fixing.
-	poetry run ruff check src || true
+	poetry run ruff check aws_lambda_script || true
 
 .PHONY: pylint
 pylint: ## Run pylint.
-	poetry run pylint src || true
+	poetry run pylint aws_lambda_script || true
 
 .PHONY: lint
 lint:  ## Run Python linter
@@ -31,7 +31,7 @@ lint:  ## Run Python linter
 
 .PHONY: mypy
 mypy:  ## Run mypy.
-	poetry run mypy src
+	poetry run mypy aws_lambda_script
 
 .PHONY: install
 install:  ## Install the dependencies excluding dev.

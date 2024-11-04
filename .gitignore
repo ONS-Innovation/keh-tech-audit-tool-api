@@ -7,3 +7,6 @@ __pycache__/
 venv/
 .env/
 aws_lambda_Script/app/__pycache__/
+
+.DS_Store
+info.txt
