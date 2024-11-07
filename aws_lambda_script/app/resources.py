@@ -170,7 +170,6 @@ class Filter(Resource):
             for key, value in args.items()
             if key not in required_param and value
         }
-        print(filter_params)
 
         # Read all projects
         data = read_data()
@@ -346,7 +345,7 @@ class Projects(Resource):
         owner_email = get_user_email(parser.parse_args())
         data = read_data()
         user_projects = [
-            proj for proj in data["projects"] if proj["user"][0]["email"] == owner_email
+            proj for proj in data["projects"] if any(user["email"] == owner_email for user in proj["user"])
         ]
         return user_projects, 200
 
@@ -365,6 +364,7 @@ class Projects(Resource):
 
         # Check that required fields are present in the JSON payload
         new_project = ns.payload
+        print(new_project)
         if (
             "user" not in new_project
             or "details" not in new_project
@@ -374,17 +374,23 @@ class Projects(Resource):
         ):
             abort(406, description="Missing JSON data")
 
-        # Ensure the email is set to owner_email
+        # Ensure the email is set to owner_email and add 'Editor' role if email matches owner_email
         for user in new_project["user"]:
             if "email" not in user or not user["email"]:
                 user["email"] = owner_email
+            if user["email"] == owner_email:
+                if "roles" not in user:
+                    user["roles"] = []
+                if "Editor" not in user["roles"]:
+                    user["roles"].append("Editor")
+        if not any(user["email"] == owner_email for user in new_project["user"]):
+            new_project["user"].append({"email": owner_email, "roles": ["Editor"], "grade": ""})
 
         data = read_data()
 
         for proj in data["projects"]:
             for new_proj_user in new_project["user"]:
                 for proj_user in proj["user"]:
-                    print(proj["details"])
                     if (
                         proj["details"][0]["name"] == new_project["details"][0]["name"]
                         and proj_user["email"] == new_proj_user["email"]
