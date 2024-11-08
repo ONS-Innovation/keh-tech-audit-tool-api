@@ -77,6 +77,14 @@ View the Postman workspace for this project [here](https://www.postman.com/scien
 
 Please read the description or README to understand how to use this workspace. You need to get a mock_token to authenticate yourself in each request.
 
+## Testing with Swagger UI
+
+View the Swagger UI [here](https://tech-audit-tool-api.sdp-sandbox.aws.onsdigital.uk/).
+
+Retrieve your `id_token`, go to the URL above, click the green outlined button with the text `Authorize` and enter your `id_token` in the `Value` box. Click the green outlined `Authorize` button. 
+
+Now you can go through the /api/ routes and test the endpoints.
+
 ## API Reference
 
 Before testing the API, you need to use the above instructions at **Testing** to get a mock token, as all requests need to be authenticated.
