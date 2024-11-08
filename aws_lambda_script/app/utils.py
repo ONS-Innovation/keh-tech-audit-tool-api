@@ -9,27 +9,38 @@ from jwt.algorithms import RSAAlgorithm
 
 # Connecting to S3
 BUCKET_NAME = os.getenv("TECH_AUDIT_DATA_BUCKET")
+SECRET_NAME = os.getenv("TECH_AUDIT_SECRET_MANAGER")
+REGION_NAME = os.getenv("AWS_DEFAULT_REGION")
 OBJECT_NAME = "new_project_data.json"
 AUTOCOMPLETE_OBJECT_NAME = "array_data.json"
-REGION_NAME = os.getenv("AWS_DEFAULT_REGION")
 
 # Create an S3 client
 s3 = boto3.client("s3", region_name=REGION_NAME)
 
+def read_cognito_data():
 
-# Stored the keys for Cognito in an S3 file. This also includes the redirect_uri.
-def read_client_keys():
-    client_keys_key = "client_keys.json"
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=REGION_NAME
+    )
+
     try:
-        response = s3.get_object(Bucket=BUCKET_NAME, Key=client_keys_key)
-        client_keys = json.loads(response["Body"].read().decode("utf-8"))
+        get_secret_value_response = client.get_secret_value(
+            SecretId=SECRET_NAME
+        )
     except ClientError as e:
-        if e.response["Error"]["Code"] == "NoSuchKey":
-            client_keys = {}
-        else:
-            abort(500, description=f"Error reading client keys: {e}")
-    return client_keys
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
 
+    return json.loads(get_secret_value_response['SecretString'])
+
+cognito_data = read_cognito_data()
+
+def return_cognito_data():
+    return cognito_data
 
 # Used for the view project or get projects routes. This reads the data from the S3 bucket.
 def read_data():
@@ -88,7 +99,7 @@ def get_cognito_jwks():
     # Includes the region (eu-west-2) and user pool ID (eu-west-2_cv6SLP60y)
     try:
         response = requests.get(
-            "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_cv6SLP60y/.well-known/jwks.json",
+            f"https://cognito-idp.{REGION_NAME}.amazonaws.com/{cognito_data['COGNITO_POOL_ID']}/.well-known/jwks.json",
             timeout=16,
         )
         if response.status_code == 200:
@@ -122,8 +133,8 @@ def verify_cognito_token(id_token):
             id_token,
             public_key,
             algorithms=["RS256"],
-            audience="dm3289s0tqtsr5qn2qm5i9fql",  # Set this to your app client ID
-            issuer="https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_cv6SLP60y",
+            audience=cognito_data["COGNITO_CLIENT_ID"],
+            issuer=f"https://cognito-idp.{REGION_NAME}.amazonaws.com/{cognito_data['COGNITO_POOL_ID']}",
         )
         return decoded_token  # Return the decoded token (contains claims like user attributes)
 

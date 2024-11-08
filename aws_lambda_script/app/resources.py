@@ -8,7 +8,8 @@ from .utils import (
     read_array_data,
     write_array_data,
     verify_cognito_token,
-    read_client_keys,
+    cognito_data,
+    return_cognito_data,
 )
 
 
@@ -464,9 +465,9 @@ class ProjectDetail(Resource):
 
 
 # Read the client keys from S3 bucket for Cognito
-cognito_settings = read_client_keys()
-COGNITO_CLIENT_ID = cognito_settings["AWS_COGNITO_CLIENT_ID"]
-COGNITO_CLIENT_SECRET = cognito_settings["AWS_COGNITO_CLIENT_SECRET"]
+cognito_settings = return_cognito_data()
+COGNITO_CLIENT_ID = cognito_settings["COGNITO_CLIENT_ID"]
+COGNITO_CLIENT_SECRET = cognito_settings["COGNITO_CLIENT_SECRET"]
 REDIRECT_URI = cognito_settings["REDIRECT_URI"]
 # REDIRECT_URI = 'http://localhost:8000/api/verify'
 
