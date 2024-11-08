@@ -12,8 +12,8 @@ from .utils import (
 )
 
 
-# Set namespace as /api/ - each request has to be localhost:3000/api/<endpoint>
-ns = Namespace("/api/", path="/api/", description="")
+# Set namespace as /api/ - each request has to be localhost:3000/api/v1/<endpoint>
+ns = Namespace("v1", path="/api/v1/", description="")
 
 # Create required authorization header
 parser = reqparse.RequestParser()
@@ -117,7 +117,7 @@ filterParser.add_argument(
     help="Frameworks to filter by",
 )
 filterParser.add_argument(
-    "CICD",
+    "cicd",
     location="args",
     action="split",
     required=False,
@@ -138,7 +138,7 @@ filterParser.add_argument(
     help="Sections to return: user, details, developed, source_control, architecture, or whole project",
 )
 
-filter_params = {
+filter_params_docs = {
     "email": "User email to filter by",
     "roles": "Roles to filter by",
     "name": "Project name to filter by",
@@ -148,187 +148,131 @@ filter_params = {
     "hosting": "Hosting type to filter by",
     "database": "Database to filter by",
     "frameworks": "Frameworks to filter by",
-    "CICD": "CI/CD tools to filter by",
+    "cicd": "CI/CD tools to filter by",
     "infrastructure": "Infrastructure to filter by",
     "return": "Sections to return: user, details, developed, source_control, architecture, or whole project",
 }
 
+def flatten(nested_list):
+    """Flatten a nested list structure without using additional imports."""
+    flat_list = []
+    for item in nested_list:
+        if isinstance(item, list):
+            flat_list.extend(flatten(item))
+        else:
+            flat_list.append(item)
+    return flat_list
 
+def build_project_response(project, sections_to_return):
+    """Build partial project data based on sections specified in return parameter."""
+    partial_project = {}
+    section_map = {
+        "user": "user",
+        "details": "details",
+        "developed": "developed",
+        "source_control": "source_control",
+        "architecture": "architecture"
+    }
+    for section in sections_to_return:
+        if section.lower() in section_map:
+            partial_project[section_map[section.lower()]] = project[section_map[section.lower()]]
+    return partial_project or project
+
+def get_nested_values(data, path):
+    """Extract values from nested dictionary/list following the given path."""
+    result = [data]
+    for key in path:
+        temp = []
+        for item in result:
+            if isinstance(item, dict):
+                # Make dictionary key lookup case-insensitive
+                value = None
+                for k in item:
+                    if k.lower() == key.lower():
+                        value = item[k]
+                        break
+                if value is None:
+                    value = []
+                # Special handling for "main" and "others" arrays
+                if isinstance(value, dict) and "main" in value and "others" in value:
+                    temp.extend(value["main"])
+                    temp.extend(value["others"])
+                else:
+                    temp.extend([value] if not isinstance(value, list) else value)
+            elif isinstance(item, list):
+                temp.extend(flatten([i.get(key, []) if isinstance(i, dict) else i for i in item]))
+        result = temp
+    return [str(val).lower() for val in flatten(result)]
+
+def matches_filter(data_values, filter_values):
+    """Check if any filter value matches any data value."""
+    return any(any(filter_val.lower() == val for val in data_values) 
+              for filter_val in filter_values)
+
+# Main get function
 @ns.route("/projects/filter")
 class Filter(Resource):
     @ns.doc(
-        params=filter_params,
+        params=filter_params_docs,
         responses={200: "Success", 401: "Authorization is required"},
     )
     def get(self):
         get_user_email(parser.parse_args())
         args = filterParser.parse_args()
-
-        # Extract filter parameters from the request, ignoring missing/empty ones
-        filter_params = {
-            key: value
-            for key, value in args.items()
-            if key not in required_param and value
-        }
-
-        # Read all projects
+        filter_params = {k: v for k, v in args.items() if k and v}
+        
         data = read_data()
         projects = data["projects"]
 
-        # Filter projects based on query params
+        # Define paths for different filter types
+        paths = {
+            "email": ["user", "email"],
+            "roles": ["user", "roles"],
+            "name": ["details", "name"],
+            "languages": ["architecture", "languages"],
+            "hosting": ["architecture", "hosting"],
+            "database": ["architecture", "database"],
+            "frameworks": ["architecture", "frameworks"],
+            "cicd": ["architecture", "CICD"],
+            "infrastructure": ["architecture", "infrastructure"]
+        }
+
+        # Special case filters
+        def filter_developed(project):
+            if "developed" not in filter_params:
+                return True
+            project_type = project["developed"][0].lower()
+            partners = [p.lower() for p in (project["developed"][1] or [])]
+            return any(f.lower() == project_type or any(f.lower() in p for p in partners) 
+                      for f in filter_params["developed"])
+
+        def filter_source_control(project):
+            if "source_control" not in filter_params:
+                return True
+            return all(any(f.lower() in sc["type"].lower() or 
+                         any(f.lower() in link["description"].lower() or 
+                             f.lower() in link["url"].lower() 
+                             for link in sc["links"])
+                         for sc in project["source_control"])
+                     for f in filter_params["source_control"])
+
+        # Filter projects
         filtered_projects = []
         for project in projects:
-            match = True
-
-            # Filter by email
-            if "email" in filter_params:
-                project_emails = [user["email"].lower() for user in project["user"]]
-                if not any(
-                    email.lower() in project_emails for email in filter_params["email"]
-                ):
-                    match = False
-
-            # Filter by roles
-            if "roles" in filter_params:
-                project_roles = [
-                    role.lower() for user in project["user"] for role in user["roles"]
-                ]
-                if not any(
-                    role.lower() in project_roles for role in filter_params["roles"]
-                ):
-                    match = False
-
-            # Filter by project name (partial match)
-            if "name" in filter_params:
-                if not any(
-                    name.lower() in project["details"]["name"].lower()
-                    for name in filter_params["name"]
-                ):
-                    match = False
-
-            # Filter by developed partners
-            if "developed" in filter_params:
-                for dev_value in filter_params["developed"]:
-                    dev_value_lower = dev_value.lower()
-
-                    # Check first part (In House, Partnership, Outsourced)
-                    developed_type = project["developed"][0].lower()
-                    if dev_value_lower == developed_type:
-                        continue
-
-                    # Check second part (list of company/partner names)
-                    developed_partners = project["developed"][1]
-                    if developed_partners:
-                        developed_partners_lower = [
-                            d.lower() for d in developed_partners if d
-                        ]
-                        if any(
-                            dev_value_lower in partner
-                            for partner in developed_partners_lower
-                        ):
-                            continue
-
-                    # If neither part matches, break out of loop
-                    match = False
-                    break
-
-            # Filter by source control
-            if "source_control" in filter_params:
-                project_source_control = project["source_control"]
-                for sc_filter in filter_params["source_control"]:
-                    sc_filter_lower = sc_filter.lower()
-                    match_found = False
-                    for sc in project_source_control:
-                        if sc_filter_lower in sc["type"].lower():
-                            match_found = True
-                            break
-                        for link in sc["links"]:
-                            if (
-                                sc_filter_lower in link["description"].lower()
-                                or sc_filter_lower in link["url"].lower()
-                            ):
-                                match_found = True
-                                break
-                        if match_found:
-                            break
-                    if not match_found:
-                        match = False
-                        break
-
-            # Filter by hosting type
-            if "hosting" in filter_params:
-                hosting_types = [project["architecture"]["hosting"]["type"].lower()] + [
-                    h.lower() for h in project["architecture"]["hosting"]["detail"]
-                ]
-                if not any(
-                    ht.lower() in hosting_types for ht in filter_params["hosting"]
-                ):
-                    match = False
-
-            # Filter by database
-            if "database" in filter_params:
-                databases = [
-                    db.lower() for db in project["architecture"]["database"]["main"]
-                ] + [db.lower() for db in project["architecture"]["database"]["others"]]
-                if not any(db.lower() in databases for db in filter_params["database"]):
-                    match = False
-
-            # Filter by frameworks
-            if "frameworks" in filter_params:
-                frameworks = [
-                    fw.lower() for fw in project["architecture"]["frameworks"]["main"]
-                ] + [
-                    fw.lower() for fw in project["architecture"]["frameworks"]["others"]
-                ]
-                if not any(
-                    fw.lower() in frameworks for fw in filter_params["frameworks"]
-                ):
-                    match = False
-
-            # Filter by CICD tools
-            if "CICD" in filter_params:
-                cicd_tools = [
-                    c.lower() for c in project["architecture"]["CICD"]["main"]
-                ] + [c.lower() for c in project["architecture"]["CICD"]["others"]]
-                if not any(c.lower() in cicd_tools for c in filter_params["CICD"]):
-                    match = False
-
-            # Filter by infrastructure
-            if "infrastructure" in filter_params:
-                infrastructure = [
-                    inf.lower()
-                    for inf in project["architecture"]["infrastructure"]["main"]
-                ] + [
-                    inf.lower()
-                    for inf in project["architecture"]["infrastructure"]["others"]
-                ]
-                if not any(
-                    inf.lower() in infrastructure
-                    for inf in filter_params["infrastructure"]
-                ):
-                    match = False
-
-            if match:
+            # Apply standard filters
+            standard_filters_pass = all(
+                matches_filter(get_nested_values(project, paths[key]), filter_params[key])
+                for key in filter_params if key in paths
+            )
+            
+            # Apply special case filters
+            if (standard_filters_pass and 
+                filter_developed(project) and 
+                filter_source_control(project)):
+                
+                # Handle return parameter
                 if "return" in filter_params:
-                    sections_to_return = filter_params["return"]
-                    partial_project = {}
-
-                    for section in sections_to_return:
-                        section = section.lower()
-                        if section == "user":
-                            partial_project["user"] = project["user"]
-                        elif section == "details":
-                            partial_project["details"] = project["details"]
-                        elif section == "developed":
-                            partial_project["developed"] = project["developed"]
-                        elif section == "source_control":
-                            partial_project["source_control"] = project[
-                                "source_control"
-                            ]
-                        elif section == "architecture":
-                            partial_project["architecture"] = project["architecture"]
-
-                    filtered_projects.append(partial_project)
+                    filtered_projects.append(build_project_response(project, filter_params["return"]))
                 else:
                     filtered_projects.append(project)
 
@@ -388,17 +332,26 @@ class Projects(Resource):
 
         data = read_data()
 
-        for proj in data["projects"]:
-            for new_proj_user in new_project["user"]:
-                for proj_user in proj["user"]:
-                    if (
-                        proj["details"][0]["name"] == new_project["details"][0]["name"]
-                        and proj_user["email"] == new_proj_user["email"]
-                    ):
-                        abort(
-                            409,
-                            description=f"Project with the same name '{proj['details'][0]['name']}' and owner '{proj_user['email']}' already exists",
-                        )
+        # Check if project with same name exists and has any matching user emails
+        new_project_name = new_project["details"][0]["name"]
+        new_project_emails = {user["email"] for user in new_project["user"]}
+        
+        matching_projects = [
+            proj for proj in data["projects"] 
+            if proj["details"][0]["name"] == new_project_name
+            and any(user["email"] in new_project_emails for user in proj["user"])
+        ]
+        
+        if matching_projects:
+            proj = matching_projects[0]
+            matching_email = next(
+                user["email"] for user in proj["user"] 
+                if user["email"] in new_project_emails
+            )
+            abort(
+                409,
+                description=f"Project with the same name '{new_project_name}' and owner '{matching_email}' already exists",
+            )
         data["projects"].append(new_project)
         write_data(data)
 
@@ -569,11 +522,12 @@ class RefreshToken(Resource):
 
         return {"id_token": token_response["id_token"]}, 200
 
+# Global token URL
+token_url = (
+    "https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token"
+)
 
 def exchange_refresh_token_for_id_token(refresh_token):
-    token_url = (
-        "https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token"
-    )
     payload = {"grant_type": "refresh_token", "refresh_token": refresh_token}
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -593,9 +547,6 @@ def exchange_refresh_token_for_id_token(refresh_token):
 
 
 def exchange_code_for_tokens(code):
-    token_url = (
-        "https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token"
-    )
     payload = {
         "grant_type": "authorization_code",
         "code": code,

@@ -1,6 +1,5 @@
 from flask_restx import fields
 
-
 # Had problems with initialising this as 'ns' wouldn't have been initialised so it would fail.
 # Making this a function would the model to intialised when it's used and when 'ns' has been initialised.
 def get_project_model():
@@ -34,6 +33,7 @@ def get_project_model():
             ),
         },
     )
+
     source_control_model = ns.model(
         "SourceControl",
         {
@@ -118,9 +118,9 @@ def get_project_model():
                     },
                 )
             ),
-            "CICD": fields.Nested(
+            "cicd": fields.Nested(
                 ns.model(
-                    "CICD",
+                    "cicd",
                     {
                         "main": fields.List(
                             fields.String, required=False, description="Main CICD tool"

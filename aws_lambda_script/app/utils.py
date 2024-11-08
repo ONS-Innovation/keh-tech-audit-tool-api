@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 from jwt.algorithms import RSAAlgorithm
 
 # Connecting to S3
-BUCKET_NAME = "keh-tech-audit-tool"
+BUCKET_NAME = os.getenv("TECH_AUDIT_DATA_BUCKET")
 OBJECT_NAME = "new_project_data.json"
 AUTOCOMPLETE_OBJECT_NAME = "array_data.json"
 REGION_NAME = os.getenv("AWS_DEFAULT_REGION")
