@@ -28,6 +28,7 @@ Set environment variables:
 ```bash
 export TECH_AUDIT_DATA_BUCKET='keh-tech-audit-tool'
 export TECH_AUDIT_SECRET_MANAGER='tech-audit-tool-api/secrets'
+export AWS_COGNITO_TOKEN_URL='https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token'
 ```
 
 Go to the aws_lambda_script directory
@@ -84,7 +85,7 @@ View the Swagger UI [here](https://tech-audit-tool-api.sdp-sandbox.aws.onsdigita
 
 Retrieve your `id_token`, go to the URL above, click the green outlined button with the text `Authorize` and enter your `id_token` in the `Value` box. Click the green outlined `Authorize` button. 
 
-Now you can go through the /api/ routes and test the endpoints.
+Now you can go through the /api/v1/ routes and test the endpoints.
 
 ## API Reference
 
@@ -93,19 +94,32 @@ Before testing the API, you need to use the above instructions at **Testing** to
 | Header | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 | `Authorization` | `string` | **Required**. ID Token (Not access) |
-
+ 
 ### Get user email
 
 ```http
-GET /api/user
+GET /api/v1/user
 ```
 
 Get's the users email.
 
+### Get new ID token from refresh token
+
+```http
+POST /api/v1/refresh
+```
+
+| Body | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `refresh_token`      | `string` | **Required**. The refresh token |
+
+Get's a new id_token from a refresh token. Old id_token is killed, refresh_token
+can be used multiple times to get a new id_token.
+
 ### Get all user projects
 
 ```http
-GET /api/projects
+GET /api/v1/projects
 ```
 
 Get's the projects associated with the users email.
@@ -113,7 +127,7 @@ Get's the projects associated with the users email.
 ### Get a specific user project
 
 ```http
-GET /api/projects/<project_name>
+GET /api/v1/projects/<project_name>
 ```
 
 | Parameter | Type     | Description                       |
@@ -126,7 +140,7 @@ Get's a specific project from the user.
 ### Create a new project
 
 ```http
-POST /api/projects/
+POST /api/v1/projects/
 ```
 
 Send JSON in this format:
@@ -199,7 +213,7 @@ Create's a project. If the languages, database, frameworks, CICD, infrastructure
 ### Get autocomplete from string [REMOVED]
 
 ```http
-GET /api/autocomplete
+GET /api/v1/autocomplete
 ```
 Removed as autocomplete is processed on front-end.
 
@@ -207,7 +221,7 @@ Removed as autocomplete is processed on front-end.
 ### Get filtered projects 
 
 ```http
-GET /api/projects/filter
+GET /api/v1/projects/filter
 ```
 
 | Parameter | Type     | Description                       |
@@ -226,7 +240,7 @@ Return can be one or more of: user, details, developed, source_control, architec
 ### Edit a project
 
 ```http
-PUT /api/projects/{project_name}
+PUT /api/v1/projects/{project_name}
 ```
 
 | Parameter | Type     | Description                       |
@@ -306,10 +320,10 @@ Edits a project. If the languages, database, frameworks, CICD, infrastructure or
 Visiting the [Cognito UI](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/authorize?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https%3A%2F%2Fdutwj6q915.execute-api.eu-west-2.amazonaws.com%2Fdev%2Fapi%2Fverify), and successfully logging in, will redirect you to:
 
 ```bash
-/api/verify?code=<code>
+/api/v1/verify?code=<code>
 ```
 
 This returns your token, which you can use in testing the authentication on the API. Use this token in the Authorization header to authenticate your requests.
 
-The /api/verify route get's the client keys and redirect uri from the bucket.
+The /api/v1/verify route get's the client keys and redirect uri from the bucket.
 

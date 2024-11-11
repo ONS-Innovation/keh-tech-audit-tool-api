@@ -1,5 +1,7 @@
 import logging
 import requests
+import os
+from http import HTTPStatus
 from flask_restx import Resource, Namespace, reqparse, abort
 from .api_models import get_project_model
 from .utils import (
@@ -9,7 +11,6 @@ from .utils import (
     write_array_data,
     verify_cognito_token,
     cognito_data,
-    return_cognito_data,
 )
 
 
@@ -154,6 +155,7 @@ filter_params_docs = {
     "return": "Sections to return: user, details, developed, source_control, architecture, or whole project",
 }
 
+
 def flatten(nested_list):
     """Flatten a nested list structure without using additional imports."""
     flat_list = []
@@ -164,6 +166,7 @@ def flatten(nested_list):
             flat_list.append(item)
     return flat_list
 
+
 def build_project_response(project, sections_to_return):
     """Build partial project data based on sections specified in return parameter."""
     partial_project = {}
@@ -172,12 +175,15 @@ def build_project_response(project, sections_to_return):
         "details": "details",
         "developed": "developed",
         "source_control": "source_control",
-        "architecture": "architecture"
+        "architecture": "architecture",
     }
     for section in sections_to_return:
         if section.lower() in section_map:
-            partial_project[section_map[section.lower()]] = project[section_map[section.lower()]]
+            partial_project[section_map[section.lower()]] = project[
+                section_map[section.lower()]
+            ]
     return partial_project or project
+
 
 def get_nested_values(data, path):
     """Extract values from nested dictionary/list following the given path."""
@@ -201,14 +207,22 @@ def get_nested_values(data, path):
                 else:
                     temp.extend([value] if not isinstance(value, list) else value)
             elif isinstance(item, list):
-                temp.extend(flatten([i.get(key, []) if isinstance(i, dict) else i for i in item]))
+                temp.extend(
+                    flatten(
+                        [i.get(key, []) if isinstance(i, dict) else i for i in item]
+                    )
+                )
         result = temp
     return [str(val).lower() for val in flatten(result)]
 
+
 def matches_filter(data_values, filter_values):
     """Check if any filter value matches any data value."""
-    return any(any(filter_val.lower() == val for val in data_values) 
-              for filter_val in filter_values)
+    return any(
+        any(filter_val.lower() == val for val in data_values)
+        for filter_val in filter_values
+    )
+
 
 # Main get function
 @ns.route("/projects/filter")
@@ -221,7 +235,7 @@ class Filter(Resource):
         get_user_email(parser.parse_args())
         args = filterParser.parse_args()
         filter_params = {k: v for k, v in args.items() if k and v}
-        
+
         data = read_data()
         projects = data["projects"]
 
@@ -235,7 +249,7 @@ class Filter(Resource):
             "database": ["architecture", "database"],
             "frameworks": ["architecture", "frameworks"],
             "cicd": ["architecture", "CICD"],
-            "infrastructure": ["architecture", "infrastructure"]
+            "infrastructure": ["architecture", "infrastructure"],
         }
 
         # Special case filters
@@ -244,36 +258,51 @@ class Filter(Resource):
                 return True
             project_type = project["developed"][0].lower()
             partners = [p.lower() for p in (project["developed"][1] or [])]
-            return any(f.lower() == project_type or any(f.lower() in p for p in partners) 
-                      for f in filter_params["developed"])
+            return any(
+                f.lower() == project_type or any(f.lower() in p for p in partners)
+                for f in filter_params["developed"]
+            )
 
         def filter_source_control(project):
             if "source_control" not in filter_params:
                 return True
-            return all(any(f.lower() in sc["type"].lower() or 
-                         any(f.lower() in link["description"].lower() or 
-                             f.lower() in link["url"].lower() 
-                             for link in sc["links"])
-                         for sc in project["source_control"])
-                     for f in filter_params["source_control"])
+            return all(
+                any(
+                    f.lower() in sc["type"].lower()
+                    or any(
+                        f.lower() in link["description"].lower()
+                        or f.lower() in link["url"].lower()
+                        for link in sc["links"]
+                    )
+                    for sc in project["source_control"]
+                )
+                for f in filter_params["source_control"]
+            )
 
         # Filter projects
         filtered_projects = []
         for project in projects:
             # Apply standard filters
             standard_filters_pass = all(
-                matches_filter(get_nested_values(project, paths[key]), filter_params[key])
-                for key in filter_params if key in paths
+                matches_filter(
+                    get_nested_values(project, paths[key]), filter_params[key]
+                )
+                for key in filter_params
+                if key in paths
             )
-            
+
             # Apply special case filters
-            if (standard_filters_pass and 
-                filter_developed(project) and 
-                filter_source_control(project)):
-                
+            if (
+                standard_filters_pass
+                and filter_developed(project)
+                and filter_source_control(project)
+            ):
+
                 # Handle return parameter
                 if "return" in filter_params:
-                    filtered_projects.append(build_project_response(project, filter_params["return"]))
+                    filtered_projects.append(
+                        build_project_response(project, filter_params["return"])
+                    )
                 else:
                     filtered_projects.append(project)
 
@@ -283,18 +312,23 @@ class Filter(Resource):
 @ns.route("/projects")
 class Projects(Resource):
 
-    # Loop through all projects and return the ones that match the user email in the first user item in the user list
+    # Loop through all projects and return the ones
+    # that match the user email in the first user item in the user list
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
     @ns.marshal_with(get_project_model(), as_list=True)
     def get(self):
         owner_email = get_user_email(parser.parse_args())
         data = read_data()
         user_projects = [
-            proj for proj in data["projects"] if any(user["email"] == owner_email for user in proj["user"])
+            proj
+            for proj in data["projects"]
+            if any(user["email"] == owner_email for user in proj["user"])
         ]
         return user_projects, 200
 
-    # Add a new project to the list of projects - needs certain fields to be present in the JSON payload, the non required will be saved as null if string or emtpy if list
+    # Add a new project to the list of projects
+    # needs certain fields to be present in the JSON payload,
+    # the non required will be saved as null if string or emtpy if list
     @ns.marshal_list_with(get_project_model())
     @ns.doc(
         responses={
@@ -329,29 +363,33 @@ class Projects(Resource):
                 if "Editor" not in user["roles"]:
                     user["roles"].append("Editor")
         if not any(user["email"] == owner_email for user in new_project["user"]):
-            new_project["user"].append({"email": owner_email, "roles": ["Editor"], "grade": ""})
+            new_project["user"].append(
+                {"email": owner_email, "roles": ["Editor"], "grade": ""}
+            )
 
         data = read_data()
 
         # Check if project with same name exists and has any matching user emails
         new_project_name = new_project["details"][0]["name"]
         new_project_emails = {user["email"] for user in new_project["user"]}
-        
+
         matching_projects = [
-            proj for proj in data["projects"] 
+            proj
+            for proj in data["projects"]
             if proj["details"][0]["name"] == new_project_name
             and any(user["email"] in new_project_emails for user in proj["user"])
         ]
-        
+
         if matching_projects:
             proj = matching_projects[0]
             matching_email = next(
-                user["email"] for user in proj["user"] 
+                user["email"]
+                for user in proj["user"]
                 if user["email"] in new_project_emails
             )
             abort(
                 409,
-                description=f"Project with the same name '{new_project_name}' and owner '{matching_email}' already exists",
+                description=f"Project with the same name '{new_project_name}', and owner '{matching_email}' already exists",
             )
         data["projects"].append(new_project)
         write_data(data)
@@ -396,7 +434,8 @@ class Projects(Resource):
 )
 @ns.route("/projects/<string:project_name>")
 class ProjectDetail(Resource):
-    # Loop through all projects and return the one that matches the name and the user email in the first user item in the user list
+    # Loop through all projects and return the one that matches
+    # the name and the user email in the first user item in the user list
     @ns.marshal_list_with(get_project_model())
     def get(self, project_name):
         owner_email = get_user_email(parser.parse_args())
@@ -418,7 +457,8 @@ class ProjectDetail(Resource):
             abort(404, description="Project not found")
         return project, 200
 
-    # Edit a project by taking the whole schema and replacing the existing project with the same name and owner
+    # Edit a project by taking the whole schema and replacing
+    # the existing project with the same name and owner
     @ns.marshal_list_with(get_project_model())
     @ns.doc(
         responses={
@@ -465,7 +505,7 @@ class ProjectDetail(Resource):
 
 
 # Read the client keys from S3 bucket for Cognito
-cognito_settings = return_cognito_data()
+cognito_settings = cognito_data
 COGNITO_CLIENT_ID = cognito_settings["COGNITO_CLIENT_ID"]
 COGNITO_CLIENT_SECRET = cognito_settings["COGNITO_CLIENT_SECRET"]
 REDIRECT_URI = cognito_settings["REDIRECT_URI"]
@@ -509,27 +549,33 @@ refreshParser.add_argument(
 
 @ns.route("/refresh")
 class RefreshToken(Resource):
-    def get(self):
+    # Sending a refresh token to Cognito to get a new ID token.
+    # Refresh can be used multiple times to get a new id_token.
+    # It kills the old id_token but not the refresh_token.
+    def post(self):
         refresh_token = refreshParser.parse_args()["refresh_token"]
         if not refresh_token:
             logger.error("Refresh token not found")
             return {"error": "Refresh token not found"}, 400
 
-        token_response = exchange_refresh_token_for_id_token(refresh_token)
+        try:
+            token_response = exchange_refresh_token_for_id_token(refresh_token)
+            return {"id_token": token_response["id_token"]}, 200
+        except Exception as e:
+            logger.error(f"Failed to refresh token: {str(e)}")
+            return {"error": "Failed to refresh token"}, 401
 
-        if "id_token" not in token_response:
-            logger.error("Failed to retrieve ID Token")
-            return {"error": "Failed to retrieve ID Token"}, 400
 
-        return {"id_token": token_response["id_token"]}, 200
+# Env variable as env may change.
+token_url = os.getenv("AWS_COGNITO_TOKEN_URL")
 
-# Global token URL
-token_url = (
-    "https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token"
-)
 
 def exchange_refresh_token_for_id_token(refresh_token):
-    payload = {"grant_type": "refresh_token", "refresh_token": refresh_token}
+    payload = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id": COGNITO_CLIENT_ID,
+    }
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
@@ -540,7 +586,7 @@ def exchange_refresh_token_for_id_token(refresh_token):
         auth=(COGNITO_CLIENT_ID, COGNITO_CLIENT_SECRET),
     )
 
-    if response.status_code != 200:
+    if response.status_code != HTTPStatus.OK:
         logger.error(f"Error: {response.status_code}, {response.text}")
         raise Exception(f"Error: {response.status_code}, {response.json()}")
 
@@ -560,7 +606,7 @@ def exchange_code_for_tokens(code):
 
     response = requests.post(token_url, data=payload, headers=headers, auth=auth)
 
-    if response.status_code != 200:
+    if response.status_code != HTTPStatus.OK:
         if response.json()["error"] == "invalid_grant":
             logger.error("Invalid authorization code")
             return {"error": "Invalid authorization code"}, 404
