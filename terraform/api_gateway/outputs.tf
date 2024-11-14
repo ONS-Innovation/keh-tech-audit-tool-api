@@ -17,3 +17,13 @@ output "api_gateway_execution_arn" {
   description = "Execution ARN of the API Gateway"
   value       = aws_api_gateway_rest_api.main.execution_arn
 }
+
+output "api_domain_name" {
+  description = "Custom domain name for the API"
+  value       = aws_api_gateway_domain_name.api.domain_name
+}
+
+output "api_endpoint" {
+  description = "Custom domain endpoint for the API"
+  value       = "https://${aws_api_gateway_domain_name.api.domain_name}"
+}

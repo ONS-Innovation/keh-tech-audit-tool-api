@@ -9,6 +9,11 @@ terraform {
 
 }
 
+# Add these data sources at the top of the file, after the terraform block
+data "aws_route53_zone" "domain" {
+  name = "${var.domain}.${var.domain_extension}"
+}
+
 # Create the API Gateway REST API
 resource "aws_api_gateway_rest_api" "main" {
   name = "${var.domain}-${var.api_name}"
@@ -276,4 +281,68 @@ resource "aws_lambda_permission" "api_gateway" {
   function_name = var.lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
+}
+
+# Create API Gateway domain name
+resource "aws_api_gateway_domain_name" "api" {
+  domain_name              = "${var.service_subdomain}.${var.domain}.${var.domain_extension}"
+  regional_certificate_arn = aws_acm_certificate_validation.cert_validation.certificate_arn
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+
+# Create Route53 record
+resource "aws_route53_record" "api" {
+  name    = aws_api_gateway_domain_name.api.domain_name
+  type    = "A"
+  zone_id = data.aws_route53_zone.domain.zone_id
+
+  alias {
+    name                   = aws_api_gateway_domain_name.api.regional_domain_name
+    zone_id                = aws_api_gateway_domain_name.api.regional_zone_id
+    evaluate_target_health = true
+  }
+}
+
+# Create ACM certificate
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "${var.service_subdomain}.${var.domain}.${var.domain_extension}"
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Create Route53 record for certificate validation
+resource "aws_route53_record" "cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.domain.zone_id
+}
+
+# Certificate validation
+resource "aws_acm_certificate_validation" "cert_validation" {
+  certificate_arn         = aws_acm_certificate.cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+}
+
+# Map custom domain to API Gateway stage
+resource "aws_api_gateway_base_path_mapping" "api" {
+  api_id      = aws_api_gateway_rest_api.main.id
+  stage_name  = aws_api_gateway_stage.main.stage_name
+  domain_name = aws_api_gateway_domain_name.api.domain_name
 }

@@ -16,13 +16,13 @@ variable "aws_secret_access_key" {
 variable "service_subdomain" {
   description = "Service subdomain"
   type        = string
-  default     = "tech-audit-tool-api"
+  default     = "tech-audit-tool-api-test"
 }
 
 variable "api_name" {
   description = "API name"
   type        = string
-  default     = "tech-audit-tool-api"
+  default     = "tech-audit-tool-api-test"
 }
 
 variable "service_title" {
