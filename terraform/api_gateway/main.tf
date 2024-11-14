@@ -216,6 +216,7 @@ resource "aws_api_gateway_method" "swaggerui_proxy_get" {
 }
 
 # Lambda integrations for all protected endpoints
+# Add in more lambda integrated endpoints here
 resource "aws_api_gateway_integration" "lambda_integration" {
   for_each = {
     "projects_get"        = aws_api_gateway_method.projects_get

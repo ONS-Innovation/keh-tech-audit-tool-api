@@ -45,5 +45,7 @@ Follow these steps:
 1. Click on the `App Integrations` tab.
 2. Scroll down to `App clients and analytics` and click on your App client.
 3. Scroll down to `Hosted UI` and click on the `Edit` button.
-4. Click `Add another URL` and add the redirect URLs to the `Callback URLs`.
+4. Click `Add another URL` and add the redirect URLs to the `Callback URLs`. These will be the URLs of the API Gateway endpoint. For example: 
+    - https://tech-audit-tool-api-test.sdp-sandbox.aws.onsdigital.uk
+    - https://0123456789.execute-api.eu-west-2.amazonaws.com/dev
 5. Click `Save changes`.
