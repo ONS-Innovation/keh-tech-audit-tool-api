@@ -597,7 +597,7 @@ def exchange_code_for_tokens(code):
     payload = {
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": f"{REDIRECT_URI}/api/verify",
+        "redirect_uri": f"{REDIRECT_URI}/api/v1/verify",
     }
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
