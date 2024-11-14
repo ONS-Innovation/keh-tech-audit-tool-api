@@ -16,22 +16,22 @@ data "aws_route53_zone" "domain" {
 
 # Create the API Gateway REST API
 resource "aws_api_gateway_rest_api" "main" {
-  name = "${var.domain}-${var.api_name}"
+  name = "${var.domain}-${var.service_subdomain}"
 
   tags = {
-    Project        = var.project_tag
-    TeamOwner      = var.team_owner_tag
-    BusinessOwner  = var.business_owner_tag
+    Project       = var.project_tag
+    TeamOwner     = var.team_owner_tag
+    BusinessOwner = var.business_owner_tag
   }
 }
 
 # Create an authorizer using the Cognito User Pool
 resource "aws_api_gateway_authorizer" "cognito" {
-  name                   = "${var.api_name}-authorizer"
-  rest_api_id            = aws_api_gateway_rest_api.main.id
-  type                   = "COGNITO_USER_POOLS"
-  provider_arns          = [var.cognito_user_pool_arn]
-  identity_source        = "method.request.header.Authorization"
+  name            = "${var.service_subdomain}-authorizer"
+  rest_api_id     = aws_api_gateway_rest_api.main.id
+  type            = "COGNITO_USER_POOLS"
+  provider_arns   = [var.cognito_user_pool_arn]
+  identity_source = "method.request.header.Authorization"
 }
 # Root API resource
 resource "aws_api_gateway_resource" "api_resource" {
@@ -70,7 +70,7 @@ resource "aws_api_gateway_method" "projects_get" {
 resource "aws_api_gateway_method" "projects_post" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   resource_id   = aws_api_gateway_resource.projects_resource.id
-  http_method   = "POST" 
+  http_method   = "POST"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito.id
 
@@ -95,7 +95,7 @@ resource "aws_api_gateway_method" "projects_proxy_get" {
 
   request_parameters = {
     "method.request.header.Authorization" = true
-    "method.request.path.proxy"          = true
+    "method.request.path.proxy"           = true
   }
 }
 
@@ -108,7 +108,7 @@ resource "aws_api_gateway_method" "projects_proxy_put" {
 
   request_parameters = {
     "method.request.header.Authorization" = true
-    "method.request.path.proxy"          = true
+    "method.request.path.proxy"           = true
   }
 }
 
@@ -218,11 +218,11 @@ resource "aws_api_gateway_method" "swaggerui_proxy_get" {
 # Lambda integrations for all protected endpoints
 resource "aws_api_gateway_integration" "lambda_integration" {
   for_each = {
-    "projects_get"         = aws_api_gateway_method.projects_get
-    "projects_post"        = aws_api_gateway_method.projects_post
-    "projects_proxy_get"   = aws_api_gateway_method.projects_proxy_get
-    "projects_proxy_put"   = aws_api_gateway_method.projects_proxy_put
-    "projects_filter_get"  = aws_api_gateway_method.projects_filter_get
+    "projects_get"        = aws_api_gateway_method.projects_get
+    "projects_post"       = aws_api_gateway_method.projects_post
+    "projects_proxy_get"  = aws_api_gateway_method.projects_proxy_get
+    "projects_proxy_put"  = aws_api_gateway_method.projects_proxy_put
+    "projects_filter_get" = aws_api_gateway_method.projects_filter_get
     "user_get"            = aws_api_gateway_method.user_get
     "verify_get"          = aws_api_gateway_method.verify_get
   }
@@ -238,16 +238,16 @@ resource "aws_api_gateway_integration" "lambda_integration" {
 # Mock integrations for Swagger endpoints
 resource "aws_api_gateway_integration" "mock_integration" {
   for_each = {
-    "swagger_json"      = aws_api_gateway_method.swagger_json_get
-    "swaggerui"        = aws_api_gateway_method.swaggerui_get
-    "swaggerui_proxy"  = aws_api_gateway_method.swaggerui_proxy_get
+    "swagger_json"    = aws_api_gateway_method.swagger_json_get
+    "swaggerui"       = aws_api_gateway_method.swaggerui_get
+    "swaggerui_proxy" = aws_api_gateway_method.swaggerui_proxy_get
   }
 
-  rest_api_id          = aws_api_gateway_rest_api.main.id
-  resource_id          = each.value.resource_id
-  http_method          = each.value.http_method
-  type                 = "MOCK"
-  
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = each.value.resource_id
+  http_method = each.value.http_method
+  type        = "MOCK"
+
   request_templates = {
     "application/json" = "{\"statusCode\": 200}"
   }
@@ -272,6 +272,37 @@ resource "aws_api_gateway_stage" "main" {
   deployment_id = aws_api_gateway_deployment.main.id
   rest_api_id   = aws_api_gateway_rest_api.main.id
   stage_name    = var.stage_name
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gateway.arn
+    format = jsonencode({
+      requestId      = "$context.requestId"
+      ip             = "$context.identity.sourceIp"
+      caller         = "$context.identity.caller"
+      user           = "$context.identity.user"
+      requestTime    = "$context.requestTime"
+      httpMethod     = "$context.httpMethod"
+      resourcePath   = "$context.resourcePath"
+      status         = "$context.status"
+      protocol       = "$context.protocol"
+      responseLength = "$context.responseLength"
+      errorMessage   = "$context.error.message"
+      errorType      = "$context.error.responseType"
+    })
+  }
+}
+
+# Stage settings
+resource "aws_api_gateway_method_settings" "all" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  stage_name  = aws_api_gateway_stage.main.stage_name
+  method_path = "*/*"
+
+  settings {
+    logging_level      = "ERROR"
+    data_trace_enabled = false
+    metrics_enabled    = true
+  }
 }
 
 # Lambda permission for API Gateway

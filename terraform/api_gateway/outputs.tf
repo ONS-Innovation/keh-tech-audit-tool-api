@@ -27,3 +27,8 @@ output "api_endpoint" {
   description = "Custom domain endpoint for the API"
   value       = "https://${aws_api_gateway_domain_name.api.domain_name}"
 }
+
+output "cloudwatch_log_group_name" {
+  description = "Name of the CloudWatch Log Group for API Gateway errors"
+  value       = aws_cloudwatch_log_group.api_gateway.name
+}
