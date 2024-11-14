@@ -1,3 +1,14 @@
+terraform {
+  backend "s3" {
+    # Backend is selected using terraform init -backend-config=path/to/backend-<env>.tfbackend
+    # bucket         = "sdp-dev-tf-state"
+    # key            = "sdp-sandbox-ecs-tech-audit-tool-api-lambda/terraform.tfstate"
+    # region         = "eu-west-2"
+    # dynamodb_table = "terraform-state-lock"
+  }
+
+}
+
 resource "aws_lambda_function" "tech_audit_lambda" {
   function_name = "${var.domain}-${var.service_subdomain}-lambda"
   package_type  = "Image"
@@ -17,7 +28,7 @@ resource "aws_lambda_function" "tech_audit_lambda" {
 
 # IAM role for Lambda
 resource "aws_iam_role" "lambda_execution_role" {
-  name = "${var.domain}-${var.service_subdomain}-lambda-role"
+  name = "${var.domain}-${var.service_subdomain}-lambda-role-${var.container_ver}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

@@ -36,6 +36,13 @@ variable "ecr_repository" {
   type        = string
 }
 
+variable "container_ver" {
+  description = "Container tag"
+  type        = string
+  default     = "v0.0.1"
+
+}
+
 variable "image_tag" {
   description = "Tag of the container image to deploy"
   type        = string
