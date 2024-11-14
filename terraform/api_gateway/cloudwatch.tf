@@ -63,8 +63,10 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
 # Enable CloudWatch logging for API Gateway
 resource "aws_api_gateway_account" "main" {
   cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
+
   lifecycle {
     create_before_destroy = true
+    prevent_destroy       = false
   }
 
   depends_on = [

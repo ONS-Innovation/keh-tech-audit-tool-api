@@ -161,12 +161,7 @@ resource "aws_api_gateway_method" "verify_get" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   resource_id   = aws_api_gateway_resource.verify_resource.id
   http_method   = "GET"
-  authorization = "COGNITO_USER_POOLS"
-  authorizer_id = aws_api_gateway_authorizer.cognito.id
-
-  request_parameters = {
-    "method.request.header.Authorization" = true
-  }
+  authorization = "NONE"
 }
 
 # /swagger.json resource and GET method
@@ -215,8 +210,23 @@ resource "aws_api_gateway_method" "swaggerui_proxy_get" {
   }
 }
 
-# Lambda integrations for all protected endpoints
-# Add in more lambda integrated endpoints here
+# Add root path GET method (for "/")
+resource "aws_api_gateway_method" "root_get" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_rest_api.main.root_resource_id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+# Add root path OPTIONS method
+resource "aws_api_gateway_method" "root_options" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_rest_api.main.root_resource_id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+# Lambda integrations for protected endpoints
 resource "aws_api_gateway_integration" "lambda_integration" {
   for_each = {
     "projects_get"        = aws_api_gateway_method.projects_get
@@ -224,8 +234,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
     "projects_proxy_get"  = aws_api_gateway_method.projects_proxy_get
     "projects_proxy_put"  = aws_api_gateway_method.projects_proxy_put
     "projects_filter_get" = aws_api_gateway_method.projects_filter_get
-    "user_get"            = aws_api_gateway_method.user_get
-    "verify_get"          = aws_api_gateway_method.verify_get
+    "user_get"           = aws_api_gateway_method.user_get
   }
 
   rest_api_id             = aws_api_gateway_rest_api.main.id
@@ -236,11 +245,23 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_function_invoke_arn}/invocations"
 }
 
-# Mock integrations for Swagger endpoints
+# Lambda integration for verify endpoint (unauthenticated)
+resource "aws_api_gateway_integration" "verify_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.verify_resource.id
+  http_method             = aws_api_gateway_method.verify_get.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_function_invoke_arn}/invocations"
+}
+
+# Mock integrations for Swagger endpoints and root
 resource "aws_api_gateway_integration" "mock_integration" {
   for_each = {
-    "swagger_json"    = aws_api_gateway_method.swagger_json_get
-    "swaggerui"       = aws_api_gateway_method.swaggerui_get
+    "root"           = aws_api_gateway_method.root_get
+    "root_options"   = aws_api_gateway_method.root_options
+    "swagger_json"   = aws_api_gateway_method.swagger_json_get
+    "swaggerui"      = aws_api_gateway_method.swaggerui_get
     "swaggerui_proxy" = aws_api_gateway_method.swaggerui_proxy_get
   }
 
@@ -250,7 +271,9 @@ resource "aws_api_gateway_integration" "mock_integration" {
   type        = "MOCK"
 
   request_templates = {
-    "application/json" = "{\"statusCode\": 200}"
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
   }
 }
 
@@ -260,6 +283,7 @@ resource "aws_api_gateway_deployment" "main" {
 
   depends_on = [
     aws_api_gateway_integration.lambda_integration,
+    aws_api_gateway_integration.verify_integration,
     aws_api_gateway_integration.mock_integration
   ]
 
@@ -377,4 +401,44 @@ resource "aws_api_gateway_base_path_mapping" "api" {
   api_id      = aws_api_gateway_rest_api.main.id
   stage_name  = aws_api_gateway_stage.main.stage_name
   domain_name = aws_api_gateway_domain_name.api.domain_name
+}
+
+# Add CORS response for OPTIONS methods
+resource "aws_api_gateway_method_response" "options_200" {
+  for_each = {
+    "root_options" = aws_api_gateway_method.root_options
+  }
+
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = each.value.resource_id
+  http_method = each.value.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+# Add CORS integration response for OPTIONS methods
+resource "aws_api_gateway_integration_response" "options_integration_response" {
+  for_each = {
+    "root_options" = aws_api_gateway_method.root_options
+  }
+
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = each.value.resource_id
+  http_method = each.value.http_method
+  status_code = aws_api_gateway_method_response.options_200[each.key].status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [
+    aws_api_gateway_method_response.options_200
+  ]
 }
