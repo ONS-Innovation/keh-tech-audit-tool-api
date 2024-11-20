@@ -16,13 +16,7 @@ variable "aws_secret_access_key" {
 variable "service_subdomain" {
   description = "Service subdomain"
   type        = string
-  default     = "tech-audit-tool-data-api"
-}
-
-variable "service_title" {
-  description = "Service title"
-  type        = string
-  default     = "Tech Audit Tool API"
+  default     = "tech-audit-tool-api"
 }
 
 variable "domain" {
@@ -55,29 +49,26 @@ variable "business_owner_tag" {
   default     = "DST"
 }
 
-variable "domain_extension" {
-  description = "Domain extension"
+variable "cognito_pool_id" {
+  description = "Cognito User Pool ID"
   type        = string
-  default     = "aws.onsdigital.uk"
+  default     = "TO_BE_SET"
 }
 
-variable "lambda_function_name" {
-  description = "Name of the Lambda function to integrate with API Gateway"
+variable "cognito_client_id" {
+  description = "Cognito Client ID"
   type        = string
+  default     = "TO_BE_SET"
 }
 
-variable "lambda_function_invoke_arn" {
-  description = "Full ARN of the Lambda function (e.g., arn:aws:lambda:REGION:ACCOUNT:function:FUNCTION_NAME)"
+variable "cognito_secret_id" {
+  description = "Cognito Client Secret ID"
   type        = string
+  default     = "TO_BE_SET"
 }
 
-variable "cognito_user_pool_arn" {
-  description = "ARN of the Cognito User Pool for API authorization"
+variable "redirect_uri" {
+  description = "Redirect URI for Cognito"
   type        = string
-}
-
-variable "stage_name" {
-  description = "Stage name for API Gateway deployment (e.g., dev, prod)"
-  type        = string
-  default     = "dev"
+  default     = "TO_BE_SET"
 }

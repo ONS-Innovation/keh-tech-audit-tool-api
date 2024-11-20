@@ -49,3 +49,8 @@ Follow these steps:
     - https://tech-audit-tool-api-test.sdp-sandbox.aws.onsdigital.uk
     - https://0123456789.execute-api.eu-west-2.amazonaws.com/dev
 5. Click `Save changes`.
+
+
+# Secrets and Environments
+
+The app in aws_lambda_script uses environment variables set in the Dockerfile.

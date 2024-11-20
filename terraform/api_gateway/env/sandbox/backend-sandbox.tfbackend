@@ -1,4 +1,0 @@
-bucket         = "sdp-sandbox-tf-state"
-key            = "sdp-sandbox-ecs-tech-audit-tool-api-gateway/terraform.tfstate"
-region         = "eu-west-2"
-dynamodb_table = "terraform-state-lock"

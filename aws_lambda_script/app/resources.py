@@ -509,7 +509,7 @@ cognito_settings = cognito_data
 COGNITO_CLIENT_ID = cognito_settings["COGNITO_CLIENT_ID"]
 COGNITO_CLIENT_SECRET = cognito_settings["COGNITO_CLIENT_SECRET"]
 REDIRECT_URI = cognito_settings["REDIRECT_URI"]
-# REDIRECT_URI = 'http://localhost:8000/api/verify'
+# REDIRECT_URI = 'http://localhost:8000/api/v1/verify'
 
 verifyParser = reqparse.RequestParser()
 verifyParser.add_argument(
