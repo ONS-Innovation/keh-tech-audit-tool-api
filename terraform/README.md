@@ -51,6 +51,56 @@ Follow these steps:
 5. Click `Save changes`.
 
 
-# Secrets and Environments
+#### Secrets and Environments
 
 The app in aws_lambda_script uses environment variables set in the Dockerfile.
+
+
+### ecs-app-user inline policy
+
+```json
+
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"apigateway:GET",
+				"apigateway:POST",
+				"apigateway:PUT",
+				"apigateway:PATCH",
+				"apigateway:DELETE",
+				"apigateway:*"
+			],
+			"Resource": [
+				"arn:aws:apigateway:eu-west-2::/*"
+			]
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"acm:RequestCertificate",
+				"acm:DescribeCertificate",
+				"acm:ListCertificates",
+				"acm:DeleteCertificate",
+				"acm:AddTagsToCertificate",
+				"acm:RemoveTagsFromCertificate",
+				"acm:ListTagsForCertificate"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"route53:ChangeResourceRecordSets",
+				"route53:ListHostedZones",
+				"route53:GetHostedZone",
+				"route53:ListResourceRecordSets"
+			],
+			"Resource": "*"
+		}
+	]
+}
+
+```

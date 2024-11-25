@@ -14,6 +14,39 @@ data "aws_route53_zone" "domain" {
   name = "${var.domain}.${var.domain_extension}"
 }
 
+# Add these locals at the top of the file, after the terraform block
+locals {
+  mock_integrations = {
+    "root" = {
+      resource_id = aws_api_gateway_rest_api.main.root_resource_id
+      http_method = "GET"
+    }
+    "root_options" = {
+      resource_id = aws_api_gateway_rest_api.main.root_resource_id
+      http_method = "OPTIONS"
+    }
+    "swagger_json" = {
+      resource_id = aws_api_gateway_resource.swagger_json.id
+      http_method = "GET"
+    }
+    "swaggerui" = {
+      resource_id = aws_api_gateway_resource.swaggerui.id
+      http_method = "GET"
+    }
+    "swaggerui_proxy" = {
+      resource_id = aws_api_gateway_resource.swaggerui_proxy.id
+      http_method = "GET"
+    }
+  }
+
+  options_methods = {
+    "root_options" = {
+      resource_id = aws_api_gateway_rest_api.main.root_resource_id
+      http_method = "OPTIONS"
+    }
+  }
+}
+
 # Create the API Gateway REST API
 resource "aws_api_gateway_rest_api" "main" {
   name = "${var.domain}-${var.service_subdomain}"
@@ -257,24 +290,19 @@ resource "aws_api_gateway_integration" "verify_integration" {
 
 # Mock integrations for Swagger endpoints and root
 resource "aws_api_gateway_integration" "mock_integration" {
-  for_each = {
-    "root"           = aws_api_gateway_method.root_get
-    "root_options"   = aws_api_gateway_method.root_options
-    "swagger_json"   = aws_api_gateway_method.swagger_json_get
-    "swaggerui"      = aws_api_gateway_method.swaggerui_get
-    "swaggerui_proxy" = aws_api_gateway_method.swaggerui_proxy_get
-  }
+  for_each = local.mock_integrations
 
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = each.value.resource_id
-  http_method = each.value.http_method
-  type        = "MOCK"
-
-  request_templates = {
+  rest_api_id          = aws_api_gateway_rest_api.main.id
+  resource_id          = each.value.resource_id
+  http_method          = each.value.http_method
+  type                 = "MOCK"
+  request_templates    = {
     "application/json" = jsonencode({
       statusCode = 200
     })
   }
+  passthrough_behavior = "WHEN_NO_MATCH"
+  timeout_milliseconds = 29000
 }
 
 # API Gateway Deployment
@@ -423,15 +451,12 @@ resource "aws_api_gateway_method_response" "options_200" {
 
 # Add CORS integration response for OPTIONS methods
 resource "aws_api_gateway_integration_response" "options_integration_response" {
-  for_each = {
-    "root_options" = aws_api_gateway_method.root_options
-  }
+  for_each = local.options_methods
 
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = each.value.resource_id
-  http_method = each.value.http_method
-  status_code = aws_api_gateway_method_response.options_200[each.key].status_code
-
+  rest_api_id         = aws_api_gateway_rest_api.main.id
+  resource_id         = each.value.resource_id
+  http_method         = each.value.http_method
+  status_code         = "200"
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
@@ -439,6 +464,7 @@ resource "aws_api_gateway_integration_response" "options_integration_response" {
   }
 
   depends_on = [
+    aws_api_gateway_integration.mock_integration,
     aws_api_gateway_method_response.options_200
   ]
 }

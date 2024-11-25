@@ -1,4 +1,4 @@
 bucket         = "sdp-dev-tf-state"
-key            = "sdp-dev-tech-audit-tool-api-store/terraform.tfstate"
+key            = "sdp-dev-ecs-tech-audit-tool-api-store/terraform.tfstate"
 region         = "eu-west-2"
 dynamodb_table = "terraform-state-lock"

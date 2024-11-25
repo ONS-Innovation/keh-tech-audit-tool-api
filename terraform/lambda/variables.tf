@@ -46,7 +46,7 @@ variable "container_ver" {
 variable "image_tag" {
   description = "Tag of the container image to deploy"
   type        = string
-  default     = "latest"
+  default     = "v0.0.1"
 }
 
 variable "tech_audit_data_bucket_name" {
@@ -70,4 +70,11 @@ variable "business_owner_tag" {
   description = "Business Owner"
   type        = string
   default     = "DST"
+}
+
+
+variable "ecr_repository_name" {
+  description = "Name of the ECR repository"
+  type        = string
+  default     = "tech-audit-tool-lambda-api"
 }

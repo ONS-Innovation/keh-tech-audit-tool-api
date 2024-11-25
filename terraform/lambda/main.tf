@@ -9,24 +9,7 @@ terraform {
 
 }
 
-resource "aws_lambda_function" "tech_audit_lambda" {
-  function_name = "${var.domain}-${var.service_subdomain}-lambda"
-  package_type  = "Image"
-  image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}:${var.image_tag}"
-  
-  role = aws_iam_role.lambda_execution_role.arn
-
-  memory_size = 128
-  timeout     = 30
-
-  environment {
-    variables = {
-      BUCKET_NAME = var.tech_audit_data_bucket_name
-    }
-  }
-}
-
-# IAM role for Lambda
+# 1. First create the IAM role
 resource "aws_iam_role" "lambda_execution_role" {
   name = "${var.domain}-${var.service_subdomain}-lambda-role-${var.container_ver}"
 
@@ -44,13 +27,47 @@ resource "aws_iam_role" "lambda_execution_role" {
   })
 }
 
-# Basic Lambda execution policy
+# 2. Attach basic execution policy
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   role       = aws_iam_role.lambda_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  depends_on = [aws_iam_role.lambda_execution_role]
 }
 
-# S3 access policy for Lambda
+# 3. Add ECR policy
+resource "aws_iam_role_policy" "lambda_ecr_policy" {
+  name = "${var.domain}-${var.service_subdomain}-lambda-ecr-policy"
+  role = aws_iam_role.lambda_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = [
+          "arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/${var.ecr_repository_name}",
+          "arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/${var.ecr_repository_name}/*"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+  depends_on = [aws_iam_role.lambda_execution_role]
+}
+
+# 4. Add S3 access policy
 resource "aws_iam_role_policy" "lambda_s3_access" {
   name = "${var.domain}-${var.service_subdomain}-lambda-s3-policy"
   role = aws_iam_role.lambda_execution_role.id
@@ -72,9 +89,10 @@ resource "aws_iam_role_policy" "lambda_s3_access" {
       }
     ]
   })
+  depends_on = [aws_iam_role.lambda_execution_role]
 }
 
-# Additional policy for Secrets Manager, CloudWatch Logs, API Gateway, and S3
+# 5. Add additional permissions
 resource "aws_iam_role_policy" "lambda_additional_permissions" {
   name = "${var.domain}-${var.service_subdomain}-lambda-additional-policy"
   role = aws_iam_role.lambda_execution_role.id
@@ -133,4 +151,30 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
       }
     ]
   })
+  depends_on = [aws_iam_role.lambda_execution_role]
+}
+
+# 6. Finally, create the Lambda function
+resource "aws_lambda_function" "tech_audit_lambda" {
+  function_name = "${var.domain}-${var.service_subdomain}-lambda"
+  package_type  = "Image"
+  image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}:${var.image_tag}"
+  
+  role = aws_iam_role.lambda_execution_role.arn
+
+  memory_size = 128
+  timeout     = 30
+
+  environment {
+    variables = {
+      BUCKET_NAME = var.tech_audit_data_bucket_name
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.lambda_ecr_policy,
+    aws_iam_role_policy.lambda_s3_access,
+    aws_iam_role_policy.lambda_additional_permissions,
+    aws_iam_role_policy_attachment.lambda_basic_execution
+  ]
 } 

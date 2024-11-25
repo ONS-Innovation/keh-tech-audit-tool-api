@@ -20,7 +20,7 @@ variable "service_subdomain" {
 }
 
 variable "domain" {
-  description = "Domain"
+  description = "Domain name (e.g., sdp-dev)"
   type        = string
   default     = "sdp-dev"
 }
@@ -47,4 +47,9 @@ variable "business_owner_tag" {
   description = "Business Owner"
   type        = string
   default     = "DST"
+}
+
+variable "container_ver" {
+  description = "Container version"
+  type        = string
 }
