@@ -12,9 +12,8 @@ htmlcov/
 # Terraform
 .terraform/
 *.tfstate
-*.tfstate.*
+*.tfstate.json
 *.tfvars
-!env/*/sandbox.tfvars
 .terraform.lock.hcl
 
 
