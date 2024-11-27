@@ -76,5 +76,5 @@ variable "business_owner_tag" {
 variable "ecr_repository_name" {
   description = "Name of the ECR repository"
   type        = string
-  default     = "tech-audit-tool-lambda-api"
+  default     = "tech-audit-tool-api"
 }

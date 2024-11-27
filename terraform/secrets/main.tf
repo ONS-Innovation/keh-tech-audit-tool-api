@@ -2,16 +2,14 @@ terraform {
   backend "s3" {
     # Backend is selected using terraform init -backend-config=path/to/backend-<env>.tfbackend
     # bucket         = "sdp-dev-tf-state"
-    # key            = "sdp-sandbox-ecs-tech-audit-tool-api-lambda/terraform.tfstate"
+    # key            = "sdp-dev-ecs-tech-audit-tool-api-lambda/terraform.tfstate"
     # region         = "eu-west-2"
     # dynamodb_table = "terraform-state-lock"
   }
-
 }
 
-
 resource "aws_secretsmanager_secret" "cognito_secrets" {
-  name = "${var.service_subdomain}/secrets"
+  name = "${var.domain}-${var.service_subdomain}/secrets"
   
   tags = {
     Environment = var.domain

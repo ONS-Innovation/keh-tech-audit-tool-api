@@ -104,3 +104,7 @@ The app in aws_lambda_script uses environment variables set in the Dockerfile.
 }
 
 ```
+
+Configure CloudWatch logs in Lambda function to point to the log group made in the API Gateway terraform.
+
+Lambda > Configuration > Monitoring and Operational Tools > Logging Configuration > Edit > CloudWatch Log Group > Select the log group created in the API Gateway terraform.

@@ -2,7 +2,7 @@ terraform {
   backend "s3" {
     # Backend is selected using terraform init -backend-config=path/to/backend-<env>.tfbackend
     # bucket         = "sdp-dev-tf-state"
-    # key            = "sdp-sandbox-ecs-tech-audit-tool-api-gateway/terraform.tfstate"
+    # key            = "sdp-dev-tech-audit-tool-api-gateway/terraform.tfstate"
     # region         = "eu-west-2"
     # dynamodb_table = "terraform-state-lock"
   }
@@ -12,39 +12,6 @@ terraform {
 # Add these data sources at the top of the file, after the terraform block
 data "aws_route53_zone" "domain" {
   name = "${var.domain}.${var.domain_extension}"
-}
-
-# Add these locals at the top of the file, after the terraform block
-locals {
-  mock_integrations = {
-    "root" = {
-      resource_id = aws_api_gateway_rest_api.main.root_resource_id
-      http_method = "GET"
-    }
-    "root_options" = {
-      resource_id = aws_api_gateway_rest_api.main.root_resource_id
-      http_method = "OPTIONS"
-    }
-    "swagger_json" = {
-      resource_id = aws_api_gateway_resource.swagger_json.id
-      http_method = "GET"
-    }
-    "swaggerui" = {
-      resource_id = aws_api_gateway_resource.swaggerui.id
-      http_method = "GET"
-    }
-    "swaggerui_proxy" = {
-      resource_id = aws_api_gateway_resource.swaggerui_proxy.id
-      http_method = "GET"
-    }
-  }
-
-  options_methods = {
-    "root_options" = {
-      resource_id = aws_api_gateway_rest_api.main.root_resource_id
-      http_method = "OPTIONS"
-    }
-  }
 }
 
 # Create the API Gateway REST API
@@ -251,17 +218,13 @@ resource "aws_api_gateway_method" "root_get" {
   authorization = "NONE"
 }
 
-# Add root path OPTIONS method
-resource "aws_api_gateway_method" "root_options" {
-  rest_api_id   = aws_api_gateway_rest_api.main.id
-  resource_id   = aws_api_gateway_rest_api.main.root_resource_id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
-
 # Lambda integrations for protected endpoints
 resource "aws_api_gateway_integration" "lambda_integration" {
   for_each = {
+    "root_get"           = aws_api_gateway_method.root_get
+    "swagger_json_get"   = aws_api_gateway_method.swagger_json_get
+    "swaggerui_get"      = aws_api_gateway_method.swaggerui_get
+    "swaggerui_proxy_get" = aws_api_gateway_method.swaggerui_proxy_get
     "projects_get"        = aws_api_gateway_method.projects_get
     "projects_post"       = aws_api_gateway_method.projects_post
     "projects_proxy_get"  = aws_api_gateway_method.projects_proxy_get
@@ -288,31 +251,13 @@ resource "aws_api_gateway_integration" "verify_integration" {
   uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_function_invoke_arn}/invocations"
 }
 
-# Mock integrations for Swagger endpoints and root
-resource "aws_api_gateway_integration" "mock_integration" {
-  for_each = local.mock_integrations
-
-  rest_api_id          = aws_api_gateway_rest_api.main.id
-  resource_id          = each.value.resource_id
-  http_method          = each.value.http_method
-  type                 = "MOCK"
-  request_templates    = {
-    "application/json" = jsonencode({
-      statusCode = 200
-    })
-  }
-  passthrough_behavior = "WHEN_NO_MATCH"
-  timeout_milliseconds = 29000
-}
-
 # API Gateway Deployment
 resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
 
   depends_on = [
     aws_api_gateway_integration.lambda_integration,
-    aws_api_gateway_integration.verify_integration,
-    aws_api_gateway_integration.mock_integration
+    aws_api_gateway_integration.verify_integration
   ]
 
   lifecycle {
@@ -429,42 +374,4 @@ resource "aws_api_gateway_base_path_mapping" "api" {
   api_id      = aws_api_gateway_rest_api.main.id
   stage_name  = aws_api_gateway_stage.main.stage_name
   domain_name = aws_api_gateway_domain_name.api.domain_name
-}
-
-# Add CORS response for OPTIONS methods
-resource "aws_api_gateway_method_response" "options_200" {
-  for_each = {
-    "root_options" = aws_api_gateway_method.root_options
-  }
-
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = each.value.resource_id
-  http_method = each.value.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods" = true
-    "method.response.header.Access-Control-Allow-Origin"  = true
-  }
-}
-
-# Add CORS integration response for OPTIONS methods
-resource "aws_api_gateway_integration_response" "options_integration_response" {
-  for_each = local.options_methods
-
-  rest_api_id         = aws_api_gateway_rest_api.main.id
-  resource_id         = each.value.resource_id
-  http_method         = each.value.http_method
-  status_code         = "200"
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-  }
-
-  depends_on = [
-    aws_api_gateway_integration.mock_integration,
-    aws_api_gateway_method_response.options_200
-  ]
 }

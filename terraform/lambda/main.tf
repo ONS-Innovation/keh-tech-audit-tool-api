@@ -2,7 +2,7 @@ terraform {
   backend "s3" {
     # Backend is selected using terraform init -backend-config=path/to/backend-<env>.tfbackend
     # bucket         = "sdp-dev-tf-state"
-    # key            = "sdp-sandbox-ecs-tech-audit-tool-api-lambda/terraform.tfstate"
+    # key            = "sdp-dev-ecs-tech-audit-tool-api-lambda/terraform.tfstate"
     # region         = "eu-west-2"
     # dynamodb_table = "terraform-state-lock"
   }
@@ -36,7 +36,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 
 # 3. Add ECR policy
 resource "aws_iam_role_policy" "lambda_ecr_policy" {
-  name = "${var.domain}-${var.service_subdomain}-lambda-ecr-policy"
+  name = "${var.domain}-${var.service_subdomain}-policy"
   role = aws_iam_role.lambda_execution_role.id
 
   policy = jsonencode({
@@ -94,7 +94,7 @@ resource "aws_iam_role_policy" "lambda_s3_access" {
 
 # 5. Add additional permissions
 resource "aws_iam_role_policy" "lambda_additional_permissions" {
-  name = "${var.domain}-${var.service_subdomain}-lambda-additional-policy"
+  name = "${var.domain}-${var.service_subdomain}-policy-2"
   role = aws_iam_role.lambda_execution_role.id
 
   policy = jsonencode({
@@ -177,4 +177,29 @@ resource "aws_lambda_function" "tech_audit_lambda" {
     aws_iam_role_policy.lambda_additional_permissions,
     aws_iam_role_policy_attachment.lambda_basic_execution
   ]
+}
+
+# In your Lambda module, add this after the Lambda role is created
+resource "aws_ecr_repository_policy" "lambda_ecr_access" {
+  repository = var.ecr_repository_name  # This should be passed from the storage module output
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "LambdaECRAccess"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+          AWS = aws_iam_role.lambda_execution_role.arn
+        }
+        Action = [
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer"
+        ]
+      }
+    ]
+  })
+
+  depends_on = [aws_iam_role.lambda_execution_role]
 } 

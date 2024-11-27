@@ -13,8 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ /var/task/app/
 COPY main.py /var/task/
 
-ENV TECH_AUDIT_DATA_BUCKET=sdp-dev-tech-audit-tool-api-tool
-ENV TECH_AUDIT_SECRET_MANAGER=sdp-dev-tech-audit-tool-api-cognito-secrets
+ENV TECH_AUDIT_DATA_BUCKET=sdp-dev-tech-audit-tool-api
+ENV TECH_AUDIT_SECRET_MANAGER=sdp-dev-tech-audit-tool-api/secrets
 ENV AWS_DEFAULT_REGION=eu-west-2
 ENV AWS_COGNITO_TOKEN_URL=https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/oauth2/token
 

@@ -26,9 +26,9 @@ make install-dev
 Set environment variables:
 
 ```bash
-export TECH_AUDIT_DATA_BUCKET='keh-tech-audit-tool'
-export TECH_AUDIT_SECRET_MANAGER='tech-audit-tool-api/secrets'
-export AWS_COGNITO_TOKEN_URL='https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token'
+export TECH_AUDIT_DATA_BUCKET='sdp-dev-tech-audit-tool-api-tool'
+export TECH_AUDIT_SECRET_MANAGER='sdp-dev-tech-audit-tool-api-cognito-secrets'
+export AWS_COGNITO_TOKEN_URL='https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/oauth2/token'
 ```
 
 Go to the aws_lambda_script directory
