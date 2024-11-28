@@ -218,6 +218,25 @@ resource "aws_api_gateway_method" "root_get" {
   authorization = "NONE"
 }
 
+# /api/v1/refresh resource and POST method
+resource "aws_api_gateway_resource" "refresh_resource" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.api_v1_resource.id
+  path_part   = "refresh"
+}
+
+resource "aws_api_gateway_method" "refresh_post" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.refresh_resource.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+
+  request_parameters = {
+    "method.request.header.Authorization" = true
+  }
+}
+
 # Lambda integrations for protected endpoints
 resource "aws_api_gateway_integration" "lambda_integration" {
   for_each = {
@@ -231,6 +250,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
     "projects_proxy_put"  = aws_api_gateway_method.projects_proxy_put
     "projects_filter_get" = aws_api_gateway_method.projects_filter_get
     "user_get"           = aws_api_gateway_method.user_get
+    "refresh_post"        = aws_api_gateway_method.refresh_post
   }
 
   rest_api_id             = aws_api_gateway_rest_api.main.id

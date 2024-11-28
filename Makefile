@@ -13,7 +13,7 @@ clean: ## Clean the temporary files.
 
 .PHONY: black
 black: ## Run black.
-	poetry run black aws_lambda_script --check || true
+	poetry run black aws_lambda_script || true
 
 .PHONY: ruff
 ruff: ## Run ruff without fixing.

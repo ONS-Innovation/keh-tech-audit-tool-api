@@ -26,8 +26,8 @@ make install-dev
 Set environment variables:
 
 ```bash
-export TECH_AUDIT_DATA_BUCKET='sdp-dev-tech-audit-tool-api-tool'
-export TECH_AUDIT_SECRET_MANAGER='sdp-dev-tech-audit-tool-api-cognito-secrets'
+export TECH_AUDIT_DATA_BUCKET='sdp-dev-tech-audit-tool-api'
+export TECH_AUDIT_SECRET_MANAGER='sdp-dev-tech-audit-tool-api/secrets'
 export AWS_COGNITO_TOKEN_URL='https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/oauth2/token'
 ```
 
