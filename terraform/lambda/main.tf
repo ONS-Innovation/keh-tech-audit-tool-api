@@ -2,7 +2,7 @@ terraform {
   backend "s3" {
     # Backend is selected using terraform init -backend-config=path/to/backend-<env>.tfbackend
     # bucket         = "sdp-dev-tf-state"
-    # key            = "sdp-dev-ecs-tech-audit-tool-api-lambda/terraform.tfstate"
+    # key            = "sdp-dev-tech-audit-tool-api-lambda/terraform.tfstate"
     # region         = "eu-west-2"
     # dynamodb_table = "terraform-state-lock"
   }
@@ -11,7 +11,7 @@ terraform {
 
 # 1. First create the IAM role
 resource "aws_iam_role" "lambda_execution_role" {
-  name = "${var.domain}-${var.service_subdomain}-lambda-role-${var.container_ver}"
+  name = "${var.domain}-${var.service_subdomain}-lambda-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -154,7 +154,7 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
   depends_on = [aws_iam_role.lambda_execution_role]
 }
 
-# 6. Finally, create the Lambda function
+# 6. Create the Lambda function
 resource "aws_lambda_function" "tech_audit_lambda" {
   function_name = "${var.domain}-${var.service_subdomain}-lambda"
   package_type  = "Image"
@@ -167,7 +167,8 @@ resource "aws_lambda_function" "tech_audit_lambda" {
 
   environment {
     variables = {
-      BUCKET_NAME = var.tech_audit_data_bucket_name
+      TECH_AUDIT_DATA_BUCKET = var.tech_audit_data_bucket_name
+      TECH_AUDIT_SECRET_MANAGER = var.tech_audit_secret_manager_name
     }
   }
 
@@ -179,9 +180,9 @@ resource "aws_lambda_function" "tech_audit_lambda" {
   ]
 }
 
-# In your Lambda module, add this after the Lambda role is created
+# 7. Add ECR policy after the lambda function is created
 resource "aws_ecr_repository_policy" "lambda_ecr_access" {
-  repository = var.ecr_repository_name  # This should be passed from the storage module output
+  repository = var.ecr_repository_name
 
   policy = jsonencode({
     Version = "2012-10-17"

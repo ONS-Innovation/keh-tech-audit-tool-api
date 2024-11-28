@@ -39,19 +39,26 @@ variable "ecr_repository" {
 variable "container_ver" {
   description = "Container tag"
   type        = string
-  default     = "v0.0.1"
+  default     = "v0.0.2"
 
 }
 
 variable "image_tag" {
   description = "Tag of the container image to deploy"
   type        = string
-  default     = "v0.0.1"
+  default     = "v0.0.2"
 }
 
 variable "tech_audit_data_bucket_name" {
   description = "Name of the S3 bucket for tech audit data"
   type        = string
+  default     = "tech-audit-tool-data"
+}
+
+variable "tech_audit_secret_manager_name" {
+  description = "Name of the Secrets Manager secret for tech audit data"
+  type        = string
+  default     = "tech-audit-tool-data"
 }
 
 variable "project_tag" {
