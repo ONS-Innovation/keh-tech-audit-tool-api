@@ -54,15 +54,3 @@ variable "container_ver" {
   type        = string
   default     = "v0.0.1"
 }
-
-variable "lambda_name" {
-  description = "Name of the Lambda function (without environment prefix)"
-  type        = string
-  default     = "tech-audit-tool-api"
-}
-
-variable "ecr_repository_name" {
-  description = "Name of the existing ECR repository"
-  type        = string
-  default     = "tech-audit-tool-api"
-}
