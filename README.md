@@ -1,5 +1,5 @@
 
-# KEH | Tech Audit Tool - API
+# Tech Audit Tool - API
 
 A Flask and flask-restx API for the tech audit tool.
 
@@ -8,7 +8,7 @@ A Flask and flask-restx API for the tech audit tool.
 Clone the project
 
 ```bash
-git clone https://github.com/ONS-Innovation/keh-tech-audit-tool-api
+git clone https://github.com/ONS-Innovation/keh-tech-audit-tool-api.git
 ```
 
 Install dependencies
@@ -195,7 +195,7 @@ Send JSON in this format:
         "main": [],
         "others": ["List of strings"]
       },
-      "CICD": {
+      "cicd": {
         "main": [],
         "others": ["List of strings"]
       },
@@ -207,7 +207,7 @@ Send JSON in this format:
     "stage":"Development"
   }
 ```
-Create's a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
+Create's a project. If the languages, database, frameworks, cicd, infrastructure or source control, is not in the array_data.json bucket then it is added.
 
 
 ### Get autocomplete from string [REMOVED]
@@ -300,7 +300,7 @@ Send JSON in this format:
         "main": [],
         "others": ["List of strings"]
       },
-      "CICD": {
+      "cicd": {
         "main": [],
         "others": ["List of strings"]
       },
@@ -312,7 +312,7 @@ Send JSON in this format:
     "stage":"Development"
   }
 ```
-Edits a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
+Edits a project. If the languages, database, frameworks, cicd, infrastructure or source control, is not in the array_data.json bucket then it is added.
 
 
 ## Authorization with Cognito and API Gateway

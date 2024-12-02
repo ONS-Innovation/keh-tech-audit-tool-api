@@ -5,3 +5,4 @@ domain                            = "sdp-dev"
 ecr_repository                    = "tech-audit-tool-api" # ECR repository name where the lambda image is stored
 tech_audit_data_bucket_name       = "sdp-dev-tech-audit-tool-api" # S3 bucket name where the tech audit data is stored
 tech_audit_secret_manager_name    = "sdp-dev-tech-audit-tool-api/secrets" # Secrets Manager secret name for tech audit data
+aws_cognito_token_url             = "https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/oauth2/token"

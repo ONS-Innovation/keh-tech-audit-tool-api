@@ -1,15 +1,3 @@
-Example sandbox.tfvars file:
-
-```
-aws_account_id        = "<your_account_id>"
-aws_access_key_id     = "<your_access_key_id>"
-aws_secret_access_key = "<your_secret_access_key>"
-domain                = "sdp-sandbox"
-cognito_user_pool_arn = "arn:aws:cognito-idp:REGION:ACCOUNT_ID:userpool/USER_POOL_ID"
-lambda_function_name  = "LAMBDA_FUNCTION_NAME"
-lambda_function_invoke_arn = "arn:aws:lambda:REGION:ACCOUNT_ID:function:LAMBDA_FUNCTION_NAME"
-```
-
 ## Adding new API Gateway endpoints
 
 ### Adding a resource (/api/v1/<resource>)
@@ -55,9 +43,7 @@ resource "aws_api_gateway_method" "<resource_name>_get" {
 ### Adding the integration for the method
 Then add in the integration for the method.
 
-```
-# Lambda integrations for all protected endpoints
-# Add in more lambda integrated endpoints here
+```bash
 resource "aws_api_gateway_integration" "lambda_integration" {
   for_each = {
     "projects_get"        = aws_api_gateway_method.projects_get

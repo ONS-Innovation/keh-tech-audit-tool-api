@@ -1,7 +1,11 @@
-FROM public.ecr.aws/lambda/python:3.12
+# Use an official Python runtime as a parent image
+FROM python:3.12-slim
 
 # Set the working directory in the container
 WORKDIR /var/task
+
+# Create a non-root user and group
+RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 # Copy the requirements.txt first to leverage Docker's cache for dependencies
 COPY requirements.txt .
@@ -13,11 +17,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ /var/task/app/
 COPY main.py /var/task/
 
-ENV TECH_AUDIT_DATA_BUCKET=sdp-dev-tech-audit-tool-api
-ENV TECH_AUDIT_SECRET_MANAGER=sdp-dev-tech-audit-tool-api/secrets
-ENV AWS_DEFAULT_REGION=eu-west-2
-ENV AWS_COGNITO_TOKEN_URL=https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/oauth2/token
+# Change ownership of the application files to the non-root user
+RUN chown -R appuser:appuser /var/task
 
+# Switch to non-root user
+USER appuser
 
 # The CMD specifies the handler to use in AWS Lambda
 CMD ["main.lambda_handler"]

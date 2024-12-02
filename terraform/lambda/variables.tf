@@ -85,3 +85,9 @@ variable "ecr_repository_name" {
   type        = string
   default     = "tech-audit-tool-api"
 }
+
+variable "aws_cognito_token_url" {
+  description = "AWS Cognito token URL"
+  type        = string
+  default     = "TO_BE_SET"
+}

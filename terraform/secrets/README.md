@@ -8,7 +8,7 @@ aws_secret_access_key = "<SECRET_ACCESS_KEY>"
 domain                = "sdp-dev"
 ```
 
-Optional variables that can be set later:
+Mandatory variables that can be set later:
 ```
 cognito_pool_id       = "<COGNITO_POOL_ID>"
 cognito_client_id     = "<COGNITO_CLIENT_ID>"

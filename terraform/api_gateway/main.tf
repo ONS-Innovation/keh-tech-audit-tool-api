@@ -9,7 +9,6 @@ terraform {
 
 }
 
-# Add these data sources at the top of the file, after the terraform block
 data "aws_route53_zone" "domain" {
   name = "${var.domain}.${var.domain_extension}"
 }
@@ -33,6 +32,7 @@ resource "aws_api_gateway_authorizer" "cognito" {
   provider_arns   = [var.cognito_user_pool_arn]
   identity_source = "method.request.header.Authorization"
 }
+
 # Root API resource
 resource "aws_api_gateway_resource" "api_resource" {
   rest_api_id = aws_api_gateway_rest_api.main.id

@@ -61,10 +61,11 @@ variable "cognito_client_id" {
   default     = "TO_BE_SET"
 }
 
-variable "cognito_secret_id" {
+variable "cognito_client_secret" {
   description = "Cognito Client Secret ID"
   type        = string
   default     = "TO_BE_SET"
+  sensitive   = true
 }
 
 variable "redirect_uri" {

@@ -23,7 +23,7 @@ resource "aws_secretsmanager_secret_version" "cognito_secrets_version" {
   secret_string = jsonencode({
     COGNITO_POOL_ID     = var.cognito_pool_id
     COGNITO_CLIENT_ID   = var.cognito_client_id
-    COGNITO_CLIENT_SECRET   = var.cognito_secret_id
+    COGNITO_CLIENT_SECRET   = var.cognito_client_secret
     REDIRECT_URI        = var.redirect_uri
   })
 }
