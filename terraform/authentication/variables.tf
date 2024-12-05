@@ -60,3 +60,38 @@ variable "domain_extension" {
   type        = string
   default     = "aws.onsdigital.uk"
 }
+
+variable "token_validity_values" {
+  description = "Token validity duration values for Cognito tokens"
+  type = object({
+    refresh_token = number
+    access_token  = number
+    id_token      = number
+  })
+  default = {
+    refresh_token = 30
+    access_token  = 1
+    id_token      = 1
+  }
+}
+
+variable "token_validity_units" {
+  description = "Time units for token validity durations"
+  type = object({
+    refresh_token = string
+    access_token  = string
+    id_token      = string
+  })
+  default = {
+    refresh_token = "days"
+    access_token  = "days"
+    id_token      = "days"
+  }
+}
+
+variable "callback_urls" {
+  description = "List of allowed callback URLs for the Cognito user pool client"
+  type        = list(string)
+  default     = []
+}
+

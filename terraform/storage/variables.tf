@@ -54,3 +54,9 @@ variable "container_ver" {
   type        = string
   default     = "v0.0.1"
 }
+
+variable "ecr_repository_name" {
+  description = "ECR repository name"
+  type        = string
+  default     = "tech-audit-tool-api"
+}

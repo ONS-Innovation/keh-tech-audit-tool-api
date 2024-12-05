@@ -94,7 +94,7 @@ resource "aws_iam_role_policy" "lambda_s3_access" {
 
 # 5. Add additional permissions
 resource "aws_iam_role_policy" "lambda_additional_permissions" {
-  name = "${var.domain}-${var.service_subdomain}-policy-2"
+  name = "${var.domain}-${var.service_subdomain}-policy-additional"
   role = aws_iam_role.lambda_execution_role.id
 
   policy = jsonencode({
@@ -156,7 +156,7 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
 
 # 6. Create the Lambda function
 resource "aws_lambda_function" "tech_audit_lambda" {
-  function_name = "${var.service_subdomain}-lambda"
+  function_name = "${var.domain}-${var.service_subdomain}-lambda"
   package_type  = "Image"
   image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}:${var.image_tag}"
   
@@ -170,7 +170,6 @@ resource "aws_lambda_function" "tech_audit_lambda" {
       TECH_AUDIT_DATA_BUCKET = var.tech_audit_data_bucket_name
       TECH_AUDIT_SECRET_MANAGER = var.tech_audit_secret_manager_name
       AWS_COGNITO_TOKEN_URL = var.aws_cognito_token_url
-      AWS_DEFAULT_REGION = var.region
     }
   }
 
@@ -194,11 +193,13 @@ resource "aws_ecr_repository_policy" "lambda_ecr_access" {
         Effect = "Allow"
         Principal = {
           Service = "lambda.amazonaws.com"
-          AWS = aws_iam_role.lambda_execution_role.arn
+          AWS = [aws_iam_role.lambda_execution_role.arn, "arn:aws:iam::590183669350:user/ecr-user"]
         }
         Action = [
+          "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
-          "ecr:GetDownloadUrlForLayer"
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetAuthorizationToken"
         ]
       }
     ]
