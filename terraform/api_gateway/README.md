@@ -61,6 +61,6 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   http_method             = each.value.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_function_invoke_arn}/invocations"
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${data.terraform_remote_state.api_lambda.outputs.lambda_function_arn}/invocations"
 }
 ```

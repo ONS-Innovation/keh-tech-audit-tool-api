@@ -10,7 +10,8 @@ This repository contains Terraform configurations for managing various AWS servi
 - Appropriate `.tfvars` and `.tfbackend` files in the `env/sandbox/` directory
 
 ### Directory Structure
-The infrastructure is organized into separate services:
+The infrastructure is organized into separate services in order of application:
+- `terraform/secrets/` - Secrets Manager
 - `terraform/storage/` - S3 buckets and DynamoDB tables
 - `terraform/lambda/` - Lambda functions
 - `terraform/authentication/` - Cognito user pools
@@ -19,79 +20,25 @@ The infrastructure is organized into separate services:
 ### Common Commands
 
 ```bash
-cd terraform/<storage/lambda/authentication/api_gateway> 
+cd terraform/<service> 
 
-terraform init -backend-config=env/sandbox/backend-sandbox.tfbackend -reconfigure
+terraform init -backend-config=env/dev/backend-dev.tfbackend -reconfigure
 
-terraform refresh -var-file=env/sandbox/sandbox.tfvars
+terraform refresh -var-file=env/dev/dev.tfvars
 
 terraform validate
 
-terraform plan -var-file=env/sandbox/sandbox.tfvars
+terraform plan -var-file=env/dev/dev.tfvars
 
-terraform apply -var-file=env/sandbox/sandbox.tfvars
+terraform apply -var-file=env/dev/dev.tfvars
 ```
 
 ### Authentication
 
-You must create the Cognito user pool (authentication) then create the API Gateway (api_gateway) then define the `cognito_user_pool_arn` and `lambda_function_invoke_arn` variables in the `api_gateway` directory.
+You must create the Cognito user pool (authentication) then create the API Gateway (api_gateway).
 
 Once API Gateway is created, you can configure the callback URLs in the Cognito user pool to point to the API Gateway endpoint.
 
 #### Secrets and Environments
 
-The app in aws_lambda_script uses environment variables set in the Dockerfile.
-
-
-### ecs-app-user inline policy
-
-```json
-
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Action": [
-				"apigateway:GET",
-				"apigateway:POST",
-				"apigateway:PUT",
-				"apigateway:PATCH",
-				"apigateway:DELETE",
-				"apigateway:*"
-			],
-			"Resource": [
-				"arn:aws:apigateway:eu-west-2::/*"
-			]
-		},
-		{
-			"Effect": "Allow",
-			"Action": [
-				"acm:RequestCertificate",
-				"acm:DescribeCertificate",
-				"acm:ListCertificates",
-				"acm:DeleteCertificate",
-				"acm:AddTagsToCertificate",
-				"acm:RemoveTagsFromCertificate",
-				"acm:ListTagsForCertificate"
-			],
-			"Resource": "*"
-		},
-		{
-			"Effect": "Allow",
-			"Action": [
-				"route53:ChangeResourceRecordSets",
-				"route53:ListHostedZones",
-				"route53:GetHostedZone",
-				"route53:ListResourceRecordSets"
-			],
-			"Resource": "*"
-		}
-	]
-}
-
-```
-
-Configure CloudWatch logs in Lambda function to point to the log group made in the API Gateway terraform.
-
-Lambda > Configuration > Monitoring and Operational Tools > Logging Configuration > Edit > CloudWatch Log Group > Select the log group created in the API Gateway terraform.
+The app in aws_lambda_script uses environment variables set in the lambda environment variables. These variables point to the secrets in Secrets Manager and the S3 bucket.

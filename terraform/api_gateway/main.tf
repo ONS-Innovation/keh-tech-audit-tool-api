@@ -29,7 +29,7 @@ resource "aws_api_gateway_authorizer" "cognito" {
   name            = "${var.service_subdomain}-authorizer"
   rest_api_id     = aws_api_gateway_rest_api.main.id
   type            = "COGNITO_USER_POOLS"
-  provider_arns   = [var.cognito_user_pool_arn]
+  provider_arns   = [data.terraform_remote_state.api_auth.outputs.tech_audit_tool_user_pool_arn]
   identity_source = "method.request.header.Authorization"
 }
 
@@ -210,12 +210,16 @@ resource "aws_api_gateway_method" "swaggerui_proxy_get" {
   }
 }
 
-# Add root path GET method (for "/")
-resource "aws_api_gateway_method" "root_get" {
+# Add root path ANY method (for "/") to handle all HTTP methods
+resource "aws_api_gateway_method" "root_any" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   resource_id   = aws_api_gateway_rest_api.main.root_resource_id
-  http_method   = "GET"
+  http_method   = "ANY"
   authorization = "NONE"
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 # /api/v1/refresh resource and POST method
@@ -240,9 +244,8 @@ resource "aws_api_gateway_method" "refresh_post" {
 # Lambda integrations for protected endpoints
 resource "aws_api_gateway_integration" "lambda_integration" {
   for_each = {
-    "root_get"           = aws_api_gateway_method.root_get
-    "swagger_json_get"   = aws_api_gateway_method.swagger_json_get
-    "swaggerui_get"      = aws_api_gateway_method.swaggerui_get
+    "swagger_json_get"    = aws_api_gateway_method.swagger_json_get
+    "swaggerui_get"       = aws_api_gateway_method.swaggerui_get
     "swaggerui_proxy_get" = aws_api_gateway_method.swaggerui_proxy_get
     "projects_get"        = aws_api_gateway_method.projects_get
     "projects_post"       = aws_api_gateway_method.projects_post
@@ -250,7 +253,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
     "projects_proxy_put"  = aws_api_gateway_method.projects_proxy_put
     "projects_filter_get" = aws_api_gateway_method.projects_filter_get
     "user_get"           = aws_api_gateway_method.user_get
-    "refresh_post"        = aws_api_gateway_method.refresh_post
+    "refresh_post"       = aws_api_gateway_method.refresh_post
   }
 
   rest_api_id             = aws_api_gateway_rest_api.main.id
@@ -258,7 +261,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   http_method             = each.value.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_function_invoke_arn}/invocations"
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${data.terraform_remote_state.api_lambda.outputs.lambda_function_arn}/invocations"
 }
 
 # Lambda integration for verify endpoint (unauthenticated)
@@ -268,7 +271,21 @@ resource "aws_api_gateway_integration" "verify_integration" {
   http_method             = aws_api_gateway_method.verify_get.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${var.lambda_function_invoke_arn}/invocations"
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${data.terraform_remote_state.api_lambda.outputs.lambda_function_arn}/invocations"
+}
+
+# Specific integration for root path
+resource "aws_api_gateway_integration" "root_lambda_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_rest_api.main.root_resource_id
+  http_method             = aws_api_gateway_method.root_any.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${data.terraform_remote_state.api_lambda.outputs.lambda_function_arn}/invocations"
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 # API Gateway Deployment
@@ -277,7 +294,8 @@ resource "aws_api_gateway_deployment" "main" {
 
   depends_on = [
     aws_api_gateway_integration.lambda_integration,
-    aws_api_gateway_integration.verify_integration
+    aws_api_gateway_integration.verify_integration,
+    aws_api_gateway_integration.root_lambda_integration
   ]
 
   lifecycle {
@@ -327,7 +345,7 @@ resource "aws_api_gateway_method_settings" "all" {
 resource "aws_lambda_permission" "api_gateway" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_function_name
+  function_name = data.terraform_remote_state.api_lambda.outputs.lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
 }

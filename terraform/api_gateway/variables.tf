@@ -61,21 +61,6 @@ variable "domain_extension" {
   default     = "aws.onsdigital.uk"
 }
 
-variable "lambda_function_name" {
-  description = "Name of the Lambda function to integrate with API Gateway"
-  type        = string
-}
-
-variable "lambda_function_invoke_arn" {
-  description = "Full ARN of the Lambda function (e.g., arn:aws:lambda:REGION:ACCOUNT:function:FUNCTION_NAME)"
-  type        = string
-}
-
-variable "cognito_user_pool_arn" {
-  description = "ARN of the Cognito User Pool for API authorization"
-  type        = string
-}
-
 variable "stage_name" {
   description = "Stage name for API Gateway deployment (e.g., dev, prod)"
   type        = string

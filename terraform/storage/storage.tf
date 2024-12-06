@@ -2,7 +2,7 @@ resource "aws_s3_bucket" "tech_audit_data_bucket" {
   bucket = "${var.domain}-${var.service_subdomain}"
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
