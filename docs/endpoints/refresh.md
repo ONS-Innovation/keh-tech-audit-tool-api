@@ -12,6 +12,12 @@ Exchange authorization code for tokens.
 
 | Parameter | Description |
 |-----------|-------------|
-| code | Authorization code from Cognito callback |
+| refresh_token | Refresh token from Cognito callback |
 
 ### Response 
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success. Response body contains the new ID token: `{"id_token": "<id_token>"}`. |
+| 400 | Bad Request |
+| 500 | Internal Server Error |

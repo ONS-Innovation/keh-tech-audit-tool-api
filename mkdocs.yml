@@ -13,7 +13,7 @@ nav:
         - /project/{project_name}: endpoints/project.md
         - /filter: endpoints/filter.md
       - User: endpoints/user.md
-      
+      - Refresh: endpoints/refresh.md
   - Infrastructure: infrastructure.md
   - Deployment: deployment.md
 

@@ -18,5 +18,5 @@ Exchange authorization code for tokens.
 
 | Status Code | Description |
 |-----------|-------------|
-| 200 | Success. Returns id_token and refresh_token |
+| 200 | Success. Response body contains the new ID token: `{"id_token": "<id_token>", "refresh_token": "<refresh_token>"}`. |
 | 400 | Bad Request |

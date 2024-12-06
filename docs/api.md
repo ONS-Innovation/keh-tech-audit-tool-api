@@ -17,19 +17,19 @@ Authorization: <id_token>
 
 ## Base URL
 
-All endpoints are prefixed with `/api/v1/`.
+All endpoints are prefixed with `/api/v1/` as the namespace.
 
 ## Available Endpoints
 
-- [Authentication](/endpoints/auth/)
-  - Verify tokens
-  - Refresh tokens
-- [Projects](/endpoints/projects/)
-  - Get all projects
-  - Create new project
-  - Get project details
-  - Update project
-- [User](/endpoints/user/)
-  - Get user information
-- [Filters](/endpoints/filters/)
-  - Filter projects by criteria
+- [Authentication](endpoints/auth.md)
+    - Verify tokens
+    - Refresh tokens
+[Projects](endpoints/projects.md)
+    - Get all projects
+    - Create new project
+    - Get project details
+    - Update project
+- [User](endpoints/user.md)
+    - Get user information
+- [Filters](endpoints/filter.md)
+    - Filter projects by criteria

@@ -87,6 +87,20 @@ Retrieve your `id_token`, go to the URL above, click the green outlined button w
 
 Now you can go through the /api/v1/ routes and test the endpoints.
 
+## MkDocs
+
+Make sure you have the docs dependencies installed to run the mkdocs commands.
+
+Install the docs dependencies:
+```bash
+make install-docs
+```
+
+Run the mkdocs:
+```bash
+make mkdocs
+```
+
 ## API Reference
 
 Before testing the API, you need to use the above instructions at **Testing** to get a mock token, as all requests need to be authenticated.
