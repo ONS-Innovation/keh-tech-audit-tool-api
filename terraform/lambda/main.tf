@@ -48,17 +48,10 @@ resource "aws_iam_role_policy" "lambda_ecr_policy" {
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
           "ecr:BatchCheckLayerAvailability",
-          "ecr:GetAuthorizationToken"
-        ]
-        Resource = [
-          "arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/${var.ecr_repository_name}",
-          "arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/${var.ecr_repository_name}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken"
+          "ecr:GetAuthorizationToken",
+          "ecr:ListImages",
+          "ecr:DescribeImages",
+          "ecr:DescribeRepositories"
         ]
         Resource = "*"
       }
@@ -177,7 +170,8 @@ resource "aws_lambda_function" "tech_audit_lambda" {
     aws_iam_role_policy.lambda_ecr_policy,
     aws_iam_role_policy.lambda_s3_access,
     aws_iam_role_policy.lambda_additional_permissions,
-    aws_iam_role_policy_attachment.lambda_basic_execution
+    aws_iam_role_policy_attachment.lambda_basic_execution,
+    aws_ecr_repository_policy.lambda_ecr_access
   ]
 }
 
@@ -192,14 +186,19 @@ resource "aws_ecr_repository_policy" "lambda_ecr_access" {
         Sid    = "LambdaECRAccess"
         Effect = "Allow"
         Principal = {
-          Service = "lambda.amazonaws.com"
-          AWS = [aws_iam_role.lambda_execution_role.arn, "arn:aws:iam::590183669350:user/ecr-user"]
+          AWS = [
+            aws_iam_role.lambda_execution_role.arn,
+            "arn:aws:iam::${var.aws_account_id}:user/ecr-user"
+          ]
         }
         Action = [
-          "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
-          "ecr:GetAuthorizationToken"
+          "ecr:ListImages",
+          "ecr:DescribeImages",
+          "ecr:DescribeRepositories"
         ]
       }
     ]

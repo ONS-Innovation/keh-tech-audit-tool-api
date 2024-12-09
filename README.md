@@ -48,7 +48,7 @@ poetry run python3 -m app
 
 This repo utilises PyTest for the testing. Please make sure you have installed dev dependencies before running tests.
 
-To test you need a mock token. Visit this [link](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/login?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https://dutwj6q915.execute-api.eu-west-2.amazonaws.com/dev/api/verify) and copy the `id_token`.
+To test you need a mock token. Visit this [link](https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/login?client_id=7hdpes1atnuepl1ffvf21a28r3&response_type=code&scope=email+openid&redirect_uri=https://tech-audit-tool-api.sdp-dev.aws.onsdigital.uk/api/v1/verify) and copy the `id_token`.
 
 Then import the token into your environment:
 
@@ -66,7 +66,7 @@ When in root directory, run the testing command. If you are in `aws_lambda_scrip
 make pytest
 ```
 
-If all tests fail, please relogin [here](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/login?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https://dutwj6q915.execute-api.eu-west-2.amazonaws.com/dev/api/verify) to the Cognito and use a new token.
+If all tests fail, please relogin [here](https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/login?client_id=7hdpes1atnuepl1ffvf21a28r3&response_type=code&scope=email+openid&redirect_uri=https://tech-audit-tool-api.sdp-dev.aws.onsdigital.uk/api/v1/verify) to the Cognito and use a new token.
 
 Once you have finished testing, clean the temp files with:
 ```bash
