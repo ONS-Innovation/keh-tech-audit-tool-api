@@ -10,13 +10,14 @@ Exchange authorization code for tokens.
 
 ### Query Parameters
 
-| Parameter | Description |
-|-----------|-------------|
-| code | Authorization code from Cognito callback |
+| Parameter | Type | Description | Required |
+|-----------|-------------|-------------|-------------|
+| `code` | `string` | Authorization code from Cognito callback | Yes |
 
 ### Responses
 
 | Status Code | Description |
 |-----------|-------------|
-| 200 | Success. Response body contains the new ID token: `{"id_token": "<id_token>", "refresh_token": "<refresh_token>"}`. |
-| 400 | Bad Request |
+| `200` | Success. Response body contains the new ID token: `{"id_token": "<id_token>", "refresh_token": "<refresh_token>"}`. |
+| `400` | Bad Request |
+| `401` | Authorization is required |

@@ -10,16 +10,13 @@ Returns the email address of the authenticated user.
 
 Requires a valid Cognito ID token in the Authorization header.
 
-### Response
+| Header | Type | Description | Required |
+|-----------|-------------|-------------|-------------|
+| `Authorization` | string | AWS Cognito ID token | Yes |
 
-```json
-{
-    "email": "string"
-}
-```
-
-### Error Responses
-
+### Responses
 | Status Code | Description |
 |--------|-------------|
-| 404 | User not found |
+| `200` | Success. Returns the user's email address. ` { "email": "string" }` |
+| `401` | Authorization is required |
+| `404` | User not found |

@@ -1,8 +1,8 @@
 # Projects API
 
-## Get All Projects
+## Get a Project
 
-`GET /api/v1/project/{project_name}`
+`GET /api/v1/projects/{project_name}`
 
 Returns the project associated with the authenticated user.
 
@@ -10,24 +10,44 @@ Returns the project associated with the authenticated user.
 
 Requires a valid Cognito ID token in the Authorization header.
 
+| Header | Type | Description | Required |
+|-----------|-------------|-------------|-------------|
+| `Authorization` | string | AWS Cognito ID token | Yes |
+
+### Path Variables
+
+| Path Variable | Type | Description | Required |
+|-----------|-------------|-------------|-------------|
+| `project_name` | string | The name of the project to get | Yes |
+
 ### Responses
 
 | Status Code | Description                             |
 |-------------|-----------------------------------------|
-| 200         | Returns a project object. |
-| 401         | Authorization is required               |
-| 404         | Project not found                       |
+| `200`         | Returns a project object. |
+| `401`         | Authorization is required               |
+| `404`         | Project not found                       |
 
 
 ## Update a Project
 
-`PUT /api/v1/projects`
+`PUT /api/v1/projects/{project_name}`
 
 Updates a project.
 
 ### Authorization
 
 Requires a valid Cognito ID token in the Authorization header.
+
+| Header | Type | Description | Required |
+|-----------|-------------|-------------|-------------|
+| `Authorization` | string | AWS Cognito ID token | Yes |
+
+### Path Variables
+
+| Path Variable | Type | Description | Required |
+|-----------|-------------|-------------|-------------|
+| `project_name` | string | The name of the project to update | Yes |
 
 ### Request Body
 
@@ -124,7 +144,7 @@ Requires a valid Cognito ID token in the Authorization header.
 
 | Status Code | Description                             |
 |-------------|-----------------------------------------|
-| 200         | Returns the same project object as the request body. |
-| 401         | Authorization is required               |
-| 404         | Project not found                       |
-| 406         | Missing JSON data                       |
+| `200`         | Returns the same project object as the request body. |
+| `401`         | Authorization is required               |
+| `404`         | Project not found                       |
+| `406`         | Missing JSON data                       |

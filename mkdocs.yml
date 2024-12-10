@@ -1,10 +1,10 @@
-site_name: Tech Audit Tool API Documentation
+site_name: Tech Audit Tool API 
 repo_url: https://github.com/ONS-innovation/tech-audit-tool-api
 repo_name: Tech Audit Tool API
 
 nav:
   - Home: index.md
-  - API Documentation:
+  - Documentation:
     - Overview: api.md
     - Endpoints:
       - Authentication: 
@@ -12,7 +12,7 @@ nav:
         - /refresh: endpoints/refresh.md
       - Projects:
         - /projects: endpoints/projects.md
-        - /project/{project_name}: endpoints/project.md
+        - /projects/{project_name}: endpoints/project.md
         - /filter: endpoints/filter.md
       - User: endpoints/user.md
   - Infrastructure: infrastructure.md

@@ -10,14 +10,17 @@ Returns all projects associated with the authenticated user.
 
 Requires a valid Cognito ID token in the Authorization header.
 
+| Header | Type | Description | Required |
+|-----------|-------------|-------------|-------------|
+| `Authorization` | string | AWS Cognito ID token | Yes |
+
 ### Responses
 
 | Status Code | Description                             |
 |-------------|-----------------------------------------|
-| 200         | Returns a list of project objects. |
-| 401         | Authorization is required               |
-
-
+| `200`         | Returns a list of project objects. |
+| `401`         | Authorization is required               |
+| `404`         | Projects not found |
 
 ## Create a Project
 
@@ -28,6 +31,10 @@ Creates a new project.
 ### Authorization
 
 Requires a valid Cognito ID token in the Authorization header.
+
+| Header | Type | Description | Required |
+|-----------|-------------|-------------|-------------|
+| `Authorization` | string | AWS Cognito ID token | Yes |
 
 ### Request Body
 
@@ -124,7 +131,7 @@ Requires a valid Cognito ID token in the Authorization header.
 
 | Status Code | Description                                             |
 |-------------|---------------------------------------------------------|
-| 201         | Created project. Returns the same project object as the request body.                                        |
-| 401         | Authorization is required                              |
-| 406         | Missing JSON data                                      |
-| 409         | Project with the same name and owner already exists    |
+| `201`         | Created project. Returns the same project object as the request body.                                        |
+| `401`         | Authorization is required                              |
+| `406`         | Missing JSON data                                      |
+| `409`         | Project with the same name and owner already exists    |

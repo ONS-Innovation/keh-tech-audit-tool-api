@@ -1,32 +1,33 @@
 # API Documentation
 
-The Tech Audit Tool API provides endpoints for managing project data and authentication. All endpoints require authentication using AWS Cognito ID tokens.
+The Tech Audit Tool API provides endpoints for managing project data and authentication. ***Most*** endpoints require authentication using AWS Cognito ID tokens.
 
-## Interactive API Documentation
+### Interactive API Documentation
 
 <iframe src="https://tech-audit-tool-api.sdp-dev.aws.onsdigital.uk/" width="100%" height="800px" frameborder="0"></iframe>
 
 
-## Authentication
+### Authentication
 
-All API endpoints require a valid AWS Cognito ID token in the Authorization header:
+**Most** API endpoints require a valid AWS Cognito ID token in the Authorization header:
 
-```
-Authorization: <id_token>
-```
+| Header | Type | Description | Required |
+|-----------|-------------|-------------|-------------|
+| `Authorization` | string | AWS Cognito ID token | Yes |
 
-## Base URL
+### Base URL
 
 All endpoints are prefixed with `/api/v1/` as the namespace.
 
-## Available Endpoints
+### Available Endpoints
 
 - [Authentication](endpoints/auth.md)
     - Verify tokens
     - Refresh tokens
-[Projects](endpoints/projects.md)
+- [Projects](endpoints/projects.md)
     - Get all projects
     - Create new project
+- [Project](endpoints/project.md)
     - Get project details
     - Update project
 - [User](endpoints/user.md)
