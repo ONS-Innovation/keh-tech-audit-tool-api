@@ -76,8 +76,8 @@ resource "aws_iam_role_policy" "lambda_s3_access" {
           "s3:ListBucket"
         ]
         Resource = [
-          "arn:aws:s3:::${var.tech_audit_data_bucket_name}",
-          "arn:aws:s3:::${var.tech_audit_data_bucket_name}/*"
+          "arn:aws:s3:::${data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name}",
+          "arn:aws:s3:::${data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name}/*"
         ]
       }
     ]
@@ -187,9 +187,9 @@ resource "aws_lambda_function" "tech_audit_lambda" {
 
   environment {
     variables = {
-      TECH_AUDIT_DATA_BUCKET = var.tech_audit_data_bucket_name
-      TECH_AUDIT_SECRET_MANAGER = var.tech_audit_secret_manager_name
-      AWS_COGNITO_TOKEN_URL = var.aws_cognito_token_url
+      TECH_AUDIT_DATA_BUCKET = data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name
+      TECH_AUDIT_SECRET_MANAGER = data.terraform_remote_state.secrets.outputs.secret_name
+      AWS_COGNITO_TOKEN_URL = "https://${var.service_subdomain}-${var.domain}.auth.eu-west-2.amazoncognito.com/oauth2/token"
     }
   }
 

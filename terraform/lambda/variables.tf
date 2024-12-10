@@ -49,18 +49,6 @@ variable "image_tag" {
   default     = "v0.0.2"
 }
 
-variable "tech_audit_data_bucket_name" {
-  description = "Name of the S3 bucket for tech audit data"
-  type        = string
-  default     = "tech-audit-tool-data"
-}
-
-variable "tech_audit_secret_manager_name" {
-  description = "Name of the Secrets Manager secret for tech audit data"
-  type        = string
-  default     = "tech-audit-tool-data"
-}
-
 variable "project_tag" {
   description = "Project"
   type        = string
@@ -84,10 +72,4 @@ variable "ecr_repository_name" {
   description = "Name of the ECR repository"
   type        = string
   default     = "tech-audit-tool-api"
-}
-
-variable "aws_cognito_token_url" {
-  description = "AWS Cognito token URL"
-  type        = string
-  default     = "TO_BE_SET"
 }
