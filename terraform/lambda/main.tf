@@ -147,12 +147,39 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
   depends_on = [aws_iam_role.lambda_execution_role]
 }
 
+resource "aws_security_group" "lambda_sg" {
+  name = "${var.domain}-${var.service_subdomain}-lambda-sg"
+  description = "Security group for ${var.domain}-${var.service_subdomain}-lambda Lambda function"
+  vpc_id = data.terraform_remote_state.vpc.outputs.vpc_id
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"] // Allow HTTPS traffic within VPC
+  }  
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.domain}-${var.service_subdomain}-lambda-sg"
+  }
+}
+
 # 6. Create the Lambda function
 resource "aws_lambda_function" "tech_audit_lambda" {
   function_name = "${var.domain}-${var.service_subdomain}-lambda"
   package_type  = "Image"
   image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}:${var.image_tag}"
   
+  vpc_config {
+    subnet_ids          = data.terraform_remote_state.vpc.outputs.private_subnets
+    security_group_ids  = [aws_security_group.lambda_sg.id] // Dedicated security group for Lambda function
+  }
+
   role = aws_iam_role.lambda_execution_role.arn
 
   memory_size = 128
@@ -171,6 +198,7 @@ resource "aws_lambda_function" "tech_audit_lambda" {
     aws_iam_role_policy.lambda_s3_access,
     aws_iam_role_policy.lambda_additional_permissions,
     aws_iam_role_policy_attachment.lambda_basic_execution,
+    aws_iam_role_policy_attachment.lambda_vpc_access,
     aws_ecr_repository_policy.lambda_ecr_access
   ]
 }
@@ -204,5 +232,12 @@ resource "aws_ecr_repository_policy" "lambda_ecr_access" {
     ]
   })
 
+  depends_on = [aws_iam_role.lambda_execution_role]
+}
+
+# Add VPC access policy to Lambda role
+resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
+  role       = aws_iam_role.lambda_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   depends_on = [aws_iam_role.lambda_execution_role]
 } 
