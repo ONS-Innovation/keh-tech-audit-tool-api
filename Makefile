@@ -49,6 +49,10 @@ install-docs:  ## Install the dependencies including docs.
 mkdocs:  ## Run mkdocs.
 	poetry run mkdocs serve
 
+.PHONY: mkdocs-build
+mkdocs-build:  ## Build mkdocs.
+	poetry run mkdocs build
+
 .PHONY: pytest
 pytest:  ## Run pytest
 	poetry run pytest

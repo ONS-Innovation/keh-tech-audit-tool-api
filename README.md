@@ -102,6 +102,14 @@ Then run the following command to run the MkDocs:
 make mkdocs
 ```
 
+Deploying the MkDocs is done by running the following command:
+
+```bash
+make mkdocs-build
+```
+
+Then changing the name of the `site` directory to `mkdocs_deployment`.
+
 ## API Reference
 
 Before testing the API, you need to use the above instructions at **Testing** to get a mock token, as all requests need to be authenticated.
