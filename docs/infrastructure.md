@@ -36,11 +36,11 @@ Run like normal.
 
 ### 5. Lambda Function
 
-Set the `tech_audit_data_bucket_name` and `tech_audit_secrets_manager_name` variables in the `tfvars` file. Leave the `aws_cognito_token_url` variable blank. Then run the terraform script.
+The tech audit S3 bucket and the secrets manager secret are created by the terraform script. The aws cognito token url is set by the terraform script. Then run the terraform script for the lambda function and this data is set in the lambda function.
 
 ### 6. API Gateway
 
-Run like normal. Note down the 
+Run like normal. Note down the URLs in the outputs.
 
 ### 7. Secrets Manager Re-application
 

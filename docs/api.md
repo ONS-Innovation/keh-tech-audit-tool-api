@@ -4,9 +4,11 @@ The Tech Audit Tool API provides endpoints for managing project data and authent
 
 ### Interactive API Documentation
 
+[Open API Documentation](https://tech-audit-tool-api.sdp-dev.aws.onsdigital.uk) or interact below:
+
 <iframe src="https://tech-audit-tool-api.sdp-dev.aws.onsdigital.uk/" width="100%" height="800px" frameborder="0"></iframe>
 
-
+    
 ### Authentication
 
 **Most** API endpoints require a valid AWS Cognito ID token in the Authorization header:

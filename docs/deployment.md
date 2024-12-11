@@ -22,6 +22,8 @@ cd aws_lambda_script
 
 Make sure to version your container images, using this format: `v<major>.<minor>.<patch>`.
 
+More information about Versioning Semantics can be found [here](https://confluence.ons.gov.uk/display/KEH/GitHub+Releases+and+AWS+ECR+Versions#Versioning%20Semantics).
+
 Build the Docker image with ECR repository URI as the name. 
 
 ```bash
