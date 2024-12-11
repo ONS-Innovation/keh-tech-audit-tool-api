@@ -41,6 +41,18 @@ install:  ## Install the dependencies excluding dev.
 install-dev:  ## Install the dependencies including dev.
 	poetry install --no-root
 
+.PHONY: install-docs
+install-docs:  ## Install the dependencies including docs.
+	poetry install --only docs --no-root
+
+.PHONY: mkdocs
+mkdocs:  ## Run mkdocs.
+	poetry run mkdocs serve
+
+.PHONY: mkdocs-build
+mkdocs-build:  ## Build mkdocs.
+	poetry run mkdocs build
+
 .PHONY: pytest
 pytest:  ## Run pytest
 	poetry run pytest
