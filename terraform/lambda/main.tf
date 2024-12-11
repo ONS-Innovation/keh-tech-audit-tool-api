@@ -51,7 +51,17 @@ resource "aws_iam_role_policy" "lambda_ecr_policy" {
           "ecr:GetAuthorizationToken",
           "ecr:ListImages",
           "ecr:DescribeImages",
-          "ecr:DescribeRepositories"
+          "ecr:DescribeRepositories",
+          "ecr:GetRepositoryPolicy"
+        ]
+        Resource = [
+          "arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/${var.ecr_repository_name}"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
         ]
         Resource = "*"
       }
@@ -173,7 +183,7 @@ resource "aws_security_group" "lambda_sg" {
 resource "aws_lambda_function" "tech_audit_lambda" {
   function_name = "${var.domain}-${var.service_subdomain}-lambda"
   package_type  = "Image"
-  image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}:${var.image_tag}"
+  image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository_name}:${var.image_tag}"
   
   vpc_config {
     subnet_ids          = data.terraform_remote_state.vpc.outputs.private_subnets
@@ -211,22 +221,20 @@ resource "aws_ecr_repository_policy" "lambda_ecr_access" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "LambdaECRAccess"
+        Sid    = "LambdaECRImageRetrievalPolicy"
         Effect = "Allow"
         Principal = {
           AWS = [
-            aws_iam_role.lambda_execution_role.arn,
-            "arn:aws:iam::${var.aws_account_id}:user/ecr-user"
+            "arn:aws:iam::${var.aws_account_id}:root"
           ]
         }
         Action = [
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer",
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetRepositoryPolicy",
           "ecr:ListImages",
           "ecr:DescribeImages",
-          "ecr:DescribeRepositories"
+          "ecr:BatchCheckLayerAvailability"
         ]
       }
     ]
