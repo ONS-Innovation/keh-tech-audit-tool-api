@@ -1,5 +1,56 @@
 ## Adding new API Gateway endpoints
 
+In the API Gateway you have three main components:
+
+#### Authorizers
+
+Within a method you can have an authorizer. This is the authorizer for the API Gateway. When creating the authorizer, you need to specify the type of authorizer, such as `COGNITO_USER_POOLS`.
+
+#### Resources
+
+A resource is a path in the API Gateway. For example, `/api`.
+
+To extend the name of the resource, you can add a resource to the existing resource. For example, `/api/v1/`.
+
+Then adding another resource to the existing resource, you can add a resource to the existing resource. For example, `/api/v1/user`.
+
+#### Methods
+
+Within a resource you can have methods. For example, `GET /api/v1/user`. 
+
+You can choose the method type, such as `GET`, `POST`, `PUT`, `DELETE`, etc.
+
+#### Integrations
+
+Within a method you can have an integration. This is the integration with the Lambda function. When creating the integration, you need to specify the Lambda function ARN and specify that it's a 'Lambda proxy integration'.
+
+
+
+### Adding an authorizer
+
+```
+resource "aws_api_gateway_authorizer" "cognito" {
+  name            = "${var.service_subdomain}-authorizer"
+  rest_api_id     = aws_api_gateway_rest_api.main.id
+  type            = "COGNITO_USER_POOLS"
+  provider_arns   = [data.terraform_remote_state.api_auth.outputs.tech_audit_tool_user_pool_arn]
+  identity_source = "method.request.header.Authorization"
+}
+```
+
+`name` is the name of the authorizer.
+
+`rest_api_id` is the id of the API Gateway.
+
+`type` is the type of authorizer, such as `COGNITO_USER_POOLS`.
+
+`provider_arns` is the ARN of the Cognito user pool. This is taken from the `auth` terraform state.
+
+`identity_source` is the source of the identity, such as `method.request.header.Authorization`. The authorization header is the header that contains the JWT token.
+
+See `Adding a method` for more information on the authorizer and adding an authorizer to a method.
+
+
 ### Adding a resource (/api/v1/<resource>)
 
 ```

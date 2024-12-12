@@ -55,7 +55,7 @@ resource "aws_iam_role_policy" "lambda_ecr_policy" {
           "ecr:GetRepositoryPolicy"
         ]
         Resource = [
-          "arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/${var.ecr_repository_name}"
+          "arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/${var.ecr_repository}"
         ]
       },
       {
@@ -183,7 +183,7 @@ resource "aws_security_group" "lambda_sg" {
 resource "aws_lambda_function" "tech_audit_lambda" {
   function_name = "${var.domain}-${var.service_subdomain}-lambda"
   package_type  = "Image"
-  image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository_name}:${var.image_tag}"
+  image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}:${var.container_ver}"
   
   vpc_config {
     subnet_ids          = data.terraform_remote_state.vpc.outputs.private_subnets
@@ -215,7 +215,7 @@ resource "aws_lambda_function" "tech_audit_lambda" {
 
 # 7. Add ECR policy after the lambda function is created
 resource "aws_ecr_repository_policy" "lambda_ecr_access" {
-  repository = var.ecr_repository_name
+  repository = var.ecr_repository
 
   policy = jsonencode({
     Version = "2012-10-17"

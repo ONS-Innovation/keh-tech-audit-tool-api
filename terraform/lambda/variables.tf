@@ -43,12 +43,6 @@ variable "container_ver" {
 
 }
 
-variable "image_tag" {
-  description = "Tag of the container image to deploy"
-  type        = string
-  default     = "v0.0.2"
-}
-
 variable "project_tag" {
   description = "Project"
   type        = string
@@ -65,11 +59,4 @@ variable "business_owner_tag" {
   description = "Business Owner"
   type        = string
   default     = "DST"
-}
-
-
-variable "ecr_repository_name" {
-  description = "Name of the ECR repository"
-  type        = string
-  default     = "tech-audit-tool-api"
 }

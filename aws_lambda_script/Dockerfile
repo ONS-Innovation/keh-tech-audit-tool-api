@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.12-slim
+FROM public.ecr.aws/lambda/python:3.12
 
 # Set the working directory in the container
 WORKDIR /var/task

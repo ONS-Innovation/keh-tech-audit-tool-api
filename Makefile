@@ -39,7 +39,7 @@ install:  ## Install the dependencies excluding dev.
 
 .PHONY: install-dev
 install-dev:  ## Install the dependencies including dev.
-	poetry install --only dev --no-root
+	poetry install --with dev
 
 .PHONY: pytest
 pytest:  ## Run pytest

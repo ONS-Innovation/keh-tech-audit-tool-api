@@ -221,7 +221,7 @@ Send JSON in this format:
     "stage":"Development"
   }
 ```
-Create's a project. If the languages, database, frameworks, cicd, infrastructure or source control, is not in the array_data.json bucket then it is added.
+Creates a project. If the languages, database, frameworks, cicd, infrastructure or source control is not in the `array_data.json` bucket, then it is added.
 
 
 ### Get autocomplete from string [REMOVED]
@@ -326,7 +326,7 @@ Send JSON in this format:
     "stage":"Development"
   }
 ```
-Edits a project. If the languages, database, frameworks, cicd, infrastructure or source control, is not in the array_data.json bucket then it is added.
+Edits a project by checking if the languages, database, frameworks, cicd, infrastructure, or source control are missing from the `array_data.json` bucket. If any are missing, they are added.
 
 
 ## Authorization with Cognito and API Gateway

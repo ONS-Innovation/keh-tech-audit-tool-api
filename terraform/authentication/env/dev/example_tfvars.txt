@@ -13,5 +13,9 @@ token_validity_units = {
   id_token      = "days"
 }
 callback_urls = [
-  "http://localhost:8000"
+  "http://localhost:8000", # Localhost UI
+  "http://localhost:8000/api/v1/verify", # Localhost API
+  "https://tech-audit-tool.<env>.aws.onsdigital.uk", # Production UI
+  "https://tech-audit-tool-api.<env>.aws.onsdigital.uk/api/v1/verify" # Production API
 ]
+
