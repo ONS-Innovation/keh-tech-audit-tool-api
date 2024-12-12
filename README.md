@@ -87,19 +87,27 @@ Retrieve your `id_token`, go to the URL above, click the green outlined button w
 
 Now you can go through the /api/v1/ routes and test the endpoints.
 
-## MkDocs
+## MkDocs Documentation
 
-Make sure you have the docs dependencies installed to run the mkdocs commands.
+To install the dependencies for the MkDocs, run the following command:
 
-Install the docs dependencies:
 ```bash
 make install-docs
 ```
 
-Run the mkdocs:
+Then run the following command to run the MkDocs:
+
 ```bash
 make mkdocs
 ```
+
+Deploying the MkDocs is done by running the following command:
+
+```bash
+make mkdocs-build
+```
+
+Then changing the name of the `site` directory to `mkdocs_deployment`.
 
 ## API Reference
 
