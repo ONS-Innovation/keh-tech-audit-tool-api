@@ -34,43 +34,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   depends_on = [aws_iam_role.lambda_execution_role]
 }
 
-# 3. Add ECR policy
-resource "aws_iam_role_policy" "lambda_ecr_policy" {
-  name = "${var.domain}-${var.service_subdomain}-policy"
-  role = aws_iam_role.lambda_execution_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetAuthorizationToken",
-          "ecr:ListImages",
-          "ecr:DescribeImages",
-          "ecr:DescribeRepositories",
-          "ecr:GetRepositoryPolicy"
-        ]
-        Resource = [
-          "arn:aws:ecr:${var.region}:${var.aws_account_id}:repository/${var.ecr_repository}"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-  depends_on = [aws_iam_role.lambda_execution_role]
-}
-
-# 4. Add S3 access policy
+# 3. Add S3 access policy
 resource "aws_iam_role_policy" "lambda_s3_access" {
   name = "${var.domain}-${var.service_subdomain}-lambda-s3-policy"
   role = aws_iam_role.lambda_execution_role.id
@@ -95,7 +59,7 @@ resource "aws_iam_role_policy" "lambda_s3_access" {
   depends_on = [aws_iam_role.lambda_execution_role]
 }
 
-# 5. Add additional permissions
+# 4. Add additional permissions
 resource "aws_iam_role_policy" "lambda_additional_permissions" {
   name = "${var.domain}-${var.service_subdomain}-policy-additional"
   role = aws_iam_role.lambda_execution_role.id
@@ -157,6 +121,7 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
   depends_on = [aws_iam_role.lambda_execution_role]
 }
 
+# 5. Create the security group
 resource "aws_security_group" "lambda_sg" {
   name = "${var.domain}-${var.service_subdomain}-lambda-sg"
   description = "Security group for ${var.domain}-${var.service_subdomain}-lambda Lambda function"
@@ -204,43 +169,11 @@ resource "aws_lambda_function" "tech_audit_lambda" {
   }
 
   depends_on = [
-    aws_iam_role_policy.lambda_ecr_policy,
     aws_iam_role_policy.lambda_s3_access,
     aws_iam_role_policy.lambda_additional_permissions,
     aws_iam_role_policy_attachment.lambda_basic_execution,
-    aws_iam_role_policy_attachment.lambda_vpc_access,
-    aws_ecr_repository_policy.lambda_ecr_access
+    aws_iam_role_policy_attachment.lambda_vpc_access
   ]
-}
-
-# 7. Add ECR policy after the lambda function is created
-resource "aws_ecr_repository_policy" "lambda_ecr_access" {
-  repository = var.ecr_repository
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "LambdaECRImageRetrievalPolicy"
-        Effect = "Allow"
-        Principal = {
-          AWS = [
-            "arn:aws:iam::${var.aws_account_id}:root"
-          ]
-        }
-        Action = [
-          "ecr:BatchGetImage",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:GetRepositoryPolicy",
-          "ecr:ListImages",
-          "ecr:DescribeImages",
-          "ecr:BatchCheckLayerAvailability"
-        ]
-      }
-    ]
-  })
-
-  depends_on = [aws_iam_role.lambda_execution_role]
 }
 
 # Add VPC access policy to Lambda role
