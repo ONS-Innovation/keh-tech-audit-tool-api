@@ -1,5 +1,5 @@
 
-# KEH | Tech Audit Tool - API
+# Tech Audit Tool - API
 
 A Flask and flask-restx API for the tech audit tool.
 
@@ -8,7 +8,7 @@ A Flask and flask-restx API for the tech audit tool.
 Clone the project
 
 ```bash
-git clone https://github.com/ONS-Innovation/keh-tech-audit-tool-api
+git clone https://github.com/ONS-Innovation/keh-tech-audit-tool-api.git
 ```
 
 Install dependencies
@@ -26,9 +26,9 @@ make install-dev
 Set environment variables:
 
 ```bash
-export TECH_AUDIT_DATA_BUCKET='keh-tech-audit-tool'
-export TECH_AUDIT_SECRET_MANAGER='tech-audit-tool-api/secrets'
-export AWS_COGNITO_TOKEN_URL='https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/token'
+export TECH_AUDIT_DATA_BUCKET='sdp-dev-tech-audit-tool-api'
+export TECH_AUDIT_SECRET_MANAGER='sdp-dev-tech-audit-tool-api/secrets'
+export AWS_COGNITO_TOKEN_URL='https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/oauth2/token'
 ```
 
 Go to the aws_lambda_script directory
@@ -48,7 +48,7 @@ poetry run python3 -m app
 
 This repo utilises PyTest for the testing. Please make sure you have installed dev dependencies before running tests.
 
-To test you need a mock token. Visit this [link](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/login?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https://dutwj6q915.execute-api.eu-west-2.amazonaws.com/dev/api/verify) and copy the `id_token`.
+To test you need a mock token. Visit the Cognito UI with the redirect URL set to your local environment. Once successully logged in, copy the `id_token`.
 
 Then import the token into your environment:
 
@@ -66,7 +66,7 @@ When in root directory, run the testing command. If you are in `aws_lambda_scrip
 make pytest
 ```
 
-If all tests fail, please relogin [here](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/login?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https://dutwj6q915.execute-api.eu-west-2.amazonaws.com/dev/api/verify) to the Cognito and use a new token.
+If all tests fail, please relogin to the Cognito and use a new token.
 
 Once you have finished testing, clean the temp files with:
 ```bash
@@ -78,15 +78,6 @@ make clean
 View the Postman workspace for this project [here](https://www.postman.com/science-pilot-55892832/workspace/keh-tech-audit-tool-api/collection/38871441-e42f661e-6430-4f46-8182-083e9e0fd4ad?action=share&creator=38871441&active-environment=38871441-7c5e3795-74f5-46b3-9034-637561aba746).
 
 Please read the description or README to understand how to use this workspace. You need to get a mock_token to authenticate yourself in each request.
-
-## Testing with Swagger UI
-
-View the Swagger UI [here](https://tech-audit-tool-api.sdp-sandbox.aws.onsdigital.uk/).
-
-Retrieve your `id_token`, go to the URL above, click the green outlined button with the text `Authorize` and enter your `id_token` in the `Value` box. Click the green outlined `Authorize` button. 
-
-Now you can go through the /api/v1/ routes and test the endpoints.
-
 
 ## MkDocs Documentation
 
@@ -218,7 +209,7 @@ Send JSON in this format:
         "main": [],
         "others": ["List of strings"]
       },
-      "CICD": {
+      "cicd": {
         "main": [],
         "others": ["List of strings"]
       },
@@ -230,7 +221,7 @@ Send JSON in this format:
     "stage":"Development"
   }
 ```
-Create's a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
+Creates a project. If the languages, database, frameworks, cicd, infrastructure or source control is not in the `array_data.json` bucket, then it is added.
 
 
 ### Get autocomplete from string [REMOVED]
@@ -323,7 +314,7 @@ Send JSON in this format:
         "main": [],
         "others": ["List of strings"]
       },
-      "CICD": {
+      "cicd": {
         "main": [],
         "others": ["List of strings"]
       },
@@ -335,12 +326,12 @@ Send JSON in this format:
     "stage":"Development"
   }
 ```
-Edits a project. If the languages, database, frameworks, CICD, infrastructure or source control, is not in the array_data.json bucket then it is added.
+Edits a project by checking if the languages, database, frameworks, cicd, infrastructure, or source control are missing from the `array_data.json` bucket. If any are missing, they are added.
 
 
 ## Authorization with Cognito and API Gateway
 
-Visiting the [Cognito UI](https://keh-tech-audit-tool.auth.eu-west-2.amazoncognito.com/oauth2/authorize?client_id=dm3289s0tqtsr5qn2qm5i9fql&response_type=code&scope=email+openid+phone&redirect_uri=https%3A%2F%2Fdutwj6q915.execute-api.eu-west-2.amazonaws.com%2Fdev%2Fapi%2Fverify), and successfully logging in, will redirect you to:
+Visiting the Cognito UI and successfully logging in, will redirect you to:
 
 ```bash
 /api/v1/verify?code=<code>
