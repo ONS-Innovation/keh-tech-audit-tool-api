@@ -353,6 +353,7 @@ class Projects(Resource):
             or "email" not in new_project["user"][0]
             or "name" not in new_project["details"][0]
             or "stage" not in new_project
+            or "supporting_tools" not in new_project
         ):
             abort(406, description="Missing JSON data")
 
@@ -512,7 +513,8 @@ class ProjectDetail(Resource):
 cognito_settings = cognito_data
 COGNITO_CLIENT_ID = cognito_settings["COGNITO_CLIENT_ID"]
 COGNITO_CLIENT_SECRET = cognito_settings["COGNITO_CLIENT_SECRET"]
-REDIRECT_URI = cognito_settings["REDIRECT_URI"]
+REDIRECT_URI = "http://localhost:8000"
+# REDIRECT_URI = cognito_settings["REDIRECT_URI"]
 
 verifyParser = reqparse.RequestParser()
 verifyParser.add_argument(
