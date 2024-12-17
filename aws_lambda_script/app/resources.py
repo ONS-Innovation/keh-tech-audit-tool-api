@@ -513,8 +513,7 @@ class ProjectDetail(Resource):
 cognito_settings = cognito_data
 COGNITO_CLIENT_ID = cognito_settings["COGNITO_CLIENT_ID"]
 COGNITO_CLIENT_SECRET = cognito_settings["COGNITO_CLIENT_SECRET"]
-REDIRECT_URI = "http://localhost:8000"
-# REDIRECT_URI = cognito_settings["REDIRECT_URI"]
+REDIRECT_URI = os.getenv("REDIRECT_URI", cognito_settings["REDIRECT_URI"])
 
 verifyParser = reqparse.RequestParser()
 verifyParser.add_argument(
