@@ -29,6 +29,8 @@ Set environment variables:
 export TECH_AUDIT_DATA_BUCKET='sdp-dev-tech-audit-tool-api'
 export TECH_AUDIT_SECRET_MANAGER='sdp-dev-tech-audit-tool-api/secrets'
 export AWS_COGNITO_TOKEN_URL='https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/oauth2/token'
+export AWS_DEFAULT_REGION='eu-west-2'
+export REDIRECT_URI='http://localhost:8000'
 ```
 
 Go to the aws_lambda_script directory
