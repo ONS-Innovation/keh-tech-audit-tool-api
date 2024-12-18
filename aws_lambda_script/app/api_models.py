@@ -166,7 +166,7 @@ def get_project_model():
             "diagram_tools": fields.List(
                 fields.String, required=True, description="Diagram tools"
             ),
-            "project_tracking_toolsf": fields.List(
+            "project_tracking_tools": fields.List(
                 fields.String, required=True, description="Project tracking tools"
             ),
             "documentation_tools": fields.List(

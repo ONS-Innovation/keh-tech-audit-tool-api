@@ -230,7 +230,7 @@ Send JSON in this format:
       "diagram_tools": [
         "List of strings"
       ],
-      "project_tracking_toolsf": [
+      "project_tracking_tools": [
         "List of strings"
       ],
       "documentation_tools": [
