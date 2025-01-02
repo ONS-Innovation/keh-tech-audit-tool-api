@@ -157,31 +157,90 @@ def get_project_model():
     supporting_tools_model = ns.model(
         "SupportingTools", 
         {
-            "code_editors": fields.List(
-                fields.String, required=True, description="Code editors"
+            "code_editors": fields.Nested(
+                ns.model(
+                    "code_editors",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main code editor"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other code editors"
+                        ),
+                    },
+                )
             ),
-            "ui_tools": fields.List(
-                fields.String, required=True, description="UI tools"
+            "user_interface": fields.Nested(
+                ns.model(
+                    "user_interface",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main UI tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other UI tools"
+                        ),
+                    },
+                )
             ),
-            "diagram_tools": fields.List(
-                fields.String, required=True, description="Diagram tools"
+            "diagrams": fields.Nested(
+                ns.model(
+                    "diagrams",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main diagram tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other diagram tools"
+                        ),
+                    },
+                )
             ),
-            "project_tracking_tools": fields.List(
-                fields.String, required=True, description="Project tracking tools"
+            "project_tracking": fields.String(
+                required=True, description="Project tracking tool used by the project"
+                ),
+            "documentation": fields.Nested(
+                ns.model(
+                    "documentation",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main documentation tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other documentation tools"
+                        ),
+                    },
+                )
             ),
-            "documentation_tools": fields.List(
-                fields.String, required=True, description="Documentation tools"
+            "communication": fields.Nested(
+                ns.model(
+                    "communication",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main communication tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other communication tools"
+                        ),
+                    },
+                )
             ),
-            "communication_tools": fields.List(
-                fields.String, required=True, description="Communication tools"
-            ),
-            "collaboration_tools": fields.List(
-                fields.String, required=True, description="Collaboration tools"
+            "collaboration": fields.Nested(
+                ns.model(
+                    "collaboration",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main collaboration tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other collaboration tools"
+                        ),
+                    },
+                )
             ),
             "incident_management": fields.String(
-                required=True, description="Incident management tools"
-            )
-
+                required=True, description="Incident management tool"
+                ),
         }
     )
 
