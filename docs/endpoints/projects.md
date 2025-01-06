@@ -149,7 +149,7 @@ Requires a valid Cognito ID token in the Authorization header.
           "string"
         ]
       },
-      "project_tracking_tools": "strings",
+      "project_tracking_tools": "string",
       "documentation_tools": {
         "main": [
           "string"

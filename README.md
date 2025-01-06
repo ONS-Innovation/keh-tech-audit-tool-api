@@ -227,29 +227,45 @@ Send JSON in this format:
     },
     "stage":"Development",
     "supporting_tools": {
-      "code_editors": [
-        "List of strings"
-      ],
-      "ui_tools": [
-        "List of strings"
-      ],
-      "diagram_tools": [
-        "List of strings"
-      ],
-      "project_tracking_tools": [
-        "List of strings"
-      ],
-      "documentation_tools": [
-        "List of strings"
-      ],
-      "communication_tools": [
-        "List of strings"
-      ],
-      "collaboration_tools": [
-        "List of strings"
-      ],
-      "incident_management": "string"
-    }
+          "code_editors": {
+            "main": [],
+            "others": [
+              "List of strings"
+              ]
+          },
+          "ui_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "diagram_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "project_tracking_tools": "string",
+          "documentation_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "communication_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "collaboration_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "incident_management": "string"
+        }
   }
 ```
 Creates a project. If the languages, database, frameworks, cicd, infrastructure or source control is not in the `array_data.json` bucket, then it is added.
@@ -354,7 +370,47 @@ Send JSON in this format:
         "others": ["List of strings"]
       }
     },
-    "stage":"Development"
+    "stage":"Development",
+    "supporting_tools": {
+          "code_editors": {
+            "main": [],
+            "others": [
+              "List of strings"
+              ]
+          },
+          "ui_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "diagram_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "project_tracking_tools": "string",
+          "documentation_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "communication_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "collaboration_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "incident_management": "string"
+        }
   }
 ```
 Edits a project by checking if the languages, database, frameworks, cicd, infrastructure, or source control are missing from the `array_data.json` bucket. If any are missing, they are added.
