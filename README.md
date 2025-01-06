@@ -82,6 +82,8 @@ Please read the description or README to understand how to use this workspace. Y
 
 ## MkDocs Documentation
 
+### Running the MkDocs locally
+
 To install the dependencies for the MkDocs, run the following command:
 
 ```bash
@@ -94,6 +96,8 @@ Then run the following command to run the MkDocs:
 make mkdocs
 ```
 
+### Deploying the MkDocs
+
 Deploying the MkDocs is done by running the following command:
 
 ```bash
@@ -101,6 +105,8 @@ make mkdocs-build
 ```
 
 Then changing the name of the `site` directory to `mkdocs_deployment`.
+
+When you push the changes to the `main` branch, the MkDocs will be deployed to GitHub pages.
 
 ## API Reference
 
