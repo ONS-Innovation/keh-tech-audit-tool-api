@@ -138,29 +138,57 @@ Requires a valid Cognito ID token in the Authorization header.
   },
   "stage": "string",
   "supporting_tools": {
-      "code_editors": [
-        "string"
-      ],
-      "ui_tools": [
-        "string"
-      ],
-      "diagram_tools": [
-        "string"
-      ],
-      "project_tracking_tools": [
-        "string"
-      ],
-      "documentation_tools": [
-        "string"
-      ],
-      "communication_tools": [
-        "string"
-      ],
-      "collaboration_tools": [
-        "string"
-      ],
-      "incident_management": "string"
-    }
+        "code_editors": {
+          "main": [
+            "string"
+          ],
+          "others": [
+            "string"
+            ]
+        },
+        "ui_tools": {
+          "main": [
+            "string"
+          ],
+          "others": [
+            "string"
+          ]
+        },
+        "diagram_tools": {
+          "main": [
+            "string"
+          ],
+          "others": [
+            "string"
+          ]
+        },
+        "project_tracking_tools": "strings",
+        "documentation_tools": {
+          "main": [
+            "string"
+          ],
+          "others": [
+            "string"
+          ]
+        },
+        "communication_tools": {
+          "main": [
+            "string"
+          ],
+          "others": [
+            "string"
+          ]
+        },
+        "collaboration_tools": {
+          "main": [
+            "string"
+          ],
+          "others": [
+            "string"
+          ]
+        },
+        "incident_management": "string"
+      }
 }
 ```
 
