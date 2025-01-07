@@ -41,8 +41,9 @@ cd aws_lambda_script
 Run the project locally
 
 ```bash
-poetry run python3 -m app
+poetry run flask --app app run
 ```
+This will run the API on port 5000, to which the UI can now access
 
 
 ## Testing
