@@ -26,7 +26,7 @@ make install-dev
 Set environment variables:
 
 ```bash
-export TECH_AUDIT_DATA_BUCKET='<sdp-dev-tech-audit-tool-api-testing/sdp-dev-tech-audit-tool-api>' # TThe latter bucket should be used in production
+export TECH_AUDIT_DATA_BUCKET='<sdp-dev-tech-audit-tool-api-testing/sdp-dev-tech-audit-tool-api>' # The latter bucket should be used in production
 export TECH_AUDIT_SECRET_MANAGER='sdp-dev-tech-audit-tool-api/secrets'
 export REDIRECT_URI='http://localhost:8000'
 export AWS_COGNITO_TOKEN_URL='https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/oauth2/token'
@@ -38,13 +38,18 @@ Go to the aws_lambda_script directory
 cd aws_lambda_script
 ```
 
-Run the project locally
+Run the project locally (with UI)
 
 ```bash
-poetry run flask --app app run
+poetry run flask --app app run --port=5000
 ```
 This will run the API on port 5000, to which the UI can now access
 
+Run the project locally (without UI)
+
+```bash
+poetry run flask --app app run --port=8000
+```
 
 ## Testing
 
