@@ -26,7 +26,7 @@ make install-dev
 Set environment variables:
 
 ```bash
-export TECH_AUDIT_DATA_BUCKET='sdp-dev-tech-audit-tool-api'
+export TECH_AUDIT_DATA_BUCKET='<sdp-dev-tech-audit-tool-api-testing/sdp-dev-tech-audit-tool-api>' # The latter bucket should be used in production
 export TECH_AUDIT_SECRET_MANAGER='sdp-dev-tech-audit-tool-api/secrets'
 export AWS_COGNITO_TOKEN_URL='https://tech-audit-tool-api-sdp-dev.auth.eu-west-2.amazoncognito.com/oauth2/token'
 export AWS_DEFAULT_REGION='eu-west-2'
@@ -39,12 +39,18 @@ Go to the aws_lambda_script directory
 cd aws_lambda_script
 ```
 
-Run the project locally
+Run the project locally (with UI)
 
 ```bash
-poetry run python3 -m app
+poetry run flask --app app run --port=5000
 ```
+This will run the API on port 5000, to which the UI can now access
 
+Run the project locally (without UI)
+
+```bash
+poetry run flask --app app run --port=8000
+```
 
 ## Testing
 
@@ -83,6 +89,8 @@ Please read the description or README to understand how to use this workspace. Y
 
 ## MkDocs Documentation
 
+### Running the MkDocs locally
+
 To install the dependencies for the MkDocs, run the following command:
 
 ```bash
@@ -95,6 +103,8 @@ Then run the following command to run the MkDocs:
 make mkdocs
 ```
 
+### Deploying the MkDocs
+
 Deploying the MkDocs is done by running the following command:
 
 ```bash
@@ -102,6 +112,8 @@ make mkdocs-build
 ```
 
 Then changing the name of the `site` directory to `mkdocs_deployment`.
+
+When you push the changes to the `main` branch, the MkDocs will be deployed to GitHub pages.
 
 ## API Reference
 
@@ -220,7 +232,47 @@ Send JSON in this format:
         "others": ["List of strings"]
       }
     },
-    "stage":"Development"
+    "stage":"Development",
+    "supporting_tools": {
+          "code_editors": {
+            "main": [],
+            "others": [
+              "List of strings"
+              ]
+          },
+          "ui_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "diagram_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "project_tracking_tools": "string",
+          "documentation_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "communication_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "collaboration_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "incident_management": "string"
+        }
   }
 ```
 Creates a project. If the languages, database, frameworks, cicd, infrastructure or source control is not in the `array_data.json` bucket, then it is added.
@@ -325,7 +377,47 @@ Send JSON in this format:
         "others": ["List of strings"]
       }
     },
-    "stage":"Development"
+    "stage":"Development",
+    "supporting_tools": {
+          "code_editors": {
+            "main": [],
+            "others": [
+              "List of strings"
+              ]
+          },
+          "ui_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "diagram_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "project_tracking_tools": "string",
+          "documentation_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "communication_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "collaboration_tools": {
+            "main": [],
+            "others": [
+              "List of strings"
+            ]
+          },
+          "incident_management": "string"
+        }
   }
 ```
 Edits a project by checking if the languages, database, frameworks, cicd, infrastructure, or source control are missing from the `array_data.json` bucket. If any are missing, they are added.

@@ -154,6 +154,96 @@ def get_project_model():
         },
     )
 
+    supporting_tools_model = ns.model(
+        "SupportingTools", 
+        {
+            "code_editors": fields.Nested(
+                ns.model(
+                    "code_editors",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main code editor"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other code editors"
+                        ),
+                    },
+                )
+            ),
+            "user_interface": fields.Nested(
+                ns.model(
+                    "user_interface",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main UI tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other UI tools"
+                        ),
+                    },
+                )
+            ),
+            "diagrams": fields.Nested(
+                ns.model(
+                    "diagrams",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main diagram tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other diagram tools"
+                        ),
+                    },
+                )
+            ),
+            "project_tracking": fields.String(
+                required=True, description="Project tracking tool used by the project"
+                ),
+            "documentation": fields.Nested(
+                ns.model(
+                    "documentation",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main documentation tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other documentation tools"
+                        ),
+                    },
+                )
+            ),
+            "communication": fields.Nested(
+                ns.model(
+                    "communication",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main communication tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other communication tools"
+                        ),
+                    },
+                )
+            ),
+            "collaboration": fields.Nested(
+                ns.model(
+                    "collaboration",
+                    {
+                        "main": fields.List(
+                            fields.String, required=True, description="Main collaboration tool"
+                        ),
+                        "others": fields.List(
+                            fields.String, required=True, description="Other collaboration tools"
+                        ),
+                    },
+                )
+            ),
+            "incident_management": fields.String(
+                required=True, description="Incident management tool"
+                ),
+        }
+    )
+
     project_model = ns.model(
         "Project",
         {
@@ -178,6 +268,9 @@ def get_project_model():
             ),
             "stage": fields.String(
                 required=True, description="Stage status of the project"
+            ),
+            "supporting_tools": fields.Nested(
+                supporting_tools_model, required=True, description="Supporting Tools Details"
             ),
         },
     )
