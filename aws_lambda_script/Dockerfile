@@ -4,8 +4,11 @@ FROM public.ecr.aws/lambda/python:3.12
 # Set the working directory in the container
 WORKDIR /var/task
 
-# Create a non-root user and group
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Create a non-root user and group manually
+RUN echo "appuser:x:1000:1000:App User:/home/appuser:/sbin/nologin" >> /etc/passwd && \
+    echo "appuser:x:1000:" >> /etc/group && \
+    mkdir -p /home/appuser && \
+    chown -R 1000:1000 /home/appuser
 
 # Copy the requirements.txt first to leverage Docker's cache for dependencies
 COPY requirements.txt .
@@ -18,7 +21,7 @@ COPY app/ /var/task/app/
 COPY main.py /var/task/
 
 # Change ownership of the application files to the non-root user
-RUN chown -R appuser:appuser /var/task
+RUN chown -R 1000:1000 /var/task
 
 # Switch to non-root user
 USER appuser
