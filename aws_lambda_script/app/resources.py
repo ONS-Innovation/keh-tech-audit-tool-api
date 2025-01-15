@@ -324,7 +324,6 @@ class Projects(Resource):
         user_projects = [
             proj
             for proj in data["projects"]
-            if any(user["email"] == owner_email for user in proj["user"])
         ]
         return user_projects, 200
 
