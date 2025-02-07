@@ -514,14 +514,11 @@ class ProjectDetail(Resource):
 
         duplicate_data = read_data(duplicate=True)
         duplicate_arr = []
-        logger.info(duplicate_data["projects"])
         for proj in duplicate_data["projects"]:
             duplicate_arr.append(proj["details"][0]["name"])
 
-        logger.info(duplicate_arr)
         counts = Counter(duplicate_arr)
         duplicate_arr = [item for item, count in counts.items() if count > 1]
-        logger.info(duplicate_arr)
         if len(duplicate_arr) > 0:
             write_data({"projects": []}, duplicate=True)
             return abort(409, description="Project with the same name already exists")
