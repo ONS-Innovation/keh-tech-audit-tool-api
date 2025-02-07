@@ -22,7 +22,7 @@ variable "service_subdomain" {
 variable "domain" {
   description = "Domain"
   type        = string
-  default     = "sdp-dev"
+  default     = "sdp-prod"
 }
 
 variable "region" {

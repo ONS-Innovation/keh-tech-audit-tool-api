@@ -22,7 +22,7 @@ variable "service_subdomain" {
 variable "domain" {
   description = "Domain name (e.g., sdp-dev)"
   type        = string
-  default     = "sdp-dev"
+  default     = "sdp-prod"
 }
 
 variable "region" {
@@ -52,11 +52,11 @@ variable "business_owner_tag" {
 variable "container_ver" {
   description = "Container version"
   type        = string
-  default     = "v0.0.1"
+  default     = "v1.0.0"
 }
 
 variable "ecr_repository_name" {
   description = "ECR repository name"
   type        = string
-  default     = "tech-audit-tool-api"
+  default     = "sdp-prod-tech-audit-tool-api"
 }
