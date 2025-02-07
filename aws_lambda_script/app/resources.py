@@ -1,6 +1,7 @@
 import logging
 import os
 from http import HTTPStatus
+from collections import Counter
 import requests
 from flask_restx import Resource, Namespace, reqparse, abort
 from .api_models import get_project_model, get_refresh_model
@@ -12,6 +13,7 @@ from .utils import (
     verify_cognito_token,
     cognito_data,
 )
+import json
 
 # Set namespace as /api/ - each request has to be <url>/api/v1/<endpoint>
 ns = Namespace("v1", path="/api/v1/", description="")
@@ -452,7 +454,6 @@ class ProjectDetail(Resource):
                 proj
                 for proj in data["projects"]
                 if proj["details"][0]["name"] == project_name
-                and any(user["email"] == owner_email for user in proj["user"])
             ),
             None,
         )
@@ -475,34 +476,58 @@ class ProjectDetail(Resource):
     def put(self, project_name):
         owner_email = get_user_email(parser.parse_args())
         updated_project = ns.payload
-
+    
         if (
             "user" not in updated_project
             or "details" not in updated_project
-            or "email" not in updated_project["user"][0]
-            or "name" not in updated_project["details"]
+            or "developed" not in updated_project
+            or "source_control" not in updated_project
+            or "architecture" not in updated_project
+            or "stage" not in updated_project
+            or "supporting_tools" not in updated_project
         ):
             abort(406, description="Missing JSON data")
+        
 
         # Ensure the email is set to owner_email
         updated_project["user"][0]["email"] = owner_email
 
         data = read_data()
+            
         project = next(
             (
                 proj
                 for proj in data["projects"]
-                if proj["details"]["name"] == project_name
+                if proj["details"][0]["name"] == project_name
                 and any(user["email"] == owner_email for user in proj["user"])
             ),
             None,
         )
-
+        
         if not project:
             abort(404, description="Project not found")
 
         # Update the project details
         project.update(updated_project)
+
+        write_data(data, duplicate=True)
+
+        duplicate_data = read_data(duplicate=True)
+        duplicate_arr = []
+        logger.info(duplicate_data["projects"])
+        for proj in duplicate_data["projects"]:
+            duplicate_arr.append(proj["details"][0]["name"])
+
+        logger.info(duplicate_arr)
+        counts = Counter(duplicate_arr)
+        duplicate_arr = [item for item, count in counts.items() if count > 1]
+        logger.info(duplicate_arr)
+        if len(duplicate_arr) > 0:
+            write_data({"projects": []}, duplicate=True)
+            return abort(409, description="Project with the same name already exists")
+
+        write_data({"projects": []}, duplicate=True)
+
         write_data(data)
 
         return project, 200
