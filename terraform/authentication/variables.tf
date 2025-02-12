@@ -28,7 +28,7 @@ variable "service_title" {
 variable "domain" {
   description = "Domain"
   type        = string
-  default     = "sdp-prod"
+  default     = "sdp-dev"
 }
 
 variable "region" {
