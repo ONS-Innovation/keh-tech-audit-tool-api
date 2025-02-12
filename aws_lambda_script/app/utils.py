@@ -47,7 +47,7 @@ cognito_data = read_cognito_data()
 
 
 # Used for the view project or get projects routes. This reads the data from the S3 bucket.
-def read_data():
+def read_data(object_name):
     """
     Reads data from an S3 bucket and returns it as a dictionary.
 
@@ -64,8 +64,9 @@ def read_data():
                                            when accessing the S3 bucket, an HTTP 500
                                            error is raised with a description of the error.
     """
+
     try:
-        response = s3.get_object(Bucket=BUCKET_NAME, Key=OBJECT_NAME)
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=object_name)
         data = json.loads(response["Body"].read().decode("utf-8"))
     except ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchKey":
@@ -76,7 +77,7 @@ def read_data():
 
 
 # Used for the POST request to add a new project to the S3 bucket.
-def write_data(new_data):
+def write_data(new_data, object_name):
     """
     Writes the provided data to an S3 bucket.
 
@@ -86,10 +87,11 @@ def write_data(new_data):
     Raises:
         ClientError: If there is an error writing data to the S3 bucket, a 500 HTTP error is raised with a description of the error.
     """
+
     try:
         s3.put_object(
             Bucket=BUCKET_NAME,
-            Key=OBJECT_NAME,
+            Key=object_name,
             Body=json.dumps(new_data, indent=4).encode("utf-8"),
         )
     except ClientError as e:

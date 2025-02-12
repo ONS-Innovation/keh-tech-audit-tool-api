@@ -39,7 +39,7 @@ variable "ecr_repository" {
 variable "container_ver" {
   description = "Container tag"
   type        = string
-  default     = "v0.0.2"
+  default     = "v1.0.0"
 
 }
 

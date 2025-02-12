@@ -52,11 +52,11 @@ variable "business_owner_tag" {
 variable "container_ver" {
   description = "Container version"
   type        = string
-  default     = "v0.0.1"
+  default     = "v1.0.0"
 }
 
 variable "ecr_repository_name" {
   description = "ECR repository name"
   type        = string
-  default     = "tech-audit-tool-api"
+  default     = "sdp-dev-tech-audit-tool-api"
 }

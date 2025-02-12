@@ -1,6 +1,7 @@
 import logging
 import os
 from http import HTTPStatus
+from collections import Counter
 import requests
 from flask_restx import Resource, Namespace, reqparse, abort
 from .api_models import get_project_model, get_refresh_model
@@ -238,7 +239,7 @@ class Filter(Resource):
         args = filterParser.parse_args()
         filter_params = {k: v for k, v in args.items() if k and v}
 
-        data = read_data()
+        data = read_data("new_project_data.json")
         projects = data["projects"]
 
         # Define paths for different filter types
@@ -320,11 +321,10 @@ class Projects(Resource):
     @ns.marshal_with(project_model, as_list=True)
     def get(self):
         owner_email = get_user_email(parser.parse_args())
-        data = read_data()
+        data = read_data("new_project_data.json")
         user_projects = [
             proj
             for proj in data["projects"]
-            if any(user["email"] == owner_email for user in proj["user"])
         ]
         return user_projects, 200
 
@@ -371,7 +371,7 @@ class Projects(Resource):
                 {"email": owner_email, "roles": ["Editor"], "grade": ""}
             )
 
-        data = read_data()
+        data = read_data("new_project_data.json")
 
         # Check if project with same name exists and has any matching user emails
         new_project_name = new_project["details"][0]["name"]
@@ -396,7 +396,7 @@ class Projects(Resource):
                 description=f"Project with the same name '{new_project_name}', and owner '{matching_email}' already exists",
             )
         data["projects"].append(new_project)
-        write_data(data)
+        write_data(data, "new_project_data.json")
 
         # Loop through the architecture and add any new items to the array data in S3
         categories = [
@@ -447,13 +447,12 @@ class ProjectDetail(Resource):
         # Sanitize project_name by replacing '%20' with spaces
         project_name = project_name.replace("%20", " ")
 
-        data = read_data()
+        data = read_data("new_project_data.json")
         project = next(
             (
                 proj
                 for proj in data["projects"]
                 if proj["details"][0]["name"] == project_name
-                and any(user["email"] == owner_email for user in proj["user"])
             ),
             None,
         )
@@ -476,35 +475,55 @@ class ProjectDetail(Resource):
     def put(self, project_name):
         owner_email = get_user_email(parser.parse_args())
         updated_project = ns.payload
-
+    
         if (
             "user" not in updated_project
             or "details" not in updated_project
-            or "email" not in updated_project["user"][0]
-            or "name" not in updated_project["details"]
+            or "developed" not in updated_project
+            or "source_control" not in updated_project
+            or "architecture" not in updated_project
+            or "stage" not in updated_project
+            or "supporting_tools" not in updated_project
         ):
             abort(406, description="Missing JSON data")
+        
 
         # Ensure the email is set to owner_email
-        updated_project["user"][0]["email"] = owner_email
 
-        data = read_data()
+        data = read_data("new_project_data.json")
+            
         project = next(
             (
                 proj
                 for proj in data["projects"]
-                if proj["details"]["name"] == project_name
+                if proj["details"][0]["name"] == project_name
                 and any(user["email"] == owner_email for user in proj["user"])
             ),
             None,
         )
-
+        
         if not project:
             abort(404, description="Project not found")
 
         # Update the project details
         project.update(updated_project)
-        write_data(data)
+
+        write_data(data, "duplicates.json")
+
+        duplicate_data = read_data("duplicates.json")
+        duplicate_arr = []
+        for proj in duplicate_data["projects"]:
+            duplicate_arr.append(proj["details"][0]["name"])
+
+        counts = Counter(duplicate_arr)
+        duplicate_arr = [item for item, count in counts.items() if count > 1]
+        if len(duplicate_arr) > 0:
+            write_data({"projects": []}, "duplicates.json")
+            return abort(409, description="Project with the same name already exists")
+
+        write_data({"projects": []}, "duplicates.json")
+
+        write_data(data, "new_project_data.json")
 
         return project, 200
 
