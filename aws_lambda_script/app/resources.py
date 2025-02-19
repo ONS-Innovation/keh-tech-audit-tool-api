@@ -474,6 +474,7 @@ class ProjectDetail(Resource):
     )
     def put(self, project_name):
         owner_email = get_user_email(parser.parse_args())
+        project_name = project_name.replace("%20", " ")
         updated_project = ns.payload
     
         if (
@@ -503,7 +504,7 @@ class ProjectDetail(Resource):
         )
         
         if not project:
-            abort(404, description="Project not found")
+            abort(404, description=f"{project_name} with user {owner_email} not found")
 
         # Update the project details
         project.update(updated_project)
