@@ -347,7 +347,7 @@ class Projects(Resource):
         # Check that required fields are present in the JSON payload
         new_project = ns.payload
         
-        logger.info("POSTING PROJECT: %s", new_project["details"][0]["name"])
+        logger.info("POSTING PROJECT: \"%s\"", new_project["details"][0]["name"])
         if (
             "user" not in new_project
             or "details" not in new_project
@@ -449,7 +449,7 @@ class ProjectDetail(Resource):
         # Sanitize project_name by replacing '%20' with spaces
         project_name = project_name.replace("%20", " ")
 
-        logger.info("FETCHING PROJECT: %s", project_name)
+        logger.info("FETCHING PROJECT: \"%s\"", project_name)
 
         data = read_data("new_project_data.json")
         project = next(
@@ -482,7 +482,7 @@ class ProjectDetail(Resource):
         project_name = project_name.replace("%20", " ")
         updated_project = ns.payload
 
-        logger.info("FETCHING PROJECT: %s", project_name)
+        logger.info("EDITING PROJECT: \"%s\"", project_name)
     
         if (
             "user" not in updated_project

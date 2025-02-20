@@ -1,8 +1,11 @@
 import awsgi
+import logging
 from app import create_app
 
 app = create_app()
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     """
@@ -23,7 +26,7 @@ def lambda_handler(event, context):
     response = awsgi.response(app, event, context)
     # Add the necessary CORS headers to the response
     response["headers"]["Access-Control-Allow-Origin"] = "*"
-    response["headers"]["Access-Control-Allow-Methods"] = "OPTIONS,PUT,POST,GET"
+    response["headers"]["Access-Control-Allow-Methods"] = "OPTIONS,POST,GET"
     response["headers"]["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
 
     return response
