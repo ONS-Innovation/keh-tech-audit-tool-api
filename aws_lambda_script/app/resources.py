@@ -447,7 +447,7 @@ class ProjectDetail(Resource):
         owner_email = get_user_email(parser.parse_args())
 
         # Sanitize project_name by replacing '%20' with spaces
-        project_name = project_name.replace("%20", " ")
+        project_name = project_name.replace("%20", " ").replace('\r\n', '').replace('\n', '')
 
         logger.info("FETCHING PROJECT: \"%s\"", project_name)
 
@@ -461,7 +461,7 @@ class ProjectDetail(Resource):
             None,
         )
         if not project:
-            logger.error("PROJECT '%s' NOT FOUND", project_name)
+            logger.error("PROJECT '%s' NOT FOUND", project_name.replace('\r\n', '').replace('\n', ''))
             abort(404, description="Project not found")
         return project, 200
 
