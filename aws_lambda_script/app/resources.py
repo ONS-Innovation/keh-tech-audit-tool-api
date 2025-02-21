@@ -346,7 +346,8 @@ class Projects(Resource):
 
         # Check that required fields are present in the JSON payload
         new_project = ns.payload
-        print(new_project)
+        
+        logger.info("POSTING PROJECT: \"%s\"", new_project["details"][0]["name"])
         if (
             "user" not in new_project
             or "details" not in new_project
@@ -355,6 +356,7 @@ class Projects(Resource):
             or "stage" not in new_project
             or "supporting_tools" not in new_project
         ):
+            logger.error("Missing JSON data")
             abort(406, description="Missing JSON data")
 
         # Ensure the email is set to owner_email and add 'Editor' role if email matches owner_email
@@ -445,7 +447,9 @@ class ProjectDetail(Resource):
         owner_email = get_user_email(parser.parse_args())
 
         # Sanitize project_name by replacing '%20' with spaces
-        project_name = project_name.replace("%20", " ")
+        project_name = project_name.replace("%20", " ").replace('\r\n', '').replace('\n', '')
+
+        logger.info("FETCHING PROJECT: \"%s\"", project_name)
 
         data = read_data("new_project_data.json")
         project = next(
@@ -457,6 +461,7 @@ class ProjectDetail(Resource):
             None,
         )
         if not project:
+            logger.error("PROJECT '%s' NOT FOUND", project_name)
             abort(404, description="Project not found")
         return project, 200
 
@@ -474,7 +479,10 @@ class ProjectDetail(Resource):
     )
     def put(self, project_name):
         owner_email = get_user_email(parser.parse_args())
+        project_name = project_name.replace("%20", " ").replace('\r\n', '').replace('\n', '')
         updated_project = ns.payload
+
+        logger.info("EDITING PROJECT: \"%s\"", project_name)
     
         if (
             "user" not in updated_project
@@ -485,6 +493,7 @@ class ProjectDetail(Resource):
             or "stage" not in updated_project
             or "supporting_tools" not in updated_project
         ):
+            logger.error("Missing JSON data")
             abort(406, description="Missing JSON data")
         
 
@@ -503,7 +512,8 @@ class ProjectDetail(Resource):
         )
         
         if not project:
-            abort(404, description="Project not found")
+            logger.error("PROJECT '%s' NOT FOUND", project_name)
+            abort(404, description=f"{project_name} with user {owner_email} not found")
 
         # Update the project details
         project.update(updated_project)

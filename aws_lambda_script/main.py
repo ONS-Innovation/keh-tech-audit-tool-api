@@ -1,8 +1,11 @@
 import awsgi
+import logging
 from app import create_app
 
 app = create_app()
 
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 def lambda_handler(event, context):
     """
