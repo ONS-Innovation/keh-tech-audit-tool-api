@@ -461,7 +461,7 @@ class ProjectDetail(Resource):
             None,
         )
         if not project:
-            logger.error("PROJECT '%s' NOT FOUND", project_name.replace('\r\n', '').replace('\n', ''))
+            logger.error("PROJECT '%s' NOT FOUND", project_name)
             abort(404, description="Project not found")
         return project, 200
 
@@ -479,7 +479,7 @@ class ProjectDetail(Resource):
     )
     def put(self, project_name):
         owner_email = get_user_email(parser.parse_args())
-        project_name = project_name.replace("%20", " ")
+        project_name = project_name.replace("%20", " ").replace('\r\n', '').replace('\n', '')
         updated_project = ns.payload
 
         logger.info("EDITING PROJECT: \"%s\"", project_name)
