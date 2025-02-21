@@ -32,7 +32,7 @@ parser.add_argument(
 required_param = {"Authorization": "ID Token required"}
 
 # Set logger for AWS cloudwatch to return just errors
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
