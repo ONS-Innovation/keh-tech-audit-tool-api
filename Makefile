@@ -56,3 +56,11 @@ mkdocs-build:  ## Build mkdocs.
 .PHONY: pytest
 pytest:  ## Run pytest
 	poetry run pytest
+
+.PHONY: run
+run-local:  ## Run the local server
+	poetry run flask --app aws_lambda_script/app run --port=5000
+
+.PHONY: run-no-ui
+run-local-no-ui:  ## Run the local server without the UI
+	poetry run flask --app aws_lambda_script/app run --port=8000
