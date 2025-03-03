@@ -11,7 +11,7 @@ def get_project_model():
         {
             "email": fields.String(required=True, description="User email"),
             "roles": fields.List(
-                fields.String, required=True, description="Roles of the user"
+                fields.String, required=False, description="Roles of the user"
             ),
             "grade": fields.String(required=False, description="Grade of the user"),
         },
@@ -20,12 +20,10 @@ def get_project_model():
     details_model = ns.model(
         "Details",
         {   
-            "programme_name": fields.String(required=True, description="Programme name", default="N/A"),
-            "programme_short_name": fields.String(required=True, description="Programme short name", default="N/A"),
+            "programme_name": fields.String(required=False, description="Programme name", default="N/A"),
+            "programme_short_name": fields.String(required=False, description="Programme short name", default="N/A"),
             "name": fields.String(required=True, description="Project name"),
-            "short_name": fields.String(
-                required=True, description="Short name of the project"
-            ),
+            "short_name": fields.String(required=False, description="Short name of the project"),
             "documentation_link": fields.List(
                 fields.String,
                 required=False,
@@ -40,23 +38,23 @@ def get_project_model():
     source_control_model = ns.model(
         "SourceControl",
         {
-            "type": fields.String(required=True, description="Type of source control"),
+            "type": fields.String(required=False, description="Type of source control"),
             "links": fields.List(
                 fields.Nested(
                     ns.model(
                         "RepoLink",
                         {
                             "description": fields.String(
-                                required=True,
+                                required=False,
                                 description="Description of the repository link",
                             ),
                             "url": fields.String(
-                                required=True, description="URL of the repository link"
+                                required=False, description="URL of the repository link"
                             ),
                         },
                     )
                 ),
-                required=True,
+                required=False,
                 description="Links to repositories",
             ),
         },
@@ -70,7 +68,7 @@ def get_project_model():
                     "Hosting",
                     {
                         "type": fields.List(
-                            fields.String, required=True, description="Type of hosting"
+                            fields.String, required=False, description="Type of hosting"
                         ),
                         "details": fields.List(
                             fields.String,
@@ -88,7 +86,7 @@ def get_project_model():
                             fields.String, required=False, description="Main database"
                         ),
                         "others": fields.List(
-                            fields.String, required=True, description="Other databases"
+                            fields.String, required=False, description="Other databases"
                         ),
                     },
                 )
@@ -101,7 +99,7 @@ def get_project_model():
                             fields.String, required=False, description="Main language"
                         ),
                         "others": fields.List(
-                            fields.String, required=True, description="Other languages"
+                            fields.String, required=False, description="Other languages"
                         ),
                     },
                 )
@@ -147,7 +145,7 @@ def get_project_model():
                         ),
                         "others": fields.List(
                             fields.String,
-                            required=True,
+                            required=False,
                             description="Other infrastructure tools",
                         ),
                     },
@@ -164,10 +162,10 @@ def get_project_model():
                     "code_editors",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main code editor"
+                            fields.String, required=False, description="Main code editor"
                         ),
                         "others": fields.List(
-                            fields.String, required=True, description="Other code editors"
+                            fields.String, required=False, description="Other code editors"
                         ),
                     },
                 )
@@ -177,10 +175,10 @@ def get_project_model():
                     "user_interface",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main UI tool"
+                            fields.String, required=False, description="Main UI tool"
                         ),
                         "others": fields.List(
-                            fields.String, required=True, description="Other UI tools"
+                            fields.String, required=False, description="Other UI tools"
                         ),
                     },
                 )
@@ -190,26 +188,26 @@ def get_project_model():
                     "diagrams",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main diagram tool"
+                            fields.String, required=False, description="Main diagram tool"
                         ),
                         "others": fields.List(
-                            fields.String, required=True, description="Other diagram tools"
+                            fields.String, required=False, description="Other diagram tools"
                         ),
                     },
                 )
             ),
             "project_tracking": fields.String(
-                required=True, description="Project tracking tool used by the project"
+                required=False, description="Project tracking tool used by the project"
                 ),
             "documentation": fields.Nested(
                 ns.model(
                     "documentation",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main documentation tool"
+                            fields.String, required=False, description="Main documentation tool"
                         ),
                         "others": fields.List(
-                            fields.String, required=True, description="Other documentation tools"
+                            fields.String, required=False, description="Other documentation tools"
                         ),
                     },
                 )
@@ -219,10 +217,10 @@ def get_project_model():
                     "communication",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main communication tool"
+                            fields.String, required=False, description="Main communication tool"
                         ),
                         "others": fields.List(
-                            fields.String, required=True, description="Other communication tools"
+                            fields.String, required=False, description="Other communication tools"
                         ),
                     },
                 )
@@ -232,16 +230,16 @@ def get_project_model():
                     "collaboration",
                     {
                         "main": fields.List(
-                            fields.String, required=True, description="Main collaboration tool"
+                            fields.String, required=False, description="Main collaboration tool"
                         ),
                         "others": fields.List(
-                            fields.String, required=True, description="Other collaboration tools"
+                            fields.String, required=False, description="Other collaboration tools"
                         ),
                     },
                 )
             ),
             "incident_management": fields.String(
-                required=True, description="Incident management tool"
+                required=False, description="Incident management tool"
                 ),
         }
     )
@@ -258,21 +256,21 @@ def get_project_model():
                 description="Details of project",
             ),
             "developed": fields.List(
-                fields.Raw, required=True, description="Development details"
+                fields.Raw, required=False, description="Development details"
             ),
             "source_control": fields.List(
                 fields.Nested(source_control_model),
-                required=True,
+                required=False,
                 description="Source control platforms",
             ),
             "architecture": fields.Nested(
-                architecture_model, required=True, description="Architecture details"
+                architecture_model, required=False, description="Architecture details"
             ),
             "stage": fields.String(
-                required=True, description="Stage status of the project"
+                required=False, description="Stage status of the project"
             ),
             "supporting_tools": fields.Nested(
-                supporting_tools_model, required=True, description="Supporting Tools Details"
+                supporting_tools_model, required=False, description="Supporting Tools Details"
             ),
         },
     )

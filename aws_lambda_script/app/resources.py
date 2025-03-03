@@ -353,8 +353,6 @@ class Projects(Resource):
             or "details" not in new_project
             or "email" not in new_project["user"][0]
             or "name" not in new_project["details"][0]
-            or "stage" not in new_project
-            or "supporting_tools" not in new_project
         ):
             logger.error("Missing JSON data")
             abort(406, description="Missing JSON data")
@@ -487,11 +485,6 @@ class ProjectDetail(Resource):
         if (
             "user" not in updated_project
             or "details" not in updated_project
-            or "developed" not in updated_project
-            or "source_control" not in updated_project
-            or "architecture" not in updated_project
-            or "stage" not in updated_project
-            or "supporting_tools" not in updated_project
         ):
             logger.error("Missing JSON data")
             abort(406, description="Missing JSON data")
