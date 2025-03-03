@@ -19,7 +19,9 @@ def get_project_model():
 
     details_model = ns.model(
         "Details",
-        {
+        {   
+            "programme_name": fields.String(required=True, description="Programme name", default="N/A"),
+            "programme_short_name": fields.String(required=True, description="Programme short name", default="N/A"),
             "name": fields.String(required=True, description="Project name"),
             "short_name": fields.String(
                 required=True, description="Short name of the project"
