@@ -259,8 +259,19 @@ class Filter(Resource):
         def filter_developed(project):
             if "developed" not in filter_params:
                 return True
-            project_type = project["developed"][0].lower()
-            partners = [p.lower() for p in (project["developed"][1] or [])]
+                
+            # Handle cases where developed field might be empty or malformed
+            if not project.get("developed") or not isinstance(project["developed"], list) or len(project["developed"]) < 1:
+                return False
+                
+            # Get project type - first element in the developed list
+            project_type = project["developed"][0].lower() if project["developed"][0] else ""
+            
+            # Get partners - second element in the developed list if it exists and is a list
+            partners = []
+            if len(project["developed"]) > 1 and isinstance(project["developed"][1], list):
+                partners = [p.lower() for p in project["developed"][1] if p]
+                
             return any(
                 f.lower() == project_type or any(f.lower() in p for p in partners)
                 for f in filter_params["developed"]
@@ -318,7 +329,7 @@ class Projects(Resource):
     # Loop through all projects and return the ones
     # that match the user email in the first user item in the user list
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
-    @ns.marshal_with(project_model, as_list=True)
+    # @ns.marshal_list_with(project_model)
     def get(self):
         owner_email = get_user_email(parser.parse_args())
         data = read_data("new_project_data.json")

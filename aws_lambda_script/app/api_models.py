@@ -256,7 +256,7 @@ def get_project_model():
                 description="Details of project",
             ),
             "developed": fields.List(
-                fields.Raw, required=False, description="Development details"
+                fields.String, required=False, description="Development details"
             ),
             "source_control": fields.List(
                 fields.Nested(source_control_model),
