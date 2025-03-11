@@ -451,7 +451,7 @@ class Projects(Resource):
 class ProjectDetail(Resource):
     # Loop through all projects and return the one that matches
     # the name and the user email in the first user item in the user list
-    @ns.marshal_list_with(project_model)
+    @ns.marshal_with(project_model)
     def get(self, project_name):
         owner_email = get_user_email(parser.parse_args())
 
