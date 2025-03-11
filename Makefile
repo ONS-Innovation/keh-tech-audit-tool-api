@@ -57,7 +57,7 @@ mkdocs-build:  ## Build mkdocs.
 pytest:  ## Run pytest
 	poetry run pytest
 
-.PHONY: run
+.PHONY: run-local
 run-local:  ## Run the local server
 	poetry run flask --app aws_lambda_script/app run --port=5000
 
