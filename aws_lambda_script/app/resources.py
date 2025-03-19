@@ -422,8 +422,7 @@ class Projects(Resource):
                     array_data[category] = []
                 array_data[category] = [item.lower() for item in array_data[category]]
                 for item in items:
-                    item = item.lower()
-                    if item not in array_data[category]:
+                    if item.lower() not in array_data[category]:
                         array_data[category].append(item)
 
         write_array_data(array_data)
