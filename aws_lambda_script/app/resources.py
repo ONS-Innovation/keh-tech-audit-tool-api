@@ -259,8 +259,19 @@ class Filter(Resource):
         def filter_developed(project):
             if "developed" not in filter_params:
                 return True
-            project_type = project["developed"][0].lower()
-            partners = [p.lower() for p in (project["developed"][1] or [])]
+                
+            # Handle cases where developed field might be empty or malformed
+            if not project.get("developed") or not isinstance(project["developed"], list) or len(project["developed"]) < 1:
+                return False
+                
+            # Get project type - first element in the developed list
+            project_type = project["developed"][0].lower() if project["developed"][0] else ""
+            
+            # Get partners - second element in the developed list if it exists and is a list
+            partners = []
+            if len(project["developed"]) > 1 and isinstance(project["developed"][1], list):
+                partners = [p.lower() for p in project["developed"][1] if p]
+                
             return any(
                 f.lower() == project_type or any(f.lower() in p for p in partners)
                 for f in filter_params["developed"]
@@ -318,7 +329,7 @@ class Projects(Resource):
     # Loop through all projects and return the ones
     # that match the user email in the first user item in the user list
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
-    @ns.marshal_with(project_model, as_list=True)
+    # @ns.marshal_list_with(project_model)
     def get(self):
         owner_email = get_user_email(parser.parse_args())
         data = read_data("new_project_data.json")
@@ -353,8 +364,6 @@ class Projects(Resource):
             or "details" not in new_project
             or "email" not in new_project["user"][0]
             or "name" not in new_project["details"][0]
-            or "stage" not in new_project
-            or "supporting_tools" not in new_project
         ):
             logger.error("Missing JSON data")
             abort(406, description="Missing JSON data")
@@ -442,7 +451,7 @@ class Projects(Resource):
 class ProjectDetail(Resource):
     # Loop through all projects and return the one that matches
     # the name and the user email in the first user item in the user list
-    @ns.marshal_list_with(project_model)
+    @ns.marshal_with(project_model)
     def get(self, project_name):
         owner_email = get_user_email(parser.parse_args())
 
@@ -487,11 +496,6 @@ class ProjectDetail(Resource):
         if (
             "user" not in updated_project
             or "details" not in updated_project
-            or "developed" not in updated_project
-            or "source_control" not in updated_project
-            or "architecture" not in updated_project
-            or "stage" not in updated_project
-            or "supporting_tools" not in updated_project
         ):
             logger.error("Missing JSON data")
             abort(406, description="Missing JSON data")
