@@ -8,8 +8,6 @@ from .api_models import get_project_model, get_refresh_model
 from .utils import (
     read_data,
     write_data,
-    read_array_data,
-    write_array_data,
     verify_cognito_token,
     cognito_data,
 )
@@ -408,34 +406,6 @@ class Projects(Resource):
             )
         data["projects"].append(new_project)
         write_data(data, "new_project_data.json")
-
-        # Loop through the architecture and add any new items to the array data in S3
-        categories = [
-            "languages",
-            "frameworks",
-            "cicd",
-            "infrastructure",
-            "database",
-            "hosting",
-        ]
-        array_data = read_array_data()
-
-        for category in categories:
-            if category in new_project["architecture"]:
-                items = []
-                if "main" in new_project["architecture"][category]:
-                    items.extend(new_project["architecture"][category]["main"])
-                if "others" in new_project["architecture"][category]:
-                    items.extend(new_project["architecture"][category]["others"])
-                if category not in array_data:
-                    array_data[category] = []
-                array_data[category] = [item.lower() for item in array_data[category]]
-                for item in items:
-                    item = item.lower()
-                    if item not in array_data[category]:
-                        array_data[category].append(item)
-
-        write_array_data(array_data)
 
         return new_project, 201
 
