@@ -17,6 +17,8 @@ nav:
       - User: endpoints/user.md
   - Infrastructure: infrastructure.md
   - Deployment: deployment.md
+  - MkDocs:
+    - Documentation: documentation.md
 
 theme:
   name: material
