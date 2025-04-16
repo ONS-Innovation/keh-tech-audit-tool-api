@@ -3,6 +3,30 @@
 
 A Flask and flask-restx API for the tech audit tool.
 
+## Contents
+
+- [Tech Audit Tool - API](#tech-audit-tool---api)
+  - [Contents](#contents)
+  - [Setting up \& Running Locally](#setting-up--running-locally)
+  - [Testing](#testing)
+  - [Testing with Postman](#testing-with-postman)
+  - [MkDocs Documentation](#mkdocs-documentation)
+    - [Running the MkDocs locally](#running-the-mkdocs-locally)
+    - [Deploying the MkDocs](#deploying-the-mkdocs)
+      - [Deployment GitHub Action](#deployment-github-action)
+      - [Manual Deployment](#manual-deployment)
+  - [API Reference](#api-reference)
+    - [Get user email](#get-user-email)
+    - [Get new ID token from refresh token](#get-new-id-token-from-refresh-token)
+    - [Get all user projects](#get-all-user-projects)
+    - [Get a specific user project](#get-a-specific-user-project)
+    - [Create a new project](#create-a-new-project)
+    - [Get autocomplete from string \[REMOVED\]](#get-autocomplete-from-string-removed)
+    - [Get filtered projects](#get-filtered-projects)
+    - [Edit a project](#edit-a-project)
+  - [Authorization with Cognito and API Gateway](#authorization-with-cognito-and-api-gateway)
+
+
 ## Setting up & Running Locally
 
 Clone the project
@@ -111,15 +135,19 @@ make mkdocs
 
 ### Deploying the MkDocs
 
+#### Deployment GitHub Action
+
+The MkDocs documentation is automatically deployed to the `gh-pages` branch of the repository using a GitHub Action. The action is triggered on every push to the `main` branch. This action is defined within `./.github/workflows/deploy_mkdocs.yml`.
+
+#### Manual Deployment
+
 Deploying the MkDocs is done by running the following command:
 
 ```bash
-make mkdocs-build
+make mkdocs-deploy
 ```
 
-Then changing the name of the `site` directory to `mkdocs_deployment`.
-
-When you push the changes to the `main` branch, the MkDocs will be deployed to GitHub pages.
+This will build the MkDocs documentation and deploy it to the `gh-pages` branch of the repository. The documentation will be available at [https://ons-innovation.github.io/keh-tech-audit-tool-api](https://ons-innovation.github.io/keh-tech-audit-tool-api).
 
 ## API Reference
 
