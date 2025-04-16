@@ -12,11 +12,9 @@ BUCKET_NAME = os.getenv("TECH_AUDIT_DATA_BUCKET", "sdp-dev-tech-audit-tool-api")
 SECRET_NAME = os.getenv("TECH_AUDIT_SECRET_MANAGER", "sdp-dev-tech-audit-tool-api/secrets")
 REGION_NAME = os.getenv("AWS_DEFAULT_REGION", "eu-west-2")
 OBJECT_NAME = "new_project_data.json"
-AUTOCOMPLETE_OBJECT_NAME = "array_data.json"
 
 # Create an S3 client
 s3 = boto3.client("s3", region_name=REGION_NAME)
-
 
 def read_cognito_data():
     """
@@ -42,9 +40,7 @@ def read_cognito_data():
 
     return json.loads(get_secret_value_response["SecretString"])
 
-
 cognito_data = read_cognito_data()
-
 
 # Used for the view project or get projects routes. This reads the data from the S3 bucket.
 def read_data(object_name):
@@ -96,58 +92,6 @@ def write_data(new_data, object_name):
         )
     except ClientError as e:
         abort(500, description=f"Error writing data: {e}")
-
-
-# This is for the autocomplete feature. The 'array_data.json'
-# file in the S3 stores the data for the autocomplete.
-# Although, this is now only used to update the json file if
-# a user adds a new type of architecture that isn't in the list.
-def read_array_data():
-    """
-    Reads array data from an S3 bucket.
-
-    This function attempts to retrieve an object from an S3 bucket and parse its content as JSON.
-    If the specified object does not exist, it returns an empty dictionary.
-    If any other error occurs, it aborts the operation with a 500 status code and an error description.
-
-    Returns:
-        dict: The parsed JSON data from the S3 object, or an empty dictionary if the object does not exist.
-
-    Raises:
-        ClientError: If an error occurs while reading the S3 object, other than a missing key.
-    """
-    try:
-        response = s3.get_object(Bucket=BUCKET_NAME, Key=AUTOCOMPLETE_OBJECT_NAME)
-        array_data = json.loads(response["Body"].read().decode("utf-8"))
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "NoSuchKey":
-            array_data = {}
-        else:
-            abort(500, description=f"Error reading array data: {e}")
-    return array_data
-
-
-def write_array_data(new_array_data):
-    """
-    Writes the provided array data to an S3 bucket as a JSON object.
-
-    Args:
-        new_array_data (list): The array data to be written to the S3 bucket.
-
-    Raises:
-        ClientError: If there is an error writing the data to S3,
-        an HTTP 500 error is raised with a description
-        of the error.
-    """
-    try:
-        s3.put_object(
-            Bucket=BUCKET_NAME,
-            Key=AUTOCOMPLETE_OBJECT_NAME,
-            Body=json.dumps(new_array_data, indent=4).encode("utf-8"),
-        )
-    except ClientError as e:
-        abort(500, description=f"Error writing array data: {e}")
-
 
 def get_cognito_jwks():
     """
