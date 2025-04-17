@@ -31,3 +31,5 @@ Thumbs.db
 aws_lambda_script/app/__pycache__/
 info.txt
 terraform_demo
+
+concourse_vars.yml

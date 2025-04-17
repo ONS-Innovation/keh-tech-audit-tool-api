@@ -1,0 +1,74 @@
+resources:
+- name: resource-repo
+  type: git
+  icon: github
+  source:
+    uri: https://github.com/ONS-Innovation/keh-tech-audit-tool-api.git
+    branch: concourse
+
+- name: api-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: ((image-repo-name))
+    username: ((registry-username))
+    password: ((registry-password))
+    tag: ((container_ver))
+
+jobs:
+- name: build-and-push
+  public: true
+  plan:
+  - get: resource-repo
+    trigger: true
+
+  - task: build-image
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: concourse/oci-build-task
+      inputs:
+      - name: resource-repo
+      outputs:
+      - name: image
+      params:
+        CONTEXT: resource-repo
+      run: # binary used to build the image
+        path: build
+
+  - put: api-image
+    params:
+      image: image/image.tar
+
+  - task: terraform
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: hashicorp/terraform}
+      inputs:
+      - name: resource-repo
+      run:
+        path: sh
+        args:
+        - -cx
+        - |
+          export AWS_ACCESS_KEY_ID=((aws_access_key_id))
+          export AWS_SECRET_ACCESS_KEY=((aws_secret_access_key))
+          git config --global url."https://x-access-token:((github_access_token))@github.com/".insteadOf "https://github.com/"
+          cd resource-repo/terraform/lambda
+          terraform init -backend-config=env/dev/backend-dev.tfbackend -reconfigure
+          terraform apply \
+           -var "aws_account_id=((aws_account_id))" \
+           -var "aws_access_key_id=((aws_access_key_id))" \
+           -var "aws_secret_access_key=((aws_secret_access_key))" \
+           -var "domain=((domain))" \
+           -var "ecr_repository=((ecr_repository))" \
+           -var "service_subdomain=((service_subdomain))" \
+           -var "TECH_AUDIT_DATA_BUCKET=((tech-audit-data-bucket))" \
+           -var "TECH_AUDIT_SECRET_MANAGER=((tech-audit-secret-manager))" \
+           -auto-approve
