@@ -59,6 +59,14 @@ def get_project_model():
             ),
         },
     )
+    
+    miscellaneous_model = ns.model(
+        "Miscellaneous",
+        {
+            "name": fields.String(required=True, description="Name of the miscellaneous detail"),
+            "description": fields.String(required=False, description="Description of the miscellaneous detail"),
+        },
+    )
 
     architecture_model = ns.model(
         "Architecture",
@@ -241,6 +249,11 @@ def get_project_model():
             "incident_management": fields.String(
                 required=False, description="Incident management tool"
                 ),
+            "miscellaneous": fields.List(
+                fields.Nested(miscellaneous_model),
+                required=False,
+                description="Miscellaneous details"
+            ),
         }
     )
 
@@ -271,7 +284,7 @@ def get_project_model():
             ),
             "supporting_tools": fields.Nested(
                 supporting_tools_model, required=False, description="Supporting Tools Details"
-            ),
+            )
         },
     )
 
