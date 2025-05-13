@@ -240,7 +240,7 @@ def get_project_model():
             ),
             "incident_management": fields.String(
                 required=False, description="Incident management tool"
-                ),
+                ), 
             "miscellaneous": fields.Nested(
                 ns.model(
                     "Miscellaneous",
