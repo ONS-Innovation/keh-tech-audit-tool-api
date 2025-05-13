@@ -358,7 +358,7 @@ class Projects(Resource):
         # Check that required fields are present in the JSON payload
         new_project = ns.payload
         
-        logger.info("POSTING PROJECT: \"%s\"", new_project["details"][0]["name"])
+        logger.info("POSTING PROJECT: \"%s\"", new_project)
         if (
             "user" not in new_project
             or "details" not in new_project
