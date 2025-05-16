@@ -240,7 +240,20 @@ def get_project_model():
             ),
             "incident_management": fields.String(
                 required=False, description="Incident management tool"
-                ),
+                ), 
+            "miscellaneous": fields.List(
+                fields.Nested(
+                    ns.model(
+                        "MiscellaneousTool",
+                        {
+                            "name": fields.String(required=True, description="Tool name"),
+                            "description": fields.String(required=True, description="Tool description"),
+                        },
+                    ),
+                    required=False,
+                    description="List of miscellaneous tools",
+                )
+            )
         }
     )
 
