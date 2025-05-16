@@ -256,7 +256,6 @@ def get_project_model():
             )
         }
     )
-    
 
     project_model = ns.model(
         "Project",
