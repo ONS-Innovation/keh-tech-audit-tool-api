@@ -21,15 +21,13 @@ if [[ ${env} != "prod" ]]; then
 fi
 
 cd resource-repo/terraform/api_gateway
+
 terraform init -backend-config=env/${env}/backend-${env}.tfbackend -reconfigure
 terraform apply \
 -var "aws_account_id=$aws_account_id" \
 -var "aws_access_key_id=$aws_access_key_id" \
 -var "aws_secret_access_key=$aws_secret_access_key" \
 -var "domain=$domain" \
--var "service_subdomain=$service_subdomain" \
--var "container_ver=${tag}" \
--var "ecr_repository=$ecr_repository" \
 -auto-approve
 
 cd ../lambda
@@ -40,4 +38,7 @@ terraform apply \
 -var "aws_access_key_id=$aws_access_key_id" \
 -var "aws_secret_access_key=$aws_secret_access_key" \
 -var "domain=$domain" \
+-var "service_subdomain=$service_subdomain" \
+-var "container_ver=${tag}" \
+-var "ecr_repository=$ecr_repository" \
 -auto-approve
