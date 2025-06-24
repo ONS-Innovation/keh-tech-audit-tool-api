@@ -282,6 +282,11 @@ def get_project_model():
             "stage": fields.String(
                 required=False, description="Stage status of the project"
             ),
+            "project_dependencies": fields.List(
+                fields.String,
+                required=False,
+                description="List of project dependencies",
+            ),
             "supporting_tools": fields.Nested(
                 supporting_tools_model, required=False, description="Supporting Tools Details"
             ),
