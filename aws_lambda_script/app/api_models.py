@@ -32,6 +32,25 @@ def get_project_model():
             "project_description": fields.String(
                 required=False, description="Description of the project"
             ),
+            "project_dependencies": fields.List(
+                fields.Nested(
+                    ns.model(
+                        "project_dependency",
+                        {
+                            "name": fields.String(
+                                required=False,
+                                description="Name of the project",
+                            ),
+                            "description": fields.String(
+                                required=False, 
+                                description="Description of the dependency"
+                            ),
+                        },
+                    )
+                ),
+                required=False,
+                description="A List of project dependencies",
+            ),
         },
     )
 
@@ -281,11 +300,6 @@ def get_project_model():
             ),
             "stage": fields.String(
                 required=False, description="Stage status of the project"
-            ),
-            "project_dependencies": fields.List(
-                fields.String,
-                required=False,
-                description="List of project dependencies",
             ),
             "supporting_tools": fields.Nested(
                 supporting_tools_model, required=False, description="Supporting Tools Details"
