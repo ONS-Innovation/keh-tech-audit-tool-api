@@ -178,6 +178,12 @@ def test_post_and_get_project_with_timestamp(
                 }
             },
             "stage": "Development",
+            "project_dependencies":[
+                {
+                    "name": "Blaise 5",
+                    "description": "For Testing",
+                }
+            ],
             "supporting_tools": {
             "code_editors": [
                 "VSCode"
