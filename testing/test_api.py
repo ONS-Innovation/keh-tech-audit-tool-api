@@ -115,7 +115,13 @@ def test_post_and_get_project_with_timestamp(
                     "documentation_link": [
                         "https://hollis.biz.ons.gov.uk"
                     ],
-                    "project_description": "Operative hybrid instruction set"
+                    "project_description": "Operative hybrid instruction set",
+                    "project_dependencies": [
+                        {
+                            "name": "Blaise 5",
+                            "description": "For Testing"
+                        }
+                    ],  
                 }
             ],
             "developed": [
@@ -178,12 +184,6 @@ def test_post_and_get_project_with_timestamp(
                 }
             },
             "stage": "Development",
-            "project_dependencies":[
-                {
-                    "name": "Blaise 5",
-                    "description": "For Testing",
-                }
-            ],
             "supporting_tools": {
             "code_editors": [
                 "VSCode"
