@@ -268,6 +268,12 @@ Send JSON in this format:
       }
     },
     "stage":"Development",
+    "project_dependencies":[
+      {
+        "name": "string",
+        "description": "string"
+      }
+    ],
     "supporting_tools": {
           "code_editors": {
             "main": [],
@@ -413,6 +419,12 @@ Send JSON in this format:
       }
     },
     "stage":"Development",
+    "project_dependencies":[
+      {
+        "name": "string",
+        "description": "string"
+      }
+    ],
     "supporting_tools": {
           "code_editors": {
             "main": [],
