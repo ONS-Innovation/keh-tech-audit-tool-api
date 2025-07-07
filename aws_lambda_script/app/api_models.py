@@ -32,6 +32,25 @@ def get_project_model():
             "project_description": fields.String(
                 required=False, description="Description of the project"
             ),
+            "project_dependencies": fields.List(
+                fields.Nested(
+                    ns.model(
+                        "project_dependency",
+                        {
+                            "name": fields.String(
+                                required=False,
+                                description="Name of the project",
+                            ),
+                            "description": fields.String(
+                                required=False, 
+                                description="Description of the dependency"
+                            ),
+                        },
+                    )
+                ),
+                required=False,
+                description="A List of project dependencies",
+            ),
         },
     )
 

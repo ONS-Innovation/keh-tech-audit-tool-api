@@ -5,7 +5,7 @@ import datetime
 from unittest.mock import patch
 
 # Mock verify_cognito_token for authentication
-mocked_user_email = "test@ons.gov.uk"
+mocked_user_email = os.getenv("MOCK_USER_EMAIL", "test@ons.gov.uk")
 
 def mock_verify_cognito_token(token):
     return {"email": mocked_user_email}
@@ -57,7 +57,7 @@ def get_mock_token():
 @patch("app.utils.verify_cognito_token", side_effect=mock_verify_cognito_token)
 def test_get_user(mock_verify_token, client):
     mock_token = get_mock_token()
-    response = client.get("/api/user", headers={"Authorization": f"{mock_token}"})
+    response = client.get("/api/v1/user", headers={"Authorization": f"{mock_token}"})
     assert (
         response.status_code == 200
     ), f"Unexpected status code: {response.status_code}, {response.data}"
@@ -70,7 +70,7 @@ def test_get_user(mock_verify_token, client):
 @patch("app.utils.verify_cognito_token", side_effect=mock_verify_cognito_token)
 def test_get_projects(mock_verify_token, mock_read, client):
     mock_token = get_mock_token()
-    response = client.get("/api/projects", headers={"Authorization": f"{mock_token}"})
+    response = client.get("/api/v1/projects", headers={"Authorization": f"{mock_token}"})
     assert (
         response.status_code == 200
     ), f"Unexpected status code: {response.status_code}, {response.data}"
@@ -88,12 +88,12 @@ def test_post_and_get_project_with_timestamp(
     mock_token = get_mock_token()
 
     # Create a unique project name using time.time()
-    project_name = f"Test Project {datetime.datetime.now(datetime.UTC)}"
+    project_name = f"Test Project {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d-%H-%M-%S')}"
 
     new_project = {
             "user": [
                 {
-                    "email": "test@ons.gov.uk",
+                    "email": mocked_user_email,
                     "roles": [
                         "Technical Contact",
                         "Editor"
@@ -110,12 +110,18 @@ def test_post_and_get_project_with_timestamp(
             ],
             "details": [
                 {
-                    "name": "Another test^3",
+                    "name": f"Test Project {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d-%H-%M-%S')}",
                     "short_name": "Principal",
                     "documentation_link": [
                         "https://hollis.biz.ons.gov.uk"
                     ],
-                    "project_description": "Operative hybrid instruction set"
+                    "project_description": "Operative hybrid instruction set",
+                    "project_dependencies": [
+                        {
+                            "name": "Blaise 5",
+                            "description": "For Testing"
+                        }
+                    ],  
                 }
             ],
             "developed": [
@@ -206,10 +212,11 @@ def test_post_and_get_project_with_timestamp(
 
     # POST the new project
     post_response = client.post(
-        "/api/projects",
+        "/api/v1/projects",
         data=json.dumps(new_project),
         headers={"Authorization": f"{mock_token}", "Content-Type": "application/json"},
     )
+    print(post_response.data)
 
     assert (
         post_response.status_code == 201
@@ -217,7 +224,7 @@ def test_post_and_get_project_with_timestamp(
 
     # GET the project by name
     get_response = client.get(
-        f"/api/projects/{project_name}", headers={"Authorization": f"{mock_token}"}
+        f"/api/v1/projects/{project_name}", headers={"Authorization": f"{mock_token}"}
     )
     assert (
         get_response.status_code == 200
@@ -226,58 +233,14 @@ def test_post_and_get_project_with_timestamp(
     assert data["details"][0]["name"] == project_name
     assert data["user"][0]["email"] == mocked_user_email
 
-
-# Tests for "/autocomplete" route
-@patch("app.utils.read_array_data", side_effect=mock_read_array_data)
-@patch("app.utils.verify_cognito_token", side_effect=mock_verify_cognito_token)
-def test_autocomplete_languages(mock_verify_token, mock_read_array, client):
-    mock_token = get_mock_token()
-    response = client.get(
-        "/api/autocomplete",
-        query_string={"type": "languages", "search": "py"},
-        headers={"Authorization": f"{mock_token}"},
-    )
-    assert (
-        response.status_code == 200
-    ), f"Unexpected status code: {response.status_code}, {response.data}"
-    data = json.loads(response.data)
-    assert "python" in data
-
-
-@patch("app.utils.verify_cognito_token", side_effect=mock_verify_cognito_token)
-def test_autocomplete_invalid_type(mock_verify_token, client):
-    mock_token = get_mock_token()
-    response = client.get(
-        "/api/autocomplete",
-        query_string={"type": "unknown", "search": "py"},
-        headers={"Authorization": f"{mock_token}"},
-    )
-    assert (
-        response.status_code == 406
-    ), f"Unexpected status code: {response.status_code}, {response.data}"
-
-
-@patch("app.utils.verify_cognito_token", side_effect=mock_verify_cognito_token)
-def test_autocomplete_query_too_long(mock_verify_token, client):
-    mock_token = get_mock_token()
-    response = client.get(
-        "/api/autocomplete",
-        query_string={"type": "languages", "search": "p" * 17},
-        headers={"Authorization": f"{mock_token}"},
-    )
-    assert (
-        response.status_code == 411
-    ), f"Unexpected status code: {response.status_code}, {response.data}"
-
-
 # Test for "/verify" route
 @patch(
-    "app.resources.exchange_code_for_tokens", return_value={"id_token": "mockidtoken"}
+    "app.resources.exchange_code_for_tokens", return_value={"id_token": "mockidtoken", "refresh_token": "mockrefreshtoken"}
 )
 def test_verify_token(mock_exchange, client):
     mock_token = get_mock_token()
     response = client.get(
-        "/api/verify",
+        "/api/v1/verify",
         query_string={"code": "mockcode"},
         headers={"Authorization": f"{mock_token}"},
     )

@@ -69,7 +69,15 @@ Requires a valid Cognito ID token in the Authorization header.
       "documentation_link": [
         "string"
       ],
-      "project_description": "string"
+      "project_description": "string",
+      "programme_name":"string",
+      "programme_short_name":"string",
+      "project_dependencies": [
+        {
+          "name": "string",
+          "description": "string"
+        }
+      ]
     }
   ],
   "developed": [

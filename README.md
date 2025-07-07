@@ -88,10 +88,11 @@ This repo utilises PyTest for the testing. Please make sure you have installed d
 
 To test you need a mock token. Visit the Cognito UI with the redirect URL set to your local environment. Once successully logged in, copy the `id_token`.
 
-Then import the token into your environment:
+Then import the token into your environment and set the email of the user you want to test with:
 
 ```bash
 export MOCK_TOKEN=<id_token>
+export MOCK_USER_EMAIL=<email>
 ```
 
 Make sure dev dependencies are installed:
@@ -267,6 +268,12 @@ Send JSON in this format:
       }
     },
     "stage":"Development",
+    "project_dependencies":[
+      {
+        "name": "string",
+        "description": "string"
+      }
+    ],
     "supporting_tools": {
           "code_editors": {
             "main": [],
@@ -412,6 +419,12 @@ Send JSON in this format:
       }
     },
     "stage":"Development",
+    "project_dependencies":[
+      {
+        "name": "string",
+        "description": "string"
+      }
+    ],
     "supporting_tools": {
           "code_editors": {
             "main": [],
