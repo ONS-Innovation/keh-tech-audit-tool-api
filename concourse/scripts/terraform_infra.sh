@@ -1,13 +1,13 @@
 set -euo pipefail
 
-aws_account_id=$(echo "$tat_secrets_api" | jq -r .aws_account_id)
-aws_access_key_id=$(echo "$tat_secrets_api" | jq -r .aws_access_key_id)
+aws_account_id=$(echo "$secrets" | jq -r .aws_account_id)
+aws_access_key_id=$(echo "$secrets" | jq -r .aws_access_key_id)
 
-aws_secret_access_key=$(echo "$tat_secrets_api" | jq -r .aws_secret_access_key)
-domain=$(echo "$tat_secrets_api" | jq -r .domain)
+aws_secret_access_key=$(echo "$secrets" | jq -r .aws_secret_access_key)
+domain=$(echo "$secrets" | jq -r .domain)
 
-service_subdomain=$(echo "$tat_secrets_api" | jq -r .service_subdomain)
-ecr_repository=$(echo "$tat_secrets_api" | jq -r .ecr_repository)
+service_subdomain=$(echo "$secrets" | jq -r .service_subdomain)
+ecr_repository=$(echo "$secrets" | jq -r .ecr_repository)
 
 export AWS_ACCESS_KEY_ID=$aws_access_key_id
 export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
