@@ -13,8 +13,6 @@ jobs:
   plan:
   - get: resource-repo
     timeout: 5m
-    trigger: true
-    timeout: 5m
   - task: build-image
     privileged: true
     config:
