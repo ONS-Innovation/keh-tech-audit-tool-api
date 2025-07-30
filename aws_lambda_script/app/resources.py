@@ -258,19 +258,27 @@ class Filter(Resource):
         def filter_developed(project):
             if "developed" not in filter_params:
                 return True
-                
+
             # Handle cases where developed field might be empty or malformed
-            if not project.get("developed") or not isinstance(project["developed"], list) or len(project["developed"]) < 1:
+            if (
+                not project.get("developed")
+                or not isinstance(project["developed"], list)
+                or len(project["developed"]) < 1
+            ):
                 return False
-                
+
             # Get project type - first element in the developed list
-            project_type = project["developed"][0].lower() if project["developed"][0] else ""
-            
+            project_type = (
+                project["developed"][0].lower() if project["developed"][0] else ""
+            )
+
             # Get partners - second element in the developed list if it exists and is a list
             partners = []
-            if len(project["developed"]) > 1 and isinstance(project["developed"][1], list):
+            if len(project["developed"]) > 1 and isinstance(
+                project["developed"][1], list
+            ):
                 partners = [p.lower() for p in project["developed"][1] if p]
-                
+
             return any(
                 f.lower() == project_type or any(f.lower() in p for p in partners)
                 for f in filter_params["developed"]
@@ -332,10 +340,7 @@ class Projects(Resource):
     def get(self):
         owner_email = get_user_email(parser.parse_args())
         data = read_data("new_project_data.json")
-        user_projects = [
-            proj
-            for proj in data["projects"]
-        ]
+        user_projects = [proj for proj in data["projects"]]
         return user_projects, 200
 
     # Add a new project to the list of projects
@@ -356,8 +361,8 @@ class Projects(Resource):
 
         # Check that required fields are present in the JSON payload
         new_project = ns.payload
-        
-        logger.info("POSTING PROJECT: \"%s\"", new_project["details"][0]["name"])
+
+        logger.info('POSTING PROJECT: "%s"', new_project["details"][0]["name"])
         if (
             "user" not in new_project
             or "details" not in new_project
@@ -427,9 +432,11 @@ class ProjectDetail(Resource):
         owner_email = get_user_email(parser.parse_args())
 
         # Sanitize project_name by replacing '%20' with spaces
-        project_name = project_name.replace("%20", " ").replace('\r\n', '').replace('\n', '')
+        project_name = (
+            project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
+        )
 
-        logger.info("FETCHING PROJECT: \"%s\"", project_name)
+        logger.info('FETCHING PROJECT: "%s"', project_name)
 
         data = read_data("new_project_data.json")
         project = next(
@@ -459,23 +466,21 @@ class ProjectDetail(Resource):
     )
     def put(self, project_name):
         owner_email = get_user_email(parser.parse_args())
-        project_name = project_name.replace("%20", " ").replace('\r\n', '').replace('\n', '')
+        project_name = (
+            project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
+        )
         updated_project = ns.payload
 
-        logger.info("EDITING PROJECT: \"%s\"", project_name)
-    
-        if (
-            "user" not in updated_project
-            or "details" not in updated_project
-        ):
+        logger.info('EDITING PROJECT: "%s"', project_name)
+
+        if "user" not in updated_project or "details" not in updated_project:
             logger.error("Missing JSON data")
             abort(406, description="Missing JSON data")
-        
 
         # Ensure the email is set to owner_email
 
         data = read_data("new_project_data.json")
-            
+
         project = next(
             (
                 proj
@@ -485,7 +490,7 @@ class ProjectDetail(Resource):
             ),
             None,
         )
-        
+
         if not project:
             logger.error("PROJECT '%s' NOT FOUND", project_name)
             abort(404, description=f"{project_name} with user {owner_email} not found")
