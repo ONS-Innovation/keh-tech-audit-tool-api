@@ -251,6 +251,7 @@ class Filter(Resource):
             "frameworks": ["architecture", "frameworks"],
             "cicd": ["architecture", "CICD"],
             "infrastructure": ["architecture", "infrastructure"],
+            "publishing": ["architecture", "publishing"],
         }
 
         # Special case filters

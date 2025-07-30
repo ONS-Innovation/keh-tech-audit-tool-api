@@ -5,6 +5,7 @@ description = ""
 authors = ["Sebastian <Sebastian.Evison-Theodossiades@ons.gov.uk>"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -16,6 +17,7 @@ requests = "^2.32.3"
 botocore = "^1.35.38"
 pyjwt = "^2.9.0"
 cryptography = "^43.0.1"
+python-dotenv = "^1.1.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"

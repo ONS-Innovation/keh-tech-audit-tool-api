@@ -181,6 +181,12 @@ def test_post_and_get_project_with_timestamp(
                     "others": [
                         "Jenkins"
                     ]
+                },
+                "publishing": {
+                    "main": [],
+                    "others": [
+                        "Pypi"
+                    ]
                 }
             },
             "stage": "Development",

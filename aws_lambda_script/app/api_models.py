@@ -170,6 +170,23 @@ def get_project_model():
                     },
                 )
             ),
+            "publishing": fields.Nested(
+                ns.model(
+                    "publishing",
+                    {
+                        "main": fields.List(
+                            fields.String,
+                            required=False,
+                            description="Main targets are internal publishing targets e.g. Github Release/ Tags, Amazon ECR Private Gallery",
+                        ),
+                        "others": fields.List(
+                            fields.String,
+                            required=False,
+                            description="Other targets are external publishing target e.g. Artifactory, PyPi, CRAN, Amazon ECR Public Gallery",
+                        ),
+                    },
+                )
+            ),
         },
     )
 

@@ -142,6 +142,14 @@ Requires a valid Cognito ID token in the Authorization header.
       "others": [
         "string"
       ]
+    },
+     "publishing": {
+      "main": [
+        "string"
+      ],
+      "others": [
+        "string"
+      ]
     }
   },
   "stage": "string",

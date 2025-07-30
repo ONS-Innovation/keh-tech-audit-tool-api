@@ -265,6 +265,10 @@ Send JSON in this format:
       "infrastructure": {
         "main": [],
         "others": ["List of strings"]
+      },
+      "publishing": {
+        "main": [],
+        "others": ["List of strings"]
       }
     },
     "stage":"Development",
@@ -414,6 +418,10 @@ Send JSON in this format:
         "others": ["List of strings"]
       },
       "infrastructure": {
+        "main": [],
+        "others": ["List of strings"]
+      },
+      "publishing": {
         "main": [],
         "others": ["List of strings"]
       }
