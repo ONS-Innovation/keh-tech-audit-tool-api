@@ -5,7 +5,6 @@ description = ""
 authors = ["Sebastian <Sebastian.Evison-Theodossiades@ons.gov.uk>"]
 license = "MIT"
 readme = "README.md"
-package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
