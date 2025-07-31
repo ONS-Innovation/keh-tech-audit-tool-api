@@ -16,6 +16,7 @@ requests = "^2.32.3"
 botocore = "^1.35.38"
 pyjwt = "^2.9.0"
 cryptography = "^43.0.1"
+python-dotenv = "^1.1.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"

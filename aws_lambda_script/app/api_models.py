@@ -19,11 +19,17 @@ def get_project_model():
 
     details_model = ns.model(
         "Details",
-        {   
-            "programme_name": fields.String(required=False, description="Programme name", default="N/A"),
-            "programme_short_name": fields.String(required=False, description="Programme short name", default="N/A"),
+        {
+            "programme_name": fields.String(
+                required=False, description="Programme name", default="N/A"
+            ),
+            "programme_short_name": fields.String(
+                required=False, description="Programme short name", default="N/A"
+            ),
             "name": fields.String(required=True, description="Project name"),
-            "short_name": fields.String(required=False, description="Short name of the project"),
+            "short_name": fields.String(
+                required=False, description="Short name of the project"
+            ),
             "documentation_link": fields.List(
                 fields.String,
                 required=False,
@@ -42,8 +48,8 @@ def get_project_model():
                                 description="Name of the project",
                             ),
                             "description": fields.String(
-                                required=False, 
-                                description="Description of the dependency"
+                                required=False,
+                                description="Description of the dependency",
                             ),
                         },
                     )
@@ -170,21 +176,42 @@ def get_project_model():
                     },
                 )
             ),
+            "publishing": fields.Nested(
+                ns.model(
+                    "publishing",
+                    {
+                        "main": fields.List(
+                            fields.String,
+                            required=False,
+                            description="Main targets are internal publishing targets e.g. Github Release/ Tags, Amazon ECR Private Gallery",
+                        ),
+                        "others": fields.List(
+                            fields.String,
+                            required=False,
+                            description="Other targets are external publishing target e.g. Artifactory, PyPi, CRAN, Amazon ECR Public Gallery",
+                        ),
+                    },
+                )
+            ),
         },
     )
 
     supporting_tools_model = ns.model(
-        "SupportingTools", 
+        "SupportingTools",
         {
             "code_editors": fields.Nested(
                 ns.model(
                     "code_editors",
                     {
                         "main": fields.List(
-                            fields.String, required=False, description="Main code editor"
+                            fields.String,
+                            required=False,
+                            description="Main code editor",
                         ),
                         "others": fields.List(
-                            fields.String, required=False, description="Other code editors"
+                            fields.String,
+                            required=False,
+                            description="Other code editors",
                         ),
                     },
                 )
@@ -207,26 +234,34 @@ def get_project_model():
                     "diagrams",
                     {
                         "main": fields.List(
-                            fields.String, required=False, description="Main diagram tool"
+                            fields.String,
+                            required=False,
+                            description="Main diagram tool",
                         ),
                         "others": fields.List(
-                            fields.String, required=False, description="Other diagram tools"
+                            fields.String,
+                            required=False,
+                            description="Other diagram tools",
                         ),
                     },
                 )
             ),
             "project_tracking": fields.String(
                 required=False, description="Project tracking tool used by the project"
-                ),
+            ),
             "documentation": fields.Nested(
                 ns.model(
                     "documentation",
                     {
                         "main": fields.List(
-                            fields.String, required=False, description="Main documentation tool"
+                            fields.String,
+                            required=False,
+                            description="Main documentation tool",
                         ),
                         "others": fields.List(
-                            fields.String, required=False, description="Other documentation tools"
+                            fields.String,
+                            required=False,
+                            description="Other documentation tools",
                         ),
                     },
                 )
@@ -236,10 +271,14 @@ def get_project_model():
                     "communication",
                     {
                         "main": fields.List(
-                            fields.String, required=False, description="Main communication tool"
+                            fields.String,
+                            required=False,
+                            description="Main communication tool",
                         ),
                         "others": fields.List(
-                            fields.String, required=False, description="Other communication tools"
+                            fields.String,
+                            required=False,
+                            description="Other communication tools",
                         ),
                     },
                 )
@@ -249,31 +288,39 @@ def get_project_model():
                     "collaboration",
                     {
                         "main": fields.List(
-                            fields.String, required=False, description="Main collaboration tool"
+                            fields.String,
+                            required=False,
+                            description="Main collaboration tool",
                         ),
                         "others": fields.List(
-                            fields.String, required=False, description="Other collaboration tools"
+                            fields.String,
+                            required=False,
+                            description="Other collaboration tools",
                         ),
                     },
                 )
             ),
             "incident_management": fields.String(
                 required=False, description="Incident management tool"
-                ), 
+            ),
             "miscellaneous": fields.List(
                 fields.Nested(
                     ns.model(
                         "MiscellaneousTool",
                         {
-                            "name": fields.String(required=True, description="Tool name"),
-                            "description": fields.String(required=True, description="Tool description"),
+                            "name": fields.String(
+                                required=True, description="Tool name"
+                            ),
+                            "description": fields.String(
+                                required=True, description="Tool description"
+                            ),
                         },
                     ),
                     required=False,
                     description="List of miscellaneous tools",
                 )
-            )
-        }
+            ),
+        },
     )
 
     project_model = ns.model(
@@ -302,7 +349,9 @@ def get_project_model():
                 required=False, description="Stage status of the project"
             ),
             "supporting_tools": fields.Nested(
-                supporting_tools_model, required=False, description="Supporting Tools Details"
+                supporting_tools_model,
+                required=False,
+                description="Supporting Tools Details",
             ),
         },
     )

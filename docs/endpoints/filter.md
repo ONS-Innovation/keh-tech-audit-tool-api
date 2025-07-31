@@ -29,6 +29,7 @@ Requires a valid Cognito ID token in the Authorization header.
 | `frameworks` | string | Frameworks to filter by (comma-separated) | False |
 | `cicd` | string | CI/CD tools to filter by (comma-separated) | False |
 | `infrastructure` | string | Infrastructure tools to filter by (comma-separated) | False |
+| `publishing` | string | Publishing target to filter by (comma-separated) | False |
 | `return` | string | Sections to return in response (user, details, developed, source_control, architecture) | False |
 
 ### Responses
