@@ -133,6 +133,7 @@ def test_post_and_get_project_with_timestamp(
             "languages": {"main": ["Python"], "others": ["JavaScript", "Java"]},
             "frameworks": {"main": [], "others": ["Flask"]},
             "cicd": {"main": [], "others": ["Github Actions"]},
+            "environments": { "dev": True, "int": False, "uat": False, "preprod": True, "prod": True, "postprod": False },
             "infrastructure": {"main": [], "others": ["Jenkins"]},
             "publishing": {"main": [], "others": ["Pypi"]},
         },

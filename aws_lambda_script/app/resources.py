@@ -30,7 +30,7 @@ parser.add_argument(
 required_param = {"Authorization": "ID Token required"}
 
 # Set logger for AWS cloudwatch to return just errors
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -250,6 +250,7 @@ class Filter(Resource):
             "database": ["architecture", "database"],
             "frameworks": ["architecture", "frameworks"],
             "cicd": ["architecture", "CICD"],
+            "environments": ["architecture", "environments"],
             "infrastructure": ["architecture", "infrastructure"],
             "publishing": ["architecture", "publishing"],
         }
@@ -386,6 +387,14 @@ class Projects(Resource):
                 {"email": owner_email, "roles": ["Editor"], "grade": ""}
             )
 
+        # Validate environments
+        environments = new_project.get("architecture", {}).get("environments", {})
+        if not isinstance(environments, dict):
+            abort(400, description="Invalid environments data: Must be a dictionary")
+        for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
+            if key not in environments or not isinstance(environments[key], bool):
+                abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
+        
         data = read_data("new_project_data.json")
 
         # Check if project with same name exists and has any matching user emails
@@ -476,6 +485,15 @@ class ProjectDetail(Resource):
         if "user" not in updated_project or "details" not in updated_project:
             logger.error("Missing JSON data")
             abort(406, description="Missing JSON data")
+
+         # Validate environments
+        environments = updated_project.get("architecture", {}).get("environments", {})
+        if not isinstance(environments, dict):
+            abort(400, description="Invalid environments data: Must be a dictionary")
+        for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
+            if key not in environments or not isinstance(environments[key], bool):
+                abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
+
 
         # Ensure the email is set to owner_email
 

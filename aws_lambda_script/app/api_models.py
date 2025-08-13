@@ -159,6 +159,19 @@ def get_project_model():
                     },
                 )
             ),
+            "environments": fields.Nested(
+                ns.model(
+                    "environments",
+                    {
+                        "dev": fields.Boolean(required=False, description="Development environment status"),
+                        "int": fields.Boolean(required=False, description="Integration environment status"),        
+                        "uat": fields.Boolean(required=False, description="User Acceptance Testing environment status"),
+                        "preprod": fields.Boolean(required=False, description="Pre-production or staging environment status"),
+                        "prod": fields.Boolean(required=False, description="Production environment status"),
+                        "postprod": fields.Boolean(required=False, description="Post-production environment status")
+                    }
+                )
+            ),
             "infrastructure": fields.Nested(
                 ns.model(
                     "Infrastructure",
