@@ -122,6 +122,14 @@ Requires a valid Cognito ID token in the Authorization header.
         "string"
       ]
     },
+    "environments": {
+      "dev": "Boolean",
+      "int": "Boolean",
+      "uat": "Boolean",
+      "preprod": "Boolean",
+      "prod": "Boolean",
+      "postprod": "Boolean",
+    },
     "infrastructure": {
       "main": [
         "string"

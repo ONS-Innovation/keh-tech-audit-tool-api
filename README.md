@@ -262,6 +262,14 @@ Send JSON in this format:
         "main": [],
         "others": ["List of strings"]
       },
+      "environments": {
+        "dev": "Boolean",
+        "int": "Boolean",
+        "uat": "Boolean",
+        "preprod": "Boolean",
+        "prod": "Boolean",
+        "postprod": "Boolean",
+      },
       "infrastructure": {
         "main": [],
         "others": ["List of strings"]
@@ -417,6 +425,14 @@ Send JSON in this format:
         "main": [],
         "others": ["List of strings"]
       },
+      "environments": {
+        "dev": "Boolean",
+        "int": "Boolean",
+        "uat": "Boolean",
+        "preprod": "Boolean",
+        "prod": "Boolean",
+        "postprod": "Boolean",
+      },
       "infrastructure": {
         "main": [],
         "others": ["List of strings"]
@@ -475,7 +491,7 @@ Send JSON in this format:
         }
   }
 ```
-Edits a project by checking if the languages, database, frameworks, cicd, infrastructure, or source control are missing from the `array_data.json` bucket. If any are missing, they are added.
+Edits a project by checking if the languages, database, frameworks, cicd, environments, infrastructure, publishing or source control are missing from the `array_data.json` bucket. If any are missing, they are added.
 
 
 ## Authorization with Cognito and API Gateway

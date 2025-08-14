@@ -5,7 +5,7 @@ from app import create_app
 app = create_app()
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     """

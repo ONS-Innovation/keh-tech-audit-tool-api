@@ -28,6 +28,7 @@ Requires a valid Cognito ID token in the Authorization header.
 | `database` | string | Database types to filter by (comma-separated) | False |
 | `frameworks` | string | Frameworks to filter by (comma-separated) | False |
 | `cicd` | string | CI/CD tools to filter by (comma-separated) | False |
+| `environments` | dict | List of environments that project are deployed | False |
 | `infrastructure` | string | Infrastructure tools to filter by (comma-separated) | False |
 | `publishing` | string | Publishing target to filter by (comma-separated) | False |
 | `return` | string | Sections to return in response (user, details, developed, source_control, architecture) | False |
