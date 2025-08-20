@@ -72,7 +72,7 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = "*"
+        Resource = "arn:aws:secretsmanager:eu-west-2:${var.aws_account_id}:secret:${var.domain}-${var.service_subdomain}/secrets-VfAgu8"
       },
       {
         Effect = "Allow"
@@ -114,7 +114,7 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
           "s3:*",
           "s3-object-lambda:*"
         ]
-        Resource = "*"
+        Resource = "arn:aws:s3:::${var.domain}-${var.service_subdomain}/*"
       }
     ]
   })
