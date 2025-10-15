@@ -33,12 +33,30 @@ required_param = {"Authorization": "ID Token required"}
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def get_user_attributes(args):
+    """Get user attributes from Cognito token.
 
-# Function to get the user email from the token
-def get_user_email(args):
+    Args:
+        args (dict): Request arguments containing the Authorization header.
+
+    Returns:
+        dict: User attributes extracted from the token.
+
+    Raises:
+        Exception: If token verification fails.
+    """
     token = args["Authorization"]
     try:
         user_attributes = verify_cognito_token(token)
+        return user_attributes
+    except Exception as error:
+        logger.exception("Error verifying token: %s", error)
+        abort(401, description="Not authorized")
+
+# Function to get the user email from the token
+def get_user_email(args):
+    try:
+        user_attributes = get_user_attributes(args)
         owner_email = user_attributes["email"]
         if not owner_email:
             logger.error("No email found in user attributes")
@@ -55,7 +73,8 @@ class User(Resource):
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
     def get(self):
         owner_email = get_user_email(parser.parse_args())
-        return {"email": owner_email}, 200
+        user_groups = get_user_attributes(parser.parse_args()).get("cognito:groups", [])
+        return {"email": owner_email, "groups": user_groups}, 200
 
 
 # Route to return all projects with optional filters
