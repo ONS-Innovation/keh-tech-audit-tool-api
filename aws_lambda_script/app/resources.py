@@ -66,6 +66,22 @@ def get_user_email(args):
         logger.exception("Error verifying token: %s", error)
         abort(401, description="Not authorized")
 
+def is_auth_user_in_admin_group():
+    """Check if the authenticated user belongs to the "Admin" group. This is case-sensitive.
+
+    Returns:
+        bool: True if the user is in the "Admin" group, False otherwise.
+
+    Raises:
+        Exception: If token verification fails.
+    """
+    try:
+        user_attributes = get_user_attributes(parser.parse_args())
+        user_groups = user_attributes.get("cognito:groups", [])
+        return "Admin" in user_groups
+    except Exception as error:
+        logger.exception("Error verifying token: %s", error)
+        abort(401, description="Not authorized")
 
 # Route to return the user email from the token in authorization header
 @ns.route("/user")
@@ -513,17 +529,18 @@ class ProjectDetail(Resource):
             if key not in environments or not isinstance(environments[key], bool):
                 abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
 
-
         # Ensure the email is set to owner_email
 
         data = read_data("new_project_data.json")
+
+        logger.info(f"Authenticated user is in admin group: {is_auth_user_in_admin_group()}")
 
         project = next(
             (
                 proj
                 for proj in data["projects"]
                 if proj["details"][0]["name"] == project_name
-                and any(user["email"] == owner_email for user in proj["user"])
+                and (any(user["email"] == owner_email for user in proj["user"]) or is_auth_user_in_admin_group())
             ),
             None,
         )
