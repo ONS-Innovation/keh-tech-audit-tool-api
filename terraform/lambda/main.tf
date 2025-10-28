@@ -164,7 +164,7 @@ resource "aws_lambda_function" "tech_audit_lambda" {
     variables = {
       TECH_AUDIT_DATA_BUCKET = data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name
       TECH_AUDIT_SECRET_MANAGER = data.terraform_remote_state.secrets.outputs.secret_name
-      AWS_COGNITO_TOKEN_URL = "https://${var.service_subdomain}-${var.domain}.auth.eu-west-2.amazoncognito.com/oauth2/token"
+      AWS_COGNITO_TOKEN_URL = "https://${var.domain}-${var.service_subdomain}.auth.eu-west-2.amazoncognito.com/oauth2/token"
     }
   }
 
