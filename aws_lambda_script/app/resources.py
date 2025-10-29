@@ -53,11 +53,8 @@ def get_user_attributes(args):
         logger.exception("Error verifying token: %s", error)
         abort(401, description="Not authorized")
 
-def get_user_information(user_attributes: dict) -> dict:
+def get_user_information() -> dict:
     """A function to collect user information from a given Cognito Token.
-
-    Args:
-        user_attributes (dict): The user attributes extracted from the Cognito token.
 
     Returns:
         dict: A dictionary containing the user's email and groups.
@@ -65,6 +62,8 @@ def get_user_information(user_attributes: dict) -> dict:
     Raises:
         abort: If the email is not found in user attributes.
     """
+    user_attributes = get_user_attributes(parser.parse_args())
+
     owner_email = user_attributes.get("email", "")
     user_groups = user_attributes.get("cognito:groups", [])
 
@@ -90,8 +89,7 @@ def is_auth_user_in_admin_group(user_groups: list) -> bool:
 class User(Resource):
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
     def get(self):
-        user_attributes = get_user_attributes(parser.parse_args())
-        user_info = get_user_information(user_attributes)
+        user_info = get_user_information()
         owner_email = user_info["email"]
         user_groups = user_info["groups"]
         return {"email": owner_email, "groups": user_groups}, 200
@@ -396,8 +394,7 @@ class Projects(Resource):
         },
     )
     def post(self):
-        user_attributes = get_user_attributes(parser.parse_args())
-        user_info = get_user_information(user_attributes)
+        user_info = get_user_information()
         owner_email = user_info["email"]
 
         # Check that required fields are present in the JSON payload
@@ -512,8 +509,7 @@ class ProjectDetail(Resource):
         },
     )
     def put(self, project_name):
-        user_attributes = get_user_attributes(parser.parse_args())
-        user_info = get_user_information(user_attributes)
+        user_info = get_user_information()
         owner_email = user_info["email"]
         user_groups = user_info["groups"]
 
