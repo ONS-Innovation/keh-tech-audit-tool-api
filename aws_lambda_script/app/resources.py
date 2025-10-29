@@ -53,43 +53,47 @@ def get_user_attributes(args):
         logger.exception("Error verifying token: %s", error)
         abort(401, description="Not authorized")
 
-# Function to get the user email from the token
-def get_user_email(args):
-    try:
-        user_attributes = get_user_attributes(args)
-        owner_email = user_attributes["email"]
-        if not owner_email:
-            logger.error("No email found in user attributes")
-            abort(401, description="Not authorized")
-        return owner_email
-    except Exception as error:
-        logger.exception("Error verifying token: %s", error)
-        abort(401, description="Not authorized")
+def get_user_information(user_attributes: dict) -> dict:
+    """A function to collect user information from a given Cognito Token.
 
-def is_auth_user_in_admin_group():
-    """Check if the authenticated user belongs to the "Admin" group. This is case-sensitive.
+    Args:
+        user_attributes (dict): The user attributes extracted from the Cognito token.
 
     Returns:
-        bool: True if the user is in the "Admin" group, False otherwise.
+        dict: A dictionary containing the user's email and groups.
 
     Raises:
-        Exception: If token verification fails.
+        abort: If the email is not found in user attributes.
     """
-    try:
-        user_attributes = get_user_attributes(parser.parse_args())
-        user_groups = user_attributes.get("cognito:groups", [])
-        return "Admin" in user_groups
-    except Exception as error:
-        logger.exception("Error verifying token: %s", error)
+    owner_email = user_attributes.get("email", "")
+    user_groups = user_attributes.get("cognito:groups", [])
+
+    if not owner_email:
+        logger.error("No email found in user attributes")
         abort(401, description="Not authorized")
+
+    return {"email": owner_email, "groups": user_groups}
+
+def is_auth_user_in_admin_group(user_groups: list) -> bool:
+    """Check if the authenticated user is in the admin group.
+
+    Args:
+        user_groups (list): List of groups the user belongs to.
+
+    Returns:
+        bool: True if user is in admin group, False otherwise.
+    """
+    return "Admin" in user_groups
 
 # Route to return the user email from the token in authorization header
 @ns.route("/user")
 class User(Resource):
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
     def get(self):
-        owner_email = get_user_email(parser.parse_args())
-        user_groups = get_user_attributes(parser.parse_args()).get("cognito:groups", [])
+        user_attributes = get_user_attributes(parser.parse_args())
+        user_info = get_user_information(user_attributes)
+        owner_email = user_info["email"]
+        user_groups = user_info["groups"]
         return {"email": owner_email, "groups": user_groups}, 200
 
 
@@ -374,7 +378,6 @@ class Projects(Resource):
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
     # @ns.marshal_list_with(project_model)
     def get(self):
-        owner_email = get_user_email(parser.parse_args())
         data = read_data("new_project_data.json")
         user_projects = [proj for proj in data["projects"]]
         return user_projects, 200
@@ -393,7 +396,9 @@ class Projects(Resource):
         },
     )
     def post(self):
-        owner_email = get_user_email(parser.parse_args())
+        user_attributes = get_user_attributes(parser.parse_args())
+        user_info = get_user_information(user_attributes)
+        owner_email = user_info["email"]
 
         # Check that required fields are present in the JSON payload
         new_project = ns.payload
@@ -473,8 +478,6 @@ class ProjectDetail(Resource):
     # the name and the user email in the first user item in the user list
     @ns.marshal_with(project_model)
     def get(self, project_name):
-        owner_email = get_user_email(parser.parse_args())
-
         # Sanitize project_name by replacing '%20' with spaces
         project_name = (
             project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
@@ -509,7 +512,11 @@ class ProjectDetail(Resource):
         },
     )
     def put(self, project_name):
-        owner_email = get_user_email(parser.parse_args())
+        user_attributes = get_user_attributes(parser.parse_args())
+        user_info = get_user_information(user_attributes)
+        owner_email = user_info["email"]
+        user_groups = user_info["groups"]
+
         project_name = (
             project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
         )
@@ -533,14 +540,14 @@ class ProjectDetail(Resource):
 
         data = read_data("new_project_data.json")
 
-        logger.info(f"Authenticated user is in admin group: {is_auth_user_in_admin_group()}")
+        logger.info(f"Authenticated user is in admin group: {is_auth_user_in_admin_group(user_groups)}")
 
         project = next(
             (
                 proj
                 for proj in data["projects"]
                 if proj["details"][0]["name"] == project_name
-                and (any(user["email"] == owner_email for user in proj["user"]) or is_auth_user_in_admin_group())
+                and (any(user["email"] == owner_email for user in proj["user"]) or is_auth_user_in_admin_group(user_groups))
             ),
             None,
         )
