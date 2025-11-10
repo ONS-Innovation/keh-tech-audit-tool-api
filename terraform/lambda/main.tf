@@ -148,7 +148,11 @@ resource "aws_security_group" "lambda_sg" {
 resource "aws_lambda_function" "tech_audit_lambda" {
   function_name = "${var.domain}-${var.service_subdomain}-lambda"
   package_type  = "Image"
-  image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}:${var.container_ver}"
+
+  # Use digest instead of tag (immutable)
+  image_uri = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}@${data.aws_ecr_image.lambda_image.image_digest}"
+
+  # image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}:${var.container_ver}"
   
   vpc_config {
     subnet_ids          = data.terraform_remote_state.vpc.outputs.private_subnets
@@ -162,9 +166,11 @@ resource "aws_lambda_function" "tech_audit_lambda" {
 
   environment {
     variables = {
-      TECH_AUDIT_DATA_BUCKET = data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name
-      TECH_AUDIT_SECRET_MANAGER = data.terraform_remote_state.secrets.outputs.secret_name
-      AWS_COGNITO_TOKEN_URL = "https://${var.domain}-${var.service_subdomain}.auth.eu-west-2.amazoncognito.com/oauth2/token"
+      TECH_AUDIT_DATA_BUCKET     = data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name
+      TECH_AUDIT_SECRET_MANAGER  = data.terraform_remote_state.secrets.outputs.secret_name
+      AWS_COGNITO_TOKEN_URL      = "https://${var.domain}-${var.service_subdomain}.auth.eu-west-2.amazoncognito.com/oauth2/token"
+      IMAGE_DIGEST               = data.aws_ecr_image.lambda_image.image_digest
+      IMAGE_TAG                  = var.container_ver
     }
   }
 
@@ -172,7 +178,8 @@ resource "aws_lambda_function" "tech_audit_lambda" {
     aws_iam_role_policy.lambda_s3_access,
     aws_iam_role_policy.lambda_additional_permissions,
     aws_iam_role_policy_attachment.lambda_basic_execution,
-    aws_iam_role_policy_attachment.lambda_vpc_access
+    aws_iam_role_policy_attachment.lambda_vpc_access,
+    data.aws_ecr_image.lambda_image
   ]
 }
 
@@ -181,4 +188,11 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
   role       = aws_iam_role.lambda_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   depends_on = [aws_iam_role.lambda_execution_role]
-} 
+}
+
+# Resolve the pushed image (must exist before terraform apply)
+data "aws_ecr_image" "lambda_image" {
+  repository_name = var.ecr_repository
+  image_tag       = var.container_ver
+}
+
