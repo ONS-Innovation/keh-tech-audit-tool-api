@@ -428,10 +428,15 @@ class Projects(Resource):
         environments = new_project.get("architecture", {}).get("environments", {})
         if not isinstance(environments, dict):
             abort(400, description="Invalid environments data: Must be a dictionary")
-        for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
-            if key not in environments or not isinstance(environments[key], bool):
-                abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
         
+        # If no environments have been selected, skip further validation
+        if len(environments) > 0:
+            # If environments dict is present, validate each key
+            # Each key will exist with a boolean value if the user has visited the page
+            for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
+                if key not in environments or not isinstance(environments[key], bool):
+                    abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
+            
         data = read_data("new_project_data.json")
 
         # Check if project with same name exists and has any matching user emails
