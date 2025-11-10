@@ -3,8 +3,7 @@ set -eo pipefail
 # Usage: ./set_pipeline.sh
 
 # Define repository name
-repo_name="tech-audit-tool-api" #KEH-TAT-API
-# repo_name=${1}
+repo_name="tech-audit-tool-api"
 
 # Always use the current branch
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || { echo "Failed to get branch name"; exit 1; })
