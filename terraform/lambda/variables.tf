@@ -60,3 +60,9 @@ variable "business_owner_tag" {
   type        = string
   default     = "DST"
 }
+
+variable "log_retention_days" {
+  description = "Log retention days"
+  type        = number
+  default     = 365
+}
