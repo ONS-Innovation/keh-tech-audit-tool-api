@@ -2,6 +2,9 @@
 FROM public.ecr.aws/lambda/python:3.12
 # Set the working directory in the container
 WORKDIR /var/task
+# Upgrade tooling and awslambdaric
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --upgrade awslambdaric
 # Create a non-root user and group manually
 RUN mkdir -p /home/appuser && \
     chown -R 1000:1000 /home/appuser

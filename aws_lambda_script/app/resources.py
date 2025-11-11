@@ -457,11 +457,13 @@ class Projects(Resource):
                 for user in proj["user"]
                 if user["email"] in new_project_emails
             )
+            logger.error("PROJECT '%s' WITH EMAIL '%s' ALREADY EXISTS", new_project_name, matching_email)
             abort(
                 409,
                 description=f"Project with the same name '{new_project_name}', and owner '{matching_email}' already exists",
             )
         data["projects"].append(new_project)
+        logger.info("PROJECT '%s' ADDED SUCCESSFULLY", new_project_name)
         write_data(data, "new_project_data.json")
 
         return new_project, 201
@@ -559,7 +561,7 @@ class ProjectDetail(Resource):
 
         # Update the project details
         project.update(updated_project)
-
+        logger.info("PROJECT '%s' UPDATED SUCCESSFULLY", project_name)
         write_data(data, "duplicates.json")
 
         duplicate_data = read_data("duplicates.json")
