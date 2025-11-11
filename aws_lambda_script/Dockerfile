@@ -2,7 +2,7 @@
 # FROM public.ecr.aws/lambda/python:3.12
 FROM public.ecr.aws/docker/library/python:3.12-alpine3.22
 # Install aws-lambda-cpp build dependencies
-RUN apk add -no-cache \
+RUN apk add --no-cache \
   g++ \
   make \
   cmake \
