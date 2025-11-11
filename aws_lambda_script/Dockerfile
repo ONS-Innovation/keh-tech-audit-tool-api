@@ -1,6 +1,13 @@
 # Use an official Python runtime as a parent image
 # FROM public.ecr.aws/lambda/python:3.12
 FROM public.ecr.aws/docker/library/python:3.12-alpine3.22
+# Install aws-lambda-cpp build dependencies
+RUN apk add -no-cache \
+  g++ \
+  make \
+  cmake \
+  unzip \
+  libcurl4-openssl-dev
 # Set the working directory in the container
 WORKDIR /var/task
 # Upgrade pip tooling
