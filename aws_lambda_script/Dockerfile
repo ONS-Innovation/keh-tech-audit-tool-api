@@ -1,19 +1,10 @@
 # Use an official Python runtime as a parent image
-# FROM public.ecr.aws/lambda/python:3.12
-FROM public.ecr.aws/docker/library/python:3.12-alpine3.22
-# Install aws-lambda-cpp build dependencies
-RUN apk add --no-cache \
-  g++ \
-  make \
-  cmake \
-  unzip \
-  curl-dev
+FROM public.ecr.aws/lambda/python:3.12
 # Set the working directory in the container
 WORKDIR /var/task
-# Upgrade pip tooling
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-# Install Lambda Runtime Interface Client
-RUN pip install --no-cache-dir awslambdaric
+# Upgrade tooling and awslambdaric
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --upgrade awslambdaric
 # Create a non-root user and group manually
 RUN mkdir -p /home/appuser && \
     chown -R 1000:1000 /home/appuser
