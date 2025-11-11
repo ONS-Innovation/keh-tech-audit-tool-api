@@ -7,7 +7,7 @@ RUN apk add --no-cache \
   make \
   cmake \
   unzip \
-  libcurl4-openssl-dev
+  curl-dev
 # Set the working directory in the container
 WORKDIR /var/task
 # Upgrade pip tooling
