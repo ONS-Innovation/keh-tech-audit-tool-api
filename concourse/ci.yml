@@ -156,7 +156,7 @@ jobs:
       secrets: ((sdp_((env))_secrets_tat_api))
       github_access_token: ((github_access_token))
       env: dev
-- name: deploy-after-github-release-prod
+- name: release-build-and-push-prod
   public: true
   plan:
   - get: resource-repo
