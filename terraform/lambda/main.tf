@@ -182,3 +182,12 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   depends_on = [aws_iam_role.lambda_execution_role]
 } 
+
+# CloudWatch log group for the Lambda
+resource "aws_cloudwatch_log_group" "lambda_log_group" {
+  name              = "/aws/lambda/${var.domain}-${var.service_subdomain}-lambda"
+  retention_in_days = var.log_retention_days
+  tags = {
+    Name      = "${var.domain}-${var.service_subdomain}-lambda-log-group"
+  }
+}
