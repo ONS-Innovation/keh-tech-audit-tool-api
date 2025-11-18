@@ -2,7 +2,7 @@
 # Create CloudWatch Log Group for API Gateway
 resource "aws_cloudwatch_log_group" "api_gateway" {
   name              = "/aws/apigateway/${var.domain}-${var.service_subdomain}"
-  retention_in_days = 30
+  retention_in_days = var.log_retention_days
 
   tags = {
     Project       = var.project_tag

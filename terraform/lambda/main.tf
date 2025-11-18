@@ -72,7 +72,7 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = "*"
+        Resource = "arn:aws:secretsmanager:eu-west-2:${var.aws_account_id}:secret:${var.domain}-${var.service_subdomain}/secrets-*"
       },
       {
         Effect = "Allow"
@@ -114,7 +114,7 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
           "s3:*",
           "s3-object-lambda:*"
         ]
-        Resource = "*"
+        Resource = "arn:aws:s3:::${var.domain}-${var.service_subdomain}/*"
       }
     ]
   })
@@ -196,3 +196,13 @@ data "aws_ecr_image" "lambda_image" {
   image_tag       = var.container_ver
 }
 
+} 
+
+# CloudWatch log group for the Lambda
+resource "aws_cloudwatch_log_group" "lambda_log_group" {
+  name              = "/aws/lambda/${var.domain}-${var.service_subdomain}-lambda"
+  retention_in_days = var.log_retention_days
+  tags = {
+    Name      = "${var.domain}-${var.service_subdomain}-lambda-log-group"
+  }
+}
