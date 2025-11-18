@@ -152,8 +152,6 @@ resource "aws_lambda_function" "tech_audit_lambda" {
   # Use digest instead of tag (immutable)
   image_uri = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}@${data.aws_ecr_image.lambda_image.image_digest}"
 
-  # image_uri     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}:${var.container_ver}"
-  
   vpc_config {
     subnet_ids          = data.terraform_remote_state.vpc.outputs.private_subnets
     security_group_ids  = [aws_security_group.lambda_sg.id] // Dedicated security group for Lambda function
