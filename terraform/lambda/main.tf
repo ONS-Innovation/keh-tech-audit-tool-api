@@ -194,8 +194,6 @@ data "aws_ecr_image" "lambda_image" {
   image_tag       = var.container_ver
 }
 
-} 
-
 # CloudWatch log group for the Lambda
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
   name              = "/aws/lambda/${var.domain}-${var.service_subdomain}-lambda"
