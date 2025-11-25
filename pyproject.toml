@@ -2,7 +2,7 @@
 name = "keh-tech-audit-tool-api"
 version = "0.1.1"
 description = ""
-authors = ["Sebastian <Sebastian.Evison-Theodossiades@ons.gov.uk>"]
+authors = ["ONS-Innovation keh-dev"]
 license = "MIT"
 readme = "README.md"
 
