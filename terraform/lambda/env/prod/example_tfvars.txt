@@ -3,3 +3,5 @@ aws_access_key_id                 = "<your_access_key_id>"
 aws_secret_access_key             = "<your_secret_access_key>"
 domain                            = "sdp-prod"
 ecr_repository                    = "tech-audit-tool-api" # ECR repository name where the lambda image is stored
+service_subdomain                 = "tech-audit-tool-api"
+container_ver                     = "container version"
