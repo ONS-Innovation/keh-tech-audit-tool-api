@@ -65,7 +65,7 @@ cd aws_lambda_script
 
 Run the project locally (with UI)
 ```bash
-make run
+make run-local
 ```
 or
 ```bash

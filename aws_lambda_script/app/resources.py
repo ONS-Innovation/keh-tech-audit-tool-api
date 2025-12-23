@@ -33,29 +33,66 @@ required_param = {"Authorization": "ID Token required"}
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def get_user_attributes(args):
+    """Get user attributes from Cognito token.
 
-# Function to get the user email from the token
-def get_user_email(args):
+    Args:
+        args (dict): Request arguments containing the Authorization header.
+
+    Returns:
+        dict: User attributes extracted from the token.
+
+    Raises:
+        Exception: If token verification fails.
+    """
     token = args["Authorization"]
     try:
         user_attributes = verify_cognito_token(token)
-        owner_email = user_attributes["email"]
-        if not owner_email:
-            logger.error("No email found in user attributes")
-            abort(401, description="Not authorized")
-        return owner_email
+        return user_attributes
     except Exception as error:
         logger.exception("Error verifying token: %s", error)
         abort(401, description="Not authorized")
 
+def get_user_information() -> dict:
+    """A function to collect user information from a given Cognito Token.
+
+    Returns:
+        dict: A dictionary containing the user's email and groups.
+
+    Raises:
+        abort: If the email is not found in user attributes.
+    """
+    user_attributes = get_user_attributes(parser.parse_args())
+
+    owner_email = user_attributes.get("email", "")
+    user_groups = user_attributes.get("cognito:groups", [])
+
+    if not owner_email:
+        logger.error("No email found in user attributes")
+        abort(401, description="Not authorized")
+
+    return {"email": owner_email, "groups": user_groups}
+
+def is_auth_user_in_admin_group(user_groups: list) -> bool:
+    """Check if the authenticated user is in the admin group.
+
+    Args:
+        user_groups (list): List of groups the user belongs to.
+
+    Returns:
+        bool: True if user is in admin group, False otherwise.
+    """
+    return "Admin" in user_groups
 
 # Route to return the user email from the token in authorization header
 @ns.route("/user")
 class User(Resource):
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
     def get(self):
-        owner_email = get_user_email(parser.parse_args())
-        return {"email": owner_email}, 200
+        user_info = get_user_information()
+        owner_email = user_info["email"]
+        user_groups = user_info["groups"]
+        return {"email": owner_email, "groups": user_groups}, 200
 
 
 # Route to return all projects with optional filters
@@ -339,7 +376,6 @@ class Projects(Resource):
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
     # @ns.marshal_list_with(project_model)
     def get(self):
-        owner_email = get_user_email(parser.parse_args())
         data = read_data("new_project_data.json")
         user_projects = [proj for proj in data["projects"]]
         return user_projects, 200
@@ -358,7 +394,8 @@ class Projects(Resource):
         },
     )
     def post(self):
-        owner_email = get_user_email(parser.parse_args())
+        user_info = get_user_information()
+        owner_email = user_info["email"]
 
         # Check that required fields are present in the JSON payload
         new_project = ns.payload
@@ -391,10 +428,15 @@ class Projects(Resource):
         environments = new_project.get("architecture", {}).get("environments", {})
         if not isinstance(environments, dict):
             abort(400, description="Invalid environments data: Must be a dictionary")
-        for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
-            if key not in environments or not isinstance(environments[key], bool):
-                abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
         
+        # If no environments have been selected, skip further validation
+        if len(environments) > 0:
+            # If environments dict is present, validate each key
+            # Each key will exist with a boolean value if the user has visited the page
+            for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
+                if key not in environments or not isinstance(environments[key], bool):
+                    abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
+            
         data = read_data("new_project_data.json")
 
         # Check if project with same name exists and has any matching user emails
@@ -415,11 +457,13 @@ class Projects(Resource):
                 for user in proj["user"]
                 if user["email"] in new_project_emails
             )
+            logger.error("PROJECT '%s' WITH EMAIL '%s' ALREADY EXISTS", new_project_name, matching_email)
             abort(
                 409,
                 description=f"Project with the same name '{new_project_name}', and owner '{matching_email}' already exists",
             )
         data["projects"].append(new_project)
+        logger.info("PROJECT '%s' ADDED SUCCESSFULLY", new_project_name)
         write_data(data, "new_project_data.json")
 
         return new_project, 201
@@ -438,8 +482,6 @@ class ProjectDetail(Resource):
     # the name and the user email in the first user item in the user list
     @ns.marshal_with(project_model)
     def get(self, project_name):
-        owner_email = get_user_email(parser.parse_args())
-
         # Sanitize project_name by replacing '%20' with spaces
         project_name = (
             project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
@@ -474,7 +516,10 @@ class ProjectDetail(Resource):
         },
     )
     def put(self, project_name):
-        owner_email = get_user_email(parser.parse_args())
+        user_info = get_user_information()
+        owner_email = user_info["email"]
+        user_groups = user_info["groups"]
+
         project_name = (
             project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
         )
@@ -494,17 +539,18 @@ class ProjectDetail(Resource):
             if key not in environments or not isinstance(environments[key], bool):
                 abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
 
-
         # Ensure the email is set to owner_email
 
         data = read_data("new_project_data.json")
+
+        logger.info(f"Authenticated user is in admin group: {is_auth_user_in_admin_group(user_groups)}")
 
         project = next(
             (
                 proj
                 for proj in data["projects"]
                 if proj["details"][0]["name"] == project_name
-                and any(user["email"] == owner_email for user in proj["user"])
+                and (any(user["email"] == owner_email for user in proj["user"]) or is_auth_user_in_admin_group(user_groups))
             ),
             None,
         )
@@ -515,7 +561,7 @@ class ProjectDetail(Resource):
 
         # Update the project details
         project.update(updated_project)
-
+        logger.info("PROJECT '%s' UPDATED SUCCESSFULLY", project_name)
         write_data(data, "duplicates.json")
 
         duplicate_data = read_data("duplicates.json")

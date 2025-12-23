@@ -23,4 +23,5 @@ module "cognito" {
   token_validity_values     = var.token_validity_values
   token_validity_units      = var.token_validity_units
   callback_urls             = var.callback_urls
+  user_groups               = {"Admin": "Admin User Group. Adds an admin user group to the user pool so users can edit all projects."}
 }

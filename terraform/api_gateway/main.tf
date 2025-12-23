@@ -301,6 +301,14 @@ resource "aws_api_gateway_deployment" "main" {
   lifecycle {
     create_before_destroy = true
   }
+
+  // This block will cause a redeployment of the API Gateway whenever the main.tf file changes
+  // Since the API routes are defined in this file, any changes to the routes will trigger a redeployment
+  triggers = {
+    redeployment = sha1(jsonencode([
+      file("main.tf")
+    ]))
+  }
 }
 
 # API Gateway Stage
