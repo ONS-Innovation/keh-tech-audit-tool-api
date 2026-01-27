@@ -145,24 +145,18 @@ resource "aws_security_group" "lambda_sg" {
 }
 
 # 6. Create the Lambda function
-resource "aws_lambda_function" "tech_audit_lambda" {
-  function_name = "${var.domain}-${var.service_subdomain}-lambda"
-  package_type  = "Image"
+module "tech_audit_lambda" {
+  source = "git::https://github.com/ONSdigital/ons-terraform-modular.git//terraform/lambda/modules/aws_lambda?ref=v1.0.0"
 
-  # Use digest instead of tag (immutable)
+  function_name = "${var.domain}-${var.service_subdomain}-lambda"
   image_uri = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}@${data.aws_ecr_image.lambda_image.image_digest}"
 
-  vpc_config {
-    subnet_ids          = data.terraform_remote_state.vpc.outputs.private_subnets
-    security_group_ids  = [aws_security_group.lambda_sg.id] // Dedicated security group for Lambda function
-  }
+  role_arn  = aws_iam_role.lambda_execution_role.arn
 
-  role = aws_iam_role.lambda_execution_role.arn
+  subnet_ids          = data.terraform_remote_state.vpc.outputs.private_subnets
+  security_group_ids  = [aws_security_group.lambda_sg.id] // Dedicated security group for Lambda function
 
-  memory_size = 128
-  timeout     = 30
-
-  environment {
+  environment_variables {
     variables = {
       TECH_AUDIT_DATA_BUCKET     = data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name
       TECH_AUDIT_SECRET_MANAGER  = data.terraform_remote_state.secrets.outputs.secret_name
