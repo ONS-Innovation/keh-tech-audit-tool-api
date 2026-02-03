@@ -32,12 +32,17 @@ module "lambda_role_and_sg" {
   }
 }
 
+locals {
+  lambda_image_digest = var.container_digest != null ? var.container_digest : data.aws_ecr_image.lambda_image[0].image_digest
+  lambda_image_uri    = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}@${local.lambda_image_digest}"
+}
+
 # 2. Create the Lambda function
 module "tech_audit_lambda" {
   source = "git::https://github.com/ONSdigital/ons-terraform-modular.git//terraform/lambda?ref=KEH-1797-shared-terraform-repo"
 
   function_name = "${var.domain}-${var.service_subdomain}-lambda"
-  image_uri = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}@${data.aws_ecr_image.lambda_image.image_digest}"
+  image_uri      = local.lambda_image_uri
 
   role_arn  = module.lambda_role_and_sg.role_arn
 
@@ -48,7 +53,7 @@ module "tech_audit_lambda" {
     TECH_AUDIT_DATA_BUCKET     = data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name
     TECH_AUDIT_SECRET_MANAGER  = data.terraform_remote_state.secrets.outputs.secret_name
     AWS_COGNITO_TOKEN_URL      = "https://${var.domain}-${var.service_subdomain}.auth.${var.region}.amazoncognito.com/oauth2/token"
-    IMAGE_DIGEST               = data.aws_ecr_image.lambda_image.image_digest
+    IMAGE_DIGEST               = local.lambda_image_digest
     IMAGE_TAG                  = var.container_ver
   }
 
@@ -67,8 +72,10 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
 
 # Resolve the pushed image (must exist before terraform apply)
 data "aws_ecr_image" "lambda_image" {
+  count           = var.container_digest == null ? 1 : 0
   repository_name = var.ecr_repository
   image_tag       = var.container_ver
+  registry_id     = var.aws_account_id
 }
 
 # CloudWatch log group for the Lambda
