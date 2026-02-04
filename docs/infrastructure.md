@@ -38,6 +38,10 @@ Run like normal.
 
 The tech audit S3 bucket and the secrets manager secret are created by the terraform script. The aws cognito token url is set by the terraform script. Then run the terraform script for the lambda function and this data is set in the lambda function.
 
+The Lambda Terraform now composes shared modules for the IAM role/security group and the Lambda resource itself. You still provide the image details via `ecr_repository` and `container_ver` (tag). Optionally, you can pin to an immutable image digest using `container_digest` to avoid tag lookup issues.
+
+After apply, you can confirm the exact image (including digest) via the `lambda_image_uri` Terraform output.
+
 ### 6. API Gateway
 
 Run like normal. Note down the URLs in the outputs.

@@ -43,6 +43,12 @@ variable "container_ver" {
 
 }
 
+variable "container_digest" {
+  description = "Optional. ECR image digest (sha256:...) to use instead of looking up by tag. Useful when tag-based lookup fails or for fully pinned deploys."
+  type        = string
+  default     = null
+}
+
 variable "project_tag" {
   description = "Project"
   type        = string

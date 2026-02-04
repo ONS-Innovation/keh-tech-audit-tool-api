@@ -8,190 +8,74 @@ terraform {
   }
 
 }
+#1. IAM Role and Security Group for Lambda
+module "lambda_role_and_sg" {
+  source = "git::https://github.com/ONSdigital/ons-terraform-modular.git//terraform/lambda/lambda_role_and_sg?ref=KEH-1797-shared-terraform-repo"
 
-# 1. First create the IAM role
-resource "aws_iam_role" "lambda_execution_role" {
-  name = "${var.domain}-${var.service_subdomain}-lambda-role"
+  domain            = var.domain
+  service_subdomain = var.service_subdomain
+  region            = var.region
+  aws_account_id    = var.aws_account_id
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
+  vpc_id        = data.terraform_remote_state.vpc.outputs.vpc_id
+  s3_bucket_name = data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name
+  secret_arn     = data.terraform_remote_state.secrets.outputs.secret_arn
 
-# 2. Attach basic execution policy
-resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  role       = aws_iam_role.lambda_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  depends_on = [aws_iam_role.lambda_execution_role]
-}
+  ingress_https_cidr_blocks = ["10.0.0.0/16"]
 
-# 3. Add S3 access policy
-resource "aws_iam_role_policy" "lambda_s3_access" {
-  name = "${var.domain}-${var.service_subdomain}-lambda-s3-policy"
-  role = aws_iam_role.lambda_execution_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          "arn:aws:s3:::${data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name}",
-          "arn:aws:s3:::${data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name}/*"
-        ]
-      }
-    ]
-  })
-  depends_on = [aws_iam_role.lambda_execution_role]
-}
-
-# 4. Add additional permissions
-resource "aws_iam_role_policy" "lambda_additional_permissions" {
-  name = "${var.domain}-${var.service_subdomain}-policy-additional"
-  role = aws_iam_role.lambda_execution_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
-        Resource = data.terraform_remote_state.secrets.outputs.secret_arn
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup"
-        ]
-        Resource = "arn:aws:logs:${var.region}:${var.aws_account_id}:*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = [
-          "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.domain}-${var.service_subdomain}-lambda:*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "execute-api:Invoke",
-          "execute-api:ManageConnections"
-        ]
-        Resource = "arn:aws:execute-api:*:*:*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:*",
-          "s3-object-lambda:*"
-        ]
-        Resource = "arn:aws:s3:::${var.domain}-${var.service_subdomain}/*"
-      }
-    ]
-  })
-  depends_on = [aws_iam_role.lambda_execution_role]
-}
-
-# 5. Create the security group
-resource "aws_security_group" "lambda_sg" {
-  name = "${var.domain}-${var.service_subdomain}-lambda-sg"
-  description = "Security group for ${var.domain}-${var.service_subdomain}-lambda Lambda function"
-  vpc_id = data.terraform_remote_state.vpc.outputs.vpc_id
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"] // Allow HTTPS traffic within VPC
-  }  
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # Optional: extra broad S3 stanza
+  extra_s3_resource_arn = "arn:aws:s3:::${var.domain}-${var.service_subdomain}/*"
 
   tags = {
-    Name = "${var.domain}-${var.service_subdomain}-lambda-sg"
+    Service = var.service_subdomain
+    Domain  = var.domain
   }
 }
 
-# 6. Create the Lambda function
-resource "aws_lambda_function" "tech_audit_lambda" {
+locals {
+  lambda_image_digest = var.container_digest != null ? var.container_digest : data.aws_ecr_image.lambda_image[0].image_digest
+  lambda_image_uri    = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}@${local.lambda_image_digest}"
+}
+
+# 2. Create the Lambda function
+module "tech_audit_lambda" {
+  source = "git::https://github.com/ONSdigital/ons-terraform-modular.git//terraform/lambda?ref=KEH-1797-shared-terraform-repo"
+
   function_name = "${var.domain}-${var.service_subdomain}-lambda"
-  package_type  = "Image"
+  image_uri      = local.lambda_image_uri
 
-  # Use digest instead of tag (immutable)
-  image_uri = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repository}@${data.aws_ecr_image.lambda_image.image_digest}"
+  role_arn  = module.lambda_role_and_sg.role_arn
 
-  vpc_config {
-    subnet_ids          = data.terraform_remote_state.vpc.outputs.private_subnets
-    security_group_ids  = [aws_security_group.lambda_sg.id] // Dedicated security group for Lambda function
-  }
+  subnet_ids          = data.terraform_remote_state.vpc.outputs.private_subnets
+  security_group_ids  = [module.lambda_role_and_sg.security_group_id] // Dedicated security group for Lambda function
 
-  role = aws_iam_role.lambda_execution_role.arn
-
-  memory_size = 128
-  timeout     = 30
-
-  environment {
-    variables = {
-      TECH_AUDIT_DATA_BUCKET     = data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name
-      TECH_AUDIT_SECRET_MANAGER  = data.terraform_remote_state.secrets.outputs.secret_name
-      AWS_COGNITO_TOKEN_URL      = "https://${var.domain}-${var.service_subdomain}.auth.eu-west-2.amazoncognito.com/oauth2/token"
-      IMAGE_DIGEST               = data.aws_ecr_image.lambda_image.image_digest
-      IMAGE_TAG                  = var.container_ver
-    }
+  environment_variables = {
+    TECH_AUDIT_DATA_BUCKET     = data.terraform_remote_state.storage.outputs.tech_audit_data_bucket_name
+    TECH_AUDIT_SECRET_MANAGER  = data.terraform_remote_state.secrets.outputs.secret_name
+    AWS_COGNITO_TOKEN_URL      = "https://${var.domain}-${var.service_subdomain}.auth.${var.region}.amazoncognito.com/oauth2/token"
+    IMAGE_DIGEST               = local.lambda_image_digest
+    IMAGE_TAG                  = var.container_ver
   }
 
   depends_on = [
-    aws_iam_role_policy.lambda_s3_access,
-    aws_iam_role_policy.lambda_additional_permissions,
-    aws_iam_role_policy_attachment.lambda_basic_execution,
-    aws_iam_role_policy_attachment.lambda_vpc_access,
+    module.lambda_role_and_sg,
     data.aws_ecr_image.lambda_image
   ]
 }
 
 # Add VPC access policy to Lambda role
 resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
-  role       = aws_iam_role.lambda_execution_role.name
+  role       = basename(module.lambda_role_and_sg.role_arn)
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-  depends_on = [aws_iam_role.lambda_execution_role]
+  depends_on = [module.lambda_role_and_sg]
 }
 
 # Resolve the pushed image (must exist before terraform apply)
 data "aws_ecr_image" "lambda_image" {
+  count           = var.container_digest == null ? 1 : 0
   repository_name = var.ecr_repository
   image_tag       = var.container_ver
+  registry_id     = var.aws_account_id
 }
 
 # CloudWatch log group for the Lambda
