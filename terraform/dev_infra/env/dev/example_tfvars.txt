@@ -1,2 +1,0 @@
-domain                            = "sdp-dev"
-service_subdomain                 = "tech-audit-tool-api"
