@@ -37,7 +37,7 @@ resource "aws_iam_policy" "secrets_access" {
 
 # IAM User Group
 resource "aws_iam_group" "group" {
-  name = "${var.domain}-${var.service_subdomain}-group"
+  name = "${var.domain}-${var.service_subdomain}-user-group"
   path = "/"
 }
 
