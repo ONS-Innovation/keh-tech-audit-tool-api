@@ -241,7 +241,7 @@ jobs:
 - name: release-build-and-push-prod
   public: true
   plan:
-  -do:
+  - do:
     - get: resource-repo
       passed: [deploy-after-github-release-dev]
       trigger: false # Manual trigger only
