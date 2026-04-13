@@ -66,3 +66,13 @@ variable "log_retention_days" {
   type        = number
   default     = 365
 }
+
+variable "azure_secret_name" {
+  description = "Name of the Azure secret containing the service principal credentials"
+  type        = string
+}
+
+variable "branch_name" {
+  description = "Branch name for the deployment"
+  type        = string
+}

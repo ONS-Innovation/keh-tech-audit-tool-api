@@ -169,6 +169,7 @@ resource "aws_lambda_function" "tech_audit_lambda" {
       AWS_COGNITO_TOKEN_URL      = "https://${var.domain}-${var.service_subdomain}.auth.eu-west-2.amazoncognito.com/oauth2/token"
       IMAGE_DIGEST               = data.aws_ecr_image.lambda_image.image_digest
       IMAGE_TAG                  = var.container_ver
+      AZURE_SECRET_NAME          = var.azure_secret_name
     }
   }
 
