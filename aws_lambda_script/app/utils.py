@@ -236,6 +236,7 @@ def send_teams_alert(message) -> None:
         if not teams_alert_client:
             logger.warning("TeamsAlertClient is not initialized. Cannot send alert.")
         elif branch_name != "main":
+            send_teams_alert(f"Attempted to send alert from a non-main branch")
             logger.warning(
                 f"Current branch is '{branch_name}'. Alerts are only sent from 'main' branch. Alert not sent."
             )
