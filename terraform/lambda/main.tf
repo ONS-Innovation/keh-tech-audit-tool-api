@@ -72,7 +72,10 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = data.terraform_remote_state.secrets.outputs.secret_arn
+        Resource = [
+          data.terraform_remote_state.secrets.outputs.secret_arn,
+          "arn:aws:secretsmanager:${var.region}:${var.aws_account_id}:secret:${var.azure_secret_name}*"
+        ]
       },
       {
         Effect = "Allow"
