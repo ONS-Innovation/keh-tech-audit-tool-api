@@ -76,3 +76,8 @@ variable "branch_name" {
   description = "Branch name for the deployment"
   type        = string
 }
+
+variable "aws_account_name" {
+  description = "AWS Account Name"
+  type        = string
+}
