@@ -6,4 +6,4 @@ aws-wsgi==0.2.7
 pyjwt>=2.7.0
 requests==2.32.4
 cryptography==46.0.5
-keh-team-alert @ git+https://github.com/ONS-Innovation/keh-teams-alert@v0.1.0
+keh-teams-alert @ git+https://github.com/ONS-Innovation/keh-teams-alert@v0.1.0
