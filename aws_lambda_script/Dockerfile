@@ -39,8 +39,9 @@ RUN --mount=type=secret,id=github_token \
       GITHUB_TOKEN="$(cat /run/secrets/github_token)"; \
       git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"; \
     fi; \
-    rm -f /root/.gitconfig 2>/dev/null || true; \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt; \
+    rm -f /root/.gitconfig 2>/dev/null || true
+    
 # RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: runtime (Lambda base)
