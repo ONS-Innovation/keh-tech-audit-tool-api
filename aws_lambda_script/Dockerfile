@@ -48,8 +48,14 @@ RUN --mount=type=secret,id=github_token \
 FROM public.ecr.aws/lambda/python:3.12
 WORKDIR /var/task
 
-COPY --from=builder /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# COPY --from=builder /opt/venv /opt/venv
+# ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy dependencies into /var/task so Lambda always imports them
+COPY --from=builder /opt/venv/lib/python3.12/site-packages/ /var/task/
+
+# Ensure /var/task is on sys.path
+ENV PYTHONPATH="/var/task:${PYTHONPATH}"
 
 COPY app/ /var/task/app/
 COPY main.py /var/task/
