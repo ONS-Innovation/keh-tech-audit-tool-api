@@ -170,6 +170,7 @@ resource "aws_lambda_function" "tech_audit_lambda" {
       IMAGE_DIGEST               = data.aws_ecr_image.lambda_image.image_digest
       IMAGE_TAG                  = var.container_ver
       AZURE_SECRET_NAME          = var.azure_secret_name
+      BRANCH_NAME                = var.branch_name
     }
   }
 
