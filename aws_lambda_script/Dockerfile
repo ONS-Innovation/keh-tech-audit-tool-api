@@ -39,7 +39,6 @@ RUN --mount=type=secret,id=github_token \
       GITHUB_TOKEN="$(cat /run/secrets/github_token)"; \
       git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"; \
     fi; \
-    poetry install --only main --no-root; \
     rm -f /root/.gitconfig 2>/dev/null || true; \
     pip install --no-cache-dir -r requirements.txt
 # RUN pip install --no-cache-dir -r requirements.txt
