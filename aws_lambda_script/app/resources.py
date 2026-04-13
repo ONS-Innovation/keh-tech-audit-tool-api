@@ -49,10 +49,11 @@ def get_user_attributes(args):
     token = args["Authorization"]
     try:
         user_attributes = verify_cognito_token(token)
-        send_teams_alert(f"User {user_attributes.get('email', 'unknown')} accessed the API")
+        send_teams_alert(f"User accessing the TAT API")
         return user_attributes
     except Exception as error:
         logger.exception("Error verifying token: %s", error)
+        send_teams_alert(f"Unauthorized access attempt with token")
         abort(401, description="Not authorized")
 
 def get_user_information() -> dict:
