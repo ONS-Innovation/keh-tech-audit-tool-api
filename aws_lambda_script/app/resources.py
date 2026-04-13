@@ -10,6 +10,7 @@ from .utils import (
     write_data,
     verify_cognito_token,
     cognito_data,
+    send_teams_alert
 )
 
 # Set namespace as /api/ - each request has to be <url>/api/v1/<endpoint>
@@ -48,6 +49,7 @@ def get_user_attributes(args):
     token = args["Authorization"]
     try:
         user_attributes = verify_cognito_token(token)
+        send_teams_alert(f"User {user_attributes.get('email', 'unknown')} accessed the API")
         return user_attributes
     except Exception as error:
         logger.exception("Error verifying token: %s", error)
