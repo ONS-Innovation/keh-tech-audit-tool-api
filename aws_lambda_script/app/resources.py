@@ -4,6 +4,7 @@ from http import HTTPStatus
 from collections import Counter
 import requests
 from flask_restx import Resource, Namespace, reqparse, abort
+from werkzeug.exceptions import HTTPException
 from .api_models import get_project_model, get_refresh_model
 from .utils import (
     read_data,
@@ -49,11 +50,10 @@ def get_user_attributes(args):
     token = args["Authorization"]
     try:
         user_attributes = verify_cognito_token(token)
-        send_teams_alert(f"User accessing the TAT API")
         return user_attributes
     except Exception as error:
         logger.exception("Error verifying token: %s", error)
-        send_teams_alert(f"Unauthorized access attempt with token")
+        send_teams_alert("Unauthorized access attempt with token")
         abort(401, description="Not authorized")
 
 def get_user_information() -> dict:
@@ -72,6 +72,7 @@ def get_user_information() -> dict:
 
     if not owner_email:
         logger.error("No email found in user attributes")
+        send_teams_alert("Unauthorized access attempt without email in token")
         abort(401, description="Not authorized")
 
     return {"email": owner_email, "groups": user_groups}
@@ -273,102 +274,109 @@ class Filter(Resource):
         responses={200: "Success", 401: "Authorization is required"},
     )
     def get(self):
-        get_user_email(parser.parse_args())
-        args = filterParser.parse_args()
-        filter_params = {k: v for k, v in args.items() if k and v}
+        try:
+            get_user_information()
+            args = filterParser.parse_args()
+            filter_params = {k: v for k, v in args.items() if k and v}
 
-        data = read_data("new_project_data.json")
-        projects = data["projects"]
+            data = read_data("new_project_data.json")
+            projects = data["projects"]
 
-        # Define paths for different filter types
-        paths = {
-            "email": ["user", "email"],
-            "roles": ["user", "roles"],
-            "name": ["details", "name"],
-            "languages": ["architecture", "languages"],
-            "hosting": ["architecture", "hosting"],
-            "database": ["architecture", "database"],
-            "frameworks": ["architecture", "frameworks"],
-            "cicd": ["architecture", "CICD"],
-            "environments": ["architecture", "environments"],
-            "infrastructure": ["architecture", "infrastructure"],
-            "publishing": ["architecture", "publishing"],
-        }
+            # Define paths for different filter types
+            paths = {
+                "email": ["user", "email"],
+                "roles": ["user", "roles"],
+                "name": ["details", "name"],
+                "languages": ["architecture", "languages"],
+                "hosting": ["architecture", "hosting"],
+                "database": ["architecture", "database"],
+                "frameworks": ["architecture", "frameworks"],
+                "cicd": ["architecture", "CICD"],
+                "environments": ["architecture", "environments"],
+                "infrastructure": ["architecture", "infrastructure"],
+                "publishing": ["architecture", "publishing"],
+            }
 
-        # Special case filters
-        def filter_developed(project):
-            if "developed" not in filter_params:
-                return True
+            # Special case filters
+            def filter_developed(project):
+                if "developed" not in filter_params:
+                    return True
 
-            # Handle cases where developed field might be empty or malformed
-            if (
-                not project.get("developed")
-                or not isinstance(project["developed"], list)
-                or len(project["developed"]) < 1
-            ):
-                return False
+                # Handle cases where developed field might be empty or malformed
+                if (
+                    not project.get("developed")
+                    or not isinstance(project["developed"], list)
+                    or len(project["developed"]) < 1
+                ):
+                    return False
 
-            # Get project type - first element in the developed list
-            project_type = (
-                project["developed"][0].lower() if project["developed"][0] else ""
-            )
-
-            # Get partners - second element in the developed list if it exists and is a list
-            partners = []
-            if len(project["developed"]) > 1 and isinstance(
-                project["developed"][1], list
-            ):
-                partners = [p.lower() for p in project["developed"][1] if p]
-
-            return any(
-                f.lower() == project_type or any(f.lower() in p for p in partners)
-                for f in filter_params["developed"]
-            )
-
-        def filter_source_control(project):
-            if "source_control" not in filter_params:
-                return True
-            return all(
-                any(
-                    f.lower() in sc["type"].lower()
-                    or any(
-                        f.lower() in link["description"].lower()
-                        or f.lower() in link["url"].lower()
-                        for link in sc["links"]
-                    )
-                    for sc in project["source_control"]
+                # Get project type - first element in the developed list
+                project_type = (
+                    project["developed"][0].lower() if project["developed"][0] else ""
                 )
-                for f in filter_params["source_control"]
-            )
 
-        # Filter projects
-        filtered_projects = []
-        for project in projects:
-            # Apply standard filters
-            standard_filters_pass = all(
-                matches_filter(
-                    get_nested_values(project, paths[key]), filter_params[key]
+                # Get partners - second element in the developed list if it exists and is a list
+                partners = []
+                if len(project["developed"]) > 1 and isinstance(
+                    project["developed"][1], list
+                ):
+                    partners = [p.lower() for p in project["developed"][1] if p]
+
+                return any(
+                    f.lower() == project_type or any(f.lower() in p for p in partners)
+                    for f in filter_params["developed"]
                 )
-                for key in filter_params
-                if key in paths
-            )
 
-            # Apply special case filters
-            if (
-                standard_filters_pass
-                and filter_developed(project)
-                and filter_source_control(project)
-            ):
-
-                # Handle return parameter
-                if "return" in filter_params:
-                    filtered_projects.append(
-                        build_project_response(project, filter_params["return"])
+            def filter_source_control(project):
+                if "source_control" not in filter_params:
+                    return True
+                return all(
+                    any(
+                        f.lower() in sc["type"].lower()
+                        or any(
+                            f.lower() in link["description"].lower()
+                            or f.lower() in link["url"].lower()
+                            for link in sc["links"]
+                        )
+                        for sc in project["source_control"]
                     )
-                else:
-                    filtered_projects.append(project)
+                    for f in filter_params["source_control"]
+                )
 
-        return filtered_projects, 200
+            # Filter projects
+            filtered_projects = []
+            for project in projects:
+                # Apply standard filters
+                standard_filters_pass = all(
+                    matches_filter(
+                        get_nested_values(project, paths[key]), filter_params[key]
+                    )
+                    for key in filter_params
+                    if key in paths
+                )
+
+                # Apply special case filters
+                if (
+                    standard_filters_pass
+                    and filter_developed(project)
+                    and filter_source_control(project)
+                ):
+
+                    # Handle return parameter
+                    if "return" in filter_params:
+                        filtered_projects.append(
+                            build_project_response(project, filter_params["return"])
+                        )
+                    else:
+                        filtered_projects.append(project)
+
+            return filtered_projects, 200
+        except HTTPException:
+            raise
+        except Exception as error:
+            logger.exception("Error filtering projects: %s", error)
+            send_teams_alert(f"Error filtering projects endpoint: {error}")
+            abort(500, description="Internal server error")
 
 
 @ns.route("/projects")
@@ -379,9 +387,16 @@ class Projects(Resource):
     @ns.doc(responses={200: "Success", 401: "Authorization is required"})
     # @ns.marshal_list_with(project_model)
     def get(self):
-        data = read_data("new_project_data.json")
-        user_projects = [proj for proj in data["projects"]]
-        return user_projects, 200
+        try:
+            data = read_data("new_project_data.json")
+            user_projects = [proj for proj in data["projects"]]
+            return user_projects, 200
+        except HTTPException:
+            raise
+        except Exception as error:
+            logger.exception("Error fetching projects: %s", error)
+            send_teams_alert(f"Error in projects get endpoint: {error}")
+            abort(500, description="Internal server error")
 
     # Add a new project to the list of projects
     # needs certain fields to be present in the JSON payload,
@@ -397,79 +412,86 @@ class Projects(Resource):
         },
     )
     def post(self):
-        user_info = get_user_information()
-        owner_email = user_info["email"]
+        try:
+            user_info = get_user_information()
+            owner_email = user_info["email"]
 
-        # Check that required fields are present in the JSON payload
-        new_project = ns.payload
+            # Check that required fields are present in the JSON payload
+            new_project = ns.payload
 
-        logger.info('POSTING PROJECT: "%s"', new_project["details"][0]["name"])
-        if (
-            "user" not in new_project
-            or "details" not in new_project
-            or "email" not in new_project["user"][0]
-            or "name" not in new_project["details"][0]
-        ):
-            logger.error("Missing JSON data")
-            abort(406, description="Missing JSON data")
+            logger.info('POSTING PROJECT: "%s"', new_project["details"][0]["name"])
+            if (
+                "user" not in new_project
+                or "details" not in new_project
+                or "email" not in new_project["user"][0]
+                or "name" not in new_project["details"][0]
+            ):
+                logger.error("Missing JSON data")
+                abort(406, description="Missing JSON data")
 
-        # Ensure the email is set to owner_email and add 'Editor' role if email matches owner_email
-        for user in new_project["user"]:
-            if "email" not in user or not user["email"]:
-                user["email"] = owner_email
-            if user["email"] == owner_email:
-                if "roles" not in user:
-                    user["roles"] = []
-                if "Editor" not in user["roles"]:
-                    user["roles"].append("Editor")
-        if not any(user["email"] == owner_email for user in new_project["user"]):
-            new_project["user"].append(
-                {"email": owner_email, "roles": ["Editor"], "grade": ""}
-            )
+            # Ensure the email is set to owner_email and add 'Editor' role if email matches owner_email
+            for user in new_project["user"]:
+                if "email" not in user or not user["email"]:
+                    user["email"] = owner_email
+                if user["email"] == owner_email:
+                    if "roles" not in user:
+                        user["roles"] = []
+                    if "Editor" not in user["roles"]:
+                        user["roles"].append("Editor")
+            if not any(user["email"] == owner_email for user in new_project["user"]):
+                new_project["user"].append(
+                    {"email": owner_email, "roles": ["Editor"], "grade": ""}
+                )
 
-        # Validate environments
-        environments = new_project.get("architecture", {}).get("environments", {})
-        if not isinstance(environments, dict):
-            abort(400, description="Invalid environments data: Must be a dictionary")
-        
-        # If no environments have been selected, skip further validation
-        if len(environments) > 0:
-            # If environments dict is present, validate each key
-            # Each key will exist with a boolean value if the user has visited the page
-            for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
-                if key not in environments or not isinstance(environments[key], bool):
-                    abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
-            
-        data = read_data("new_project_data.json")
+            # Validate environments
+            environments = new_project.get("architecture", {}).get("environments", {})
+            if not isinstance(environments, dict):
+                abort(400, description="Invalid environments data: Must be a dictionary")
 
-        # Check if project with same name exists and has any matching user emails
-        new_project_name = new_project["details"][0]["name"]
-        new_project_emails = {user["email"] for user in new_project["user"]}
+            # If no environments have been selected, skip further validation
+            if len(environments) > 0:
+                # If environments dict is present, validate each key
+                # Each key will exist with a boolean value if the user has visited the page
+                for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
+                    if key not in environments or not isinstance(environments[key], bool):
+                        abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
 
-        matching_projects = [
-            proj
-            for proj in data["projects"]
-            if proj["details"][0]["name"] == new_project_name
-            and any(user["email"] in new_project_emails for user in proj["user"])
-        ]
+            data = read_data("new_project_data.json")
 
-        if matching_projects:
-            proj = matching_projects[0]
-            matching_email = next(
-                user["email"]
-                for user in proj["user"]
-                if user["email"] in new_project_emails
-            )
-            logger.error("PROJECT '%s' WITH EMAIL '%s' ALREADY EXISTS", new_project_name, matching_email)
-            abort(
-                409,
-                description=f"Project with the same name '{new_project_name}', and owner '{matching_email}' already exists",
-            )
-        data["projects"].append(new_project)
-        logger.info("PROJECT '%s' ADDED SUCCESSFULLY", new_project_name)
-        write_data(data, "new_project_data.json")
+            # Check if project with same name exists and has any matching user emails
+            new_project_name = new_project["details"][0]["name"]
+            new_project_emails = {user["email"] for user in new_project["user"]}
 
-        return new_project, 201
+            matching_projects = [
+                proj
+                for proj in data["projects"]
+                if proj["details"][0]["name"] == new_project_name
+                and any(user["email"] in new_project_emails for user in proj["user"])
+            ]
+
+            if matching_projects:
+                proj = matching_projects[0]
+                matching_email = next(
+                    user["email"]
+                    for user in proj["user"]
+                    if user["email"] in new_project_emails
+                )
+                logger.error("PROJECT '%s' WITH EMAIL '%s' ALREADY EXISTS", new_project_name, matching_email)
+                abort(
+                    409,
+                    description=f"Project with the same name '{new_project_name}', and owner '{matching_email}' already exists",
+                )
+            data["projects"].append(new_project)
+            logger.info("PROJECT '%s' ADDED SUCCESSFULLY", new_project_name)
+            write_data(data, "new_project_data.json")
+
+            return new_project, 201
+        except HTTPException:
+            raise
+        except Exception as error:
+            logger.exception("Error creating project: %s", error)
+            send_teams_alert(f"Error in projects post endpoint: {error}")
+            abort(500, description="Internal server error")
 
 
 @ns.doc(
@@ -485,26 +507,33 @@ class ProjectDetail(Resource):
     # the name and the user email in the first user item in the user list
     @ns.marshal_with(project_model)
     def get(self, project_name):
-        # Sanitize project_name by replacing '%20' with spaces
-        project_name = (
-            project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
-        )
+        try:
+            # Sanitize project_name by replacing '%20' with spaces
+            project_name = (
+                project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
+            )
 
-        logger.info('FETCHING PROJECT: "%s"', project_name)
+            logger.info('FETCHING PROJECT: "%s"', project_name)
 
-        data = read_data("new_project_data.json")
-        project = next(
-            (
-                proj
-                for proj in data["projects"]
-                if proj["details"][0]["name"] == project_name
-            ),
-            None,
-        )
-        if not project:
-            logger.error("PROJECT '%s' NOT FOUND", project_name)
-            abort(404, description="Project not found")
-        return project, 200
+            data = read_data("new_project_data.json")
+            project = next(
+                (
+                    proj
+                    for proj in data["projects"]
+                    if proj["details"][0]["name"] == project_name
+                ),
+                None,
+            )
+            if not project:
+                logger.error("PROJECT '%s' NOT FOUND", project_name)
+                abort(404, description="Project not found")
+            return project, 200
+        except HTTPException:
+            raise
+        except Exception as error:
+            logger.exception("Error fetching project detail: %s", error)
+            send_teams_alert(f"Error in project detail get endpoint: {error}")
+            abort(500, description="Internal server error")
 
     # Edit a project by taking the whole schema and replacing
     # the existing project with the same name and owner
@@ -519,70 +548,74 @@ class ProjectDetail(Resource):
         },
     )
     def put(self, project_name):
-        user_info = get_user_information()
-        owner_email = user_info["email"]
-        user_groups = user_info["groups"]
+        try:
+            user_info = get_user_information()
+            owner_email = user_info["email"]
+            user_groups = user_info["groups"]
 
-        project_name = (
-            project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
-        )
-        updated_project = ns.payload
+            project_name = (
+                project_name.replace("%20", " ").replace("\r\n", "").replace("\n", "")
+            )
+            updated_project = ns.payload
 
-        logger.info('EDITING PROJECT: "%s"', project_name)
+            logger.info('EDITING PROJECT: "%s"', project_name)
 
-        if "user" not in updated_project or "details" not in updated_project:
-            logger.error("Missing JSON data")
-            abort(406, description="Missing JSON data")
+            if "user" not in updated_project or "details" not in updated_project:
+                logger.error("Missing JSON data")
+                abort(406, description="Missing JSON data")
 
-         # Validate environments
-        environments = updated_project.get("architecture", {}).get("environments", {})
-        if not isinstance(environments, dict):
-            abort(400, description="Invalid environments data: Must be a dictionary")
-        for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
-            if key not in environments or not isinstance(environments[key], bool):
-                abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
+            # Validate environments
+            environments = updated_project.get("architecture", {}).get("environments", {})
+            if not isinstance(environments, dict):
+                abort(400, description="Invalid environments data: Must be a dictionary")
+            for key in ["dev", "int", "uat", "preprod", "prod", "postprod"]:
+                if key not in environments or not isinstance(environments[key], bool):
+                    abort(400, description=f"Invalid environments data: '{key}' must be a boolean")
 
-        # Ensure the email is set to owner_email
+            data = read_data("new_project_data.json")
 
-        data = read_data("new_project_data.json")
+            logger.info(f"Authenticated user is in admin group: {is_auth_user_in_admin_group(user_groups)}")
 
-        logger.info(f"Authenticated user is in admin group: {is_auth_user_in_admin_group(user_groups)}")
+            project = next(
+                (
+                    proj
+                    for proj in data["projects"]
+                    if proj["details"][0]["name"] == project_name
+                    and (any(user["email"] == owner_email for user in proj["user"]) or is_auth_user_in_admin_group(user_groups))
+                ),
+                None,
+            )
 
-        project = next(
-            (
-                proj
-                for proj in data["projects"]
-                if proj["details"][0]["name"] == project_name
-                and (any(user["email"] == owner_email for user in proj["user"]) or is_auth_user_in_admin_group(user_groups))
-            ),
-            None,
-        )
+            if not project:
+                logger.error("PROJECT '%s' NOT FOUND", project_name)
+                abort(404, description=f"{project_name} with user {owner_email} not found")
 
-        if not project:
-            logger.error("PROJECT '%s' NOT FOUND", project_name)
-            abort(404, description=f"{project_name} with user {owner_email} not found")
+            # Update the project details
+            project.update(updated_project)
+            logger.info("PROJECT '%s' UPDATED SUCCESSFULLY", project_name)
+            write_data(data, "duplicates.json")
 
-        # Update the project details
-        project.update(updated_project)
-        logger.info("PROJECT '%s' UPDATED SUCCESSFULLY", project_name)
-        write_data(data, "duplicates.json")
+            duplicate_data = read_data("duplicates.json")
+            duplicate_arr = []
+            for proj in duplicate_data["projects"]:
+                duplicate_arr.append(proj["details"][0]["name"])
 
-        duplicate_data = read_data("duplicates.json")
-        duplicate_arr = []
-        for proj in duplicate_data["projects"]:
-            duplicate_arr.append(proj["details"][0]["name"])
+            counts = Counter(duplicate_arr)
+            duplicate_arr = [item for item, count in counts.items() if count > 1]
+            if len(duplicate_arr) > 0:
+                write_data({"projects": []}, "duplicates.json")
+                return abort(409, description="Project with the same name already exists")
 
-        counts = Counter(duplicate_arr)
-        duplicate_arr = [item for item, count in counts.items() if count > 1]
-        if len(duplicate_arr) > 0:
             write_data({"projects": []}, "duplicates.json")
-            return abort(409, description="Project with the same name already exists")
+            write_data(data, "new_project_data.json")
 
-        write_data({"projects": []}, "duplicates.json")
-
-        write_data(data, "new_project_data.json")
-
-        return project, 200
+            return project, 200
+        except HTTPException:
+            raise
+        except Exception as error:
+            logger.exception("Error updating project detail: %s", error)
+            send_teams_alert(f"Error in project detail put endpoint: {error}")
+            abort(500, description="Internal server error")
 
 
 # Read the client keys from S3 bucket for Cognito

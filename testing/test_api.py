@@ -3,6 +3,7 @@ import json
 import os
 import datetime
 from unittest.mock import patch
+from werkzeug.exceptions import Unauthorized
 
 # Mock verify_cognito_token for authentication
 mocked_user_email = os.getenv("MOCK_USER_EMAIL", "test@ons.gov.uk")
@@ -82,6 +83,18 @@ def test_get_projects(mock_verify_token, mock_read, client):
     ), f"Unexpected status code: {response.status_code}, {response.data}"
     data = json.loads(response.data)
     assert "Test Project" in data[-1]["details"][0]["name"]
+
+
+@patch("app.resources.get_user_information", side_effect=Unauthorized("Not authorized"))
+def test_filter_projects_preserves_http_exception(mock_get_user_information, client):
+    mock_token = get_mock_token()
+    response = client.get(
+        "/api/v1/projects/filter", headers={"Authorization": f"{mock_token}"}
+    )
+
+    assert (
+        response.status_code == 401
+    ), f"Unexpected status code: {response.status_code}, {response.data}"
 
 
 # Test for POSTing a new project with a timestamp in the name

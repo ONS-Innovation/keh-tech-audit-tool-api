@@ -82,7 +82,8 @@ def read_data(object_name):
         if e.response["Error"]["Code"] == "NoSuchKey":
             data = {"projects": []}
         else:
-            abort(500, description=f"Error reading data: {e}")
+            logger.exception("Failed to read %s from S3", object_name)
+            abort(500, description="Internal server error")
     return data
 
 
@@ -105,7 +106,9 @@ def write_data(new_data, object_name):
             Body=json.dumps(new_data, indent=4).encode("utf-8"),
         )
     except ClientError as e:
-        abort(500, description=f"Error writing data: {e}")
+        logger.exception("S3 write failed for %s", object_name)
+        send_teams_alert(f"Failed to write data - {object_name} to S3 bucket")
+        abort(500, description="Internal server error")
 
 def get_cognito_jwks():
     """
@@ -184,17 +187,27 @@ def verify_cognito_token(id_token):
         abort(401, description=f"Invalid token: {str(e)}")
 
 # Initialize Teams Alert Client
+tenant_id = ""
+client_id = ""
+client_secret = ""
+scope = ""
+alert_url = ""
 
-azure_secret_name = read_cognito_data(ALERTS_AZURE_SECRET_NAME)
-if azure_secret_name:
-    logger.info("Initializing Teams Alert Client with Azure credentials")
-    tenant_id = azure_secret_name["azure_tenant_id"]
-    client_id = azure_secret_name["azure_client_id"]
-    client_secret = azure_secret_name["azure_client_secret"]
-    scope = azure_secret_name["azure_scope"]
-    alert_url = azure_secret_name["azure_webhook_url"]
-else:
-    logger.warning("Azure credentials not found. Teams alerts will not be sent.")
+try:
+    logger.info("Attempting to read Azure credentials from Secrets Manager")
+    azure_secret_name = read_cognito_data(ALERTS_AZURE_SECRET_NAME)
+    if azure_secret_name:
+        logger.info("Azure credentials found. Initializing Teams Alert Client.")
+        tenant_id = azure_secret_name["azure_tenant_id"]
+        client_id = azure_secret_name["azure_client_id"]
+        client_secret = azure_secret_name["azure_client_secret"]
+        scope = azure_secret_name["azure_scope"]
+        alert_url = azure_secret_name["azure_webhook_url"]
+    else:
+        logger.warning("Azure credentials not found. Teams alerts will not be sent.")
+except Exception as e:
+    logger.error(f"Error initializing Teams Alert Client: {e}, Teams alerts will not be sent.")
+
 
 
 def get_teams_alert_client() -> TeamsAlertClient:
@@ -224,8 +237,7 @@ def send_teams_alert(message) -> None:
     logger.info("Preparing to send alert to Teams Channel")
     teams_alert_client = get_teams_alert_client()
     if (
-        teams_alert_client
-        # teams_alert_client and branch_name == "main"
+        teams_alert_client and branch_name == "main"
     ):  # Only send alerts if client is initialized and on main branch
         try:
             alert_message = setup_alert_message(message)
