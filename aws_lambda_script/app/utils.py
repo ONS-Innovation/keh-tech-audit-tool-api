@@ -4,10 +4,15 @@ import boto3
 import jwt
 import requests
 import logging
-from keh_teams_alert import TeamsAlertClient
+from typing import Any
 from flask_restx import abort
 from botocore.exceptions import ClientError
 from jwt.algorithms import RSAAlgorithm
+
+try:
+    from keh_teams_alert import TeamsAlertClient
+except ModuleNotFoundError:
+    TeamsAlertClient = None
 
 # Setup Logging
 logging.basicConfig(
@@ -210,7 +215,11 @@ except Exception as e:
 
 
 
-def get_teams_alert_client() -> TeamsAlertClient:
+def get_teams_alert_client() -> Any:
+    if TeamsAlertClient is None:
+        logger.warning("keh_teams_alert is not installed. Teams alerts are disabled.")
+        return None
+
     try:
         logger.info("Creating TeamsAlertClient instance")
         teams_alert_client = TeamsAlertClient(

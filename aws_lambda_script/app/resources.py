@@ -401,7 +401,7 @@ class Projects(Resource):
     # Add a new project to the list of projects
     # needs certain fields to be present in the JSON payload,
     # the non required will be saved as null if string or emtpy if list
-    @ns.marshal_list_with(project_model)
+    @ns.marshal_with(project_model)
     @ns.doc(
         body=project_model,
         responses={
@@ -537,7 +537,7 @@ class ProjectDetail(Resource):
 
     # Edit a project by taking the whole schema and replacing
     # the existing project with the same name and owner
-    @ns.marshal_list_with(project_model)
+    @ns.marshal_with(project_model)
     @ns.doc(
         body=project_model,
         responses={
