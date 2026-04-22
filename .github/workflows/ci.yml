@@ -36,19 +36,28 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
 
-      - name: Configure GitHub auth for git dependencies
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Remove private alert dependency for CI
         run: |
-          git config --global url."https://${GH_TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-
-      - name: Configure Poetry to use system git
-        run: poetry config system-git-client true
+          python - <<'PY'
+          from pathlib import Path
+          
+          pyproject = Path("pyproject.toml")
+          pyproject.write_text(
+              "\n".join(
+                  line
+                  for line in pyproject.read_text().splitlines()
+                  if "keh-teams-alert" not in line
+              )
+              + "\n"
+          )
+          
+          lockfile = Path("poetry.lock")
+          if lockfile.exists():
+              lockfile.unlink()
+          PY
 
       - name: Install dependencies
-        env:
-          GIT_TERMINAL_PROMPT: 0
-        run: make install-dev
+        run: poetry install --with dev --no-root
 
       - name: Lint Python
         run: make lint
