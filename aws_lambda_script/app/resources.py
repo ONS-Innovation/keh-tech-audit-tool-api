@@ -11,7 +11,7 @@ from .utils import (
     write_data,
     verify_cognito_token,
     cognito_data,
-    send_teams_alert
+    send_teams_alert,
 )
 
 # Set namespace as /api/ - each request has to be <url>/api/v1/<endpoint>
@@ -45,12 +45,14 @@ def get_user_attributes(args):
         dict: User attributes extracted from the token.
 
     Raises:
-        Exception: If token verification fails.
+        HTTPException: Propagates HTTP authentication failures from token verification.
     """
     token = args["Authorization"]
     try:
         user_attributes = verify_cognito_token(token)
         return user_attributes
+    except HTTPException:
+        raise
     except Exception as error:
         logger.exception("Error verifying token: %s", error)
         send_teams_alert("Unauthorized access attempt with token")

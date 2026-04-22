@@ -92,6 +92,20 @@ def test_filter_projects_preserves_http_exception(mock_get_user_information, cli
     ), f"Unexpected status code: {response.status_code}, {response.data}"
 
 
+@patch("app.resources.send_teams_alert")
+@patch("app.resources.verify_cognito_token", side_effect=Unauthorized("Not authorized"))
+def test_get_user_preserves_http_exception_from_token_verification(
+    mock_verify_token, mock_send_teams_alert, client
+):
+    mock_token = get_mock_token()
+    response = client.get("/api/v1/user", headers={"Authorization": f"{mock_token}"})
+
+    assert (
+        response.status_code == 401
+    ), f"Unexpected status code: {response.status_code}, {response.data}"
+    mock_send_teams_alert.assert_not_called()
+
+
 # Test for POSTing a new project with a timestamp in the name
 @patch("app.resources.verify_cognito_token", side_effect=mock_verify_cognito_token)
 def test_post_and_get_project_with_timestamp(mock_verify_token, client):
