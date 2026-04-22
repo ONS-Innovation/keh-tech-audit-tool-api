@@ -1,18 +1,18 @@
 # Authentication
 
-The API uses AWS Cognito for authentication. All API endpoints require a valid ID token in the Authorization header.
+The API uses AWS Cognito for authentication. This endpoint exchanges a refresh token for a new ID token and does not require an `Authorization` header.
 
 ## Refresh Token
 
-`GET /api/v1/refresh`
+`POST /api/v1/refresh`
 
-Exchange authorization code for tokens.
+Exchange a refresh token for a new ID token.
 
-### Query Parameters
+### Request Body
 
-| Parameter | Description |
-|-----------|-------------|
-| `refresh_token` | Refresh token from Cognito callback |
+| Parameter | Type | Description | Required |
+|-----------|------|-------------|----------|
+| `refresh_token` | string | Refresh token returned by Cognito | Yes |
 
 ### Response 
 
@@ -20,3 +20,4 @@ Exchange authorization code for tokens.
 |-------------|-------------|
 | `200` | Success. Response body contains the new ID token: `{"id_token": "string"}`. |
 | `400` | Bad Request |
+| `401` | Failed to refresh token |

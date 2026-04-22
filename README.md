@@ -86,14 +86,15 @@ poetry run flask --app app run --port=8000
 
 This repo utilises PyTest for the testing. Please make sure you have installed dev dependencies before running tests.
 
-To test you need a mock token. Visit the Cognito UI with the redirect URL set to your local environment. Once successully logged in, copy the `id_token`.
+Local tests now mock AWS Secrets Manager, Cognito settings and Teams alert configuration in `testing/conftest.py`, so a real AWS session or Cognito token is not required for `pytest`.
 
-Then import the token into your environment and set the email of the user you want to test with:
+If you want to override the default mocked user in tests, set:
 
 ```bash
-export MOCK_TOKEN=<id_token>
 export MOCK_USER_EMAIL=<email>
 ```
+
+`MOCK_TOKEN` is optional for local tests and defaults to `local-test-token`.
 
 Make sure dev dependencies are installed:
 ```bash
@@ -105,8 +106,6 @@ When in root directory, run the testing command. If you are in `aws_lambda_scrip
 make pytest
 ```
 
-If all tests fail, please relogin to the Cognito and use a new token.
-
 Once you have finished testing, clean the temp files with:
 ```bash
 make clean
@@ -116,7 +115,7 @@ make clean
 
 View the Postman workspace for this project [here](https://www.postman.com/science-pilot-55892832/workspace/keh-tech-audit-tool-api/collection/38871441-e42f661e-6430-4f46-8182-083e9e0fd4ad?action=share&creator=38871441&active-environment=38871441-7c5e3795-74f5-46b3-9034-637561aba746).
 
-Please read the description or README to understand how to use this workspace. You need to get a mock_token to authenticate yourself in each request.
+Please read the description or README to understand how to use this workspace. Postman requests still require a real Cognito ID token in the `Authorization` header.
 
 ## MkDocs Documentation
 
@@ -152,7 +151,7 @@ This will build the MkDocs documentation and deploy it to the `gh-pages` branch 
 
 ## API Reference
 
-Before testing the API, you need to use the above instructions at **Testing** to get a mock token, as all requests need to be authenticated.
+Before calling the API manually, use a valid Cognito ID token in the `Authorization` header. Local `pytest` runs mock authentication automatically.
 
 | Header | Type     | Description                |
 | :-------- | :------- | :------------------------- |
@@ -185,7 +184,7 @@ can be used multiple times to get a new id_token.
 GET /api/v1/projects
 ```
 
-Get's the projects associated with the users email.
+Gets all projects currently stored by the API.
 
 ### Get a specific user project
 
@@ -198,7 +197,7 @@ GET /api/v1/projects/<project_name>
 | `<project_name>`      | `string` | **Required**. The project you want to get |
 
 
-Get's a specific project from the user.
+Gets a specific project by name.
 
 ### Create a new project
 
@@ -229,7 +228,7 @@ Send JSON in this format:
         "project_description": "Description"
       }]
     ,
-    "developed": ["In-house", []],
+    "developed": ["In-house"],
     "source_control": [
       {
         "type": "GitHub",
@@ -280,12 +279,6 @@ Send JSON in this format:
       }
     },
     "stage":"Development",
-    "project_dependencies":[
-      {
-        "name": "string",
-        "description": "string"
-      }
-    ],
     "supporting_tools": {
           "code_editors": {
             "main": [],
@@ -293,38 +286,39 @@ Send JSON in this format:
               "List of strings"
               ]
           },
-          "ui_tools": {
+          "user_interface": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "diagram_tools": {
+          "diagrams": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "project_tracking_tools": "string",
-          "documentation_tools": {
+          "project_tracking": "string",
+          "documentation": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "communication_tools": {
+          "communication": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "collaboration_tools": {
+          "collaboration": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "incident_management": "string"
+          "incident_management": "string",
+          "miscellaneous": []
         }
   }
 ```
@@ -351,9 +345,9 @@ GET /api/v1/projects/filter
 | `<return>`      | `string` | What you want returned from the project. Multiple return filter seperated by a comma (,) |
 
 
-Get's projects using a filter.
+Gets projects using one or more query filters.
 
-Filter can be one or more of: email, roles, name, developed, source_control, hosting, database, languages, frameworks, cicd, infrastructure.
+Filter can be one or more of: email, roles, name, developed, source_control, hosting, database, languages, frameworks, cicd, environments, infrastructure, publishing.
 
 Return can be one or more of: user, details, developed, source_control, architecture.
 
@@ -392,7 +386,7 @@ Send JSON in this format:
         "project_description": "Description"
       }]
     ,
-    "developed": ["In-house", []],
+    "developed": ["In-house"],
     "source_control": [
       {
         "type": "GitHub",
@@ -443,12 +437,6 @@ Send JSON in this format:
       }
     },
     "stage":"Development",
-    "project_dependencies":[
-      {
-        "name": "string",
-        "description": "string"
-      }
-    ],
     "supporting_tools": {
           "code_editors": {
             "main": [],
@@ -456,38 +444,39 @@ Send JSON in this format:
               "List of strings"
               ]
           },
-          "ui_tools": {
+          "user_interface": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "diagram_tools": {
+          "diagrams": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "project_tracking_tools": "string",
-          "documentation_tools": {
+          "project_tracking": "string",
+          "documentation": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "communication_tools": {
+          "communication": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "collaboration_tools": {
+          "collaboration": {
             "main": [],
             "others": [
               "List of strings"
             ]
           },
-          "incident_management": "string"
+          "incident_management": "string",
+          "miscellaneous": []
         }
   }
 ```
