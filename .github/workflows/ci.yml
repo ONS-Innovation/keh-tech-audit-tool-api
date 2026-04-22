@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Poetry
-        run: pipx install poetry==1.7.1
+        run: pipx install poetry==2.3.2
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -42,7 +42,12 @@ jobs:
         run: |
           git config --global url."https://${GH_TOKEN}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 
+      - name: Configure Poetry to use system git
+        run: poetry config system-git-client true
+
       - name: Install dependencies
+        env:
+          GIT_TERMINAL_PROMPT: 0
         run: make install-dev
 
       - name: Lint Python
