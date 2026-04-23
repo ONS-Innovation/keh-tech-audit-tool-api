@@ -32,3 +32,35 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encrypt_by_defaul
     }
   }
 }
+
+data "aws_iam_policy_document" "deny_insecure_transport" {
+  statement {
+    sid    = "DenyInsecureTransport"
+    effect = "Deny"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "s3:*"
+    ]
+
+    resources = [
+      aws_s3_bucket.tech_audit_data_bucket.arn,
+      "${aws_s3_bucket.tech_audit_data_bucket.arn}/*"
+    ]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "enforce_ssl" {
+  bucket = aws_s3_bucket.tech_audit_data_bucket.id
+  policy = data.aws_iam_policy_document.deny_insecure_transport.json
+}
