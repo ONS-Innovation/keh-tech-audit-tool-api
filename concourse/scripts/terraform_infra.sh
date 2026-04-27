@@ -18,7 +18,17 @@ if [[ ${env} != "prod" ]]; then
     env="dev"
 fi
 
-cd resource-repo/terraform/lambda
+cd resource-repo/terraform/storage
+
+terraform init -backend-config=env/${env}/backend-${env}.tfbackend -reconfigure
+terraform apply \
+-var "aws_account_id=$aws_account_id" \
+-var "aws_access_key_id=$aws_access_key_id" \
+-var "aws_secret_access_key=$aws_secret_access_key" \
+-var "domain=$domain" \
+-auto-approve
+
+cd ../lambda
 
 terraform init -backend-config=env/${env}/backend-${env}.tfbackend -reconfigure
 terraform apply \
@@ -40,4 +50,3 @@ terraform apply \
 -var "aws_secret_access_key=$aws_secret_access_key" \
 -var "domain=$domain" \
 -auto-approve
-
