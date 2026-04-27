@@ -534,7 +534,7 @@ class ProjectDetail(Resource):
             raise
         except Exception as error:
             logger.exception("Error fetching project detail: %s", error)
-            send_teams_alert(f"Error in project detail get endpoint: {error}")
+            send_teams_alert("Error in project detail get endpoint")
             abort(500, description="Internal server error")
 
     # Edit a project by taking the whole schema and replacing
