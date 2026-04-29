@@ -2,7 +2,9 @@ import pytest
 import json
 import os
 import datetime
+import copy
 from unittest.mock import patch
+from werkzeug.exceptions import Unauthorized
 
 # Mock verify_cognito_token for authentication
 mocked_user_email = os.getenv("MOCK_USER_EMAIL", "test@ons.gov.uk")
@@ -13,11 +15,11 @@ def mock_verify_cognito_token(token):
 
 
 # Mock reading data function
-def mock_read_data():
+def mock_read_data(_object_name=None):
     return {
         "projects": [
             {
-                "details": {"name": "Test Project"},
+                "details": [{"name": "Test Project"}],
                 "user": [{"email": mocked_user_email}],
                 "architecture": {
                     "languages": {"main": "python", "others": ["javascript"]}
@@ -48,17 +50,11 @@ def client():
 
 # Helper to get mock token from environment
 def get_mock_token():
-    mock_token = os.getenv("MOCK_TOKEN")
-    print(mock_token)
-    if not mock_token:
-        raise EnvironmentError(
-            "MOCK_TOKEN environment variable is not set. Please set it to run the tests."
-        )
-    return mock_token
+    return os.getenv("MOCK_TOKEN", "local-test-token")
 
 
 # Test for "/user" route
-@patch("app.utils.verify_cognito_token", side_effect=mock_verify_cognito_token)
+@patch("app.resources.verify_cognito_token", side_effect=mock_verify_cognito_token)
 def test_get_user(mock_verify_token, client):
     mock_token = get_mock_token()
     response = client.get("/api/v1/user", headers={"Authorization": f"{mock_token}"})
@@ -70,8 +66,8 @@ def test_get_user(mock_verify_token, client):
 
 
 # Test for "/projects" route - GET
-@patch("app.utils.read_data", side_effect=mock_read_data)
-@patch("app.utils.verify_cognito_token", side_effect=mock_verify_cognito_token)
+@patch("app.resources.read_data", side_effect=mock_read_data)
+@patch("app.resources.verify_cognito_token", side_effect=mock_verify_cognito_token)
 def test_get_projects(mock_verify_token, mock_read, client):
     mock_token = get_mock_token()
     response = client.get(
@@ -84,14 +80,44 @@ def test_get_projects(mock_verify_token, mock_read, client):
     assert "Test Project" in data[-1]["details"][0]["name"]
 
 
-# Test for POSTing a new project with a timestamp in the name
-@patch("app.utils.read_data", side_effect=mock_read_data)
-@patch("app.utils.verify_cognito_token", side_effect=mock_verify_cognito_token)
-@patch("app.utils.write_data")
-def test_post_and_get_project_with_timestamp(
-    mock_write_data, mock_verify_token, mock_read, client
+@patch("app.resources.get_user_information", side_effect=Unauthorized("Not authorized"))
+def test_filter_projects_preserves_http_exception(mock_get_user_information, client):
+    mock_token = get_mock_token()
+    response = client.get(
+        "/api/v1/projects/filter", headers={"Authorization": f"{mock_token}"}
+    )
+
+    assert (
+        response.status_code == 401
+    ), f"Unexpected status code: {response.status_code}, {response.data}"
+
+
+@patch("app.resources.send_teams_alert")
+@patch("app.resources.verify_cognito_token", side_effect=Unauthorized("Not authorized"))
+def test_get_user_preserves_http_exception_from_token_verification(
+    mock_verify_token, mock_send_teams_alert, client
 ):
     mock_token = get_mock_token()
+    response = client.get("/api/v1/user", headers={"Authorization": f"{mock_token}"})
+
+    assert (
+        response.status_code == 401
+    ), f"Unexpected status code: {response.status_code}, {response.data}"
+    mock_send_teams_alert.assert_not_called()
+
+
+# Test for POSTing a new project with a timestamp in the name
+@patch("app.resources.verify_cognito_token", side_effect=mock_verify_cognito_token)
+def test_post_and_get_project_with_timestamp(mock_verify_token, client):
+    mock_token = get_mock_token()
+    stored_data = mock_read_data()
+
+    def mock_stateful_read_data(_object_name=None):
+        return copy.deepcopy(stored_data)
+
+    def mock_stateful_write_data(new_data, _object_name=None):
+        stored_data.clear()
+        stored_data.update(copy.deepcopy(new_data))
 
     # Create a unique project name using time.time()
     project_name = f"Test Project {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d-%H-%M-%S')}"
@@ -111,7 +137,7 @@ def test_post_and_get_project_with_timestamp(
         ],
         "details": [
             {
-                "name": f"Test Project {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d-%H-%M-%S')}",
+                "name": project_name,
                 "short_name": "Principal",
                 "documentation_link": ["https://hollis.biz.ons.gov.uk"],
                 "project_description": "Operative hybrid instruction set",
@@ -120,7 +146,7 @@ def test_post_and_get_project_with_timestamp(
                 ],
             }
         ],
-        "developed": ["In-house", []],
+        "developed": ["In-house"],
         "source_control": [
             {
                 "type": "GitHub",
@@ -139,39 +165,42 @@ def test_post_and_get_project_with_timestamp(
         },
         "stage": "Development",
         "supporting_tools": {
-            "code_editors": ["VSCode"],
-            "ui_tools": ["Figma"],
-            "diagram_tools": ["Draw.io"],
-            "project_tracking_tools": ["Jira"],
-            "documentation_tools": ["Confluence"],
-            "communication_tools": ["Teams"],
-            "collaboration_tools": ["Github"],
+            "code_editors": {"main": ["VSCode"], "others": []},
+            "user_interface": {"main": ["Figma"], "others": []},
+            "diagrams": {"main": ["Draw.io"], "others": []},
+            "project_tracking": "Jira",
+            "documentation": {"main": ["Confluence"], "others": []},
+            "communication": {"main": ["Teams"], "others": []},
+            "collaboration": {"main": ["Github"], "others": []},
             "incident_management": "ServiceNow",
+            "miscellaneous": [],
         },
     }
 
-    # POST the new project
-    post_response = client.post(
-        "/api/v1/projects",
-        data=json.dumps(new_project),
-        headers={"Authorization": f"{mock_token}", "Content-Type": "application/json"},
-    )
-    print(post_response.data)
+    with patch("app.resources.read_data", side_effect=mock_stateful_read_data), patch(
+        "app.resources.write_data", side_effect=mock_stateful_write_data
+    ):
+        # POST the new project
+        post_response = client.post(
+            "/api/v1/projects",
+            data=json.dumps(new_project),
+            headers={"Authorization": f"{mock_token}", "Content-Type": "application/json"},
+        )
 
-    assert (
-        post_response.status_code == 201
-    ), f"Unexpected status code: {post_response.status_code}, {post_response.data}"
+        assert (
+            post_response.status_code == 201
+        ), f"Unexpected status code: {post_response.status_code}, {post_response.data}"
 
-    # GET the project by name
-    get_response = client.get(
-        f"/api/v1/projects/{project_name}", headers={"Authorization": f"{mock_token}"}
-    )
-    assert (
-        get_response.status_code == 200
-    ), f"Unexpected status code: {get_response.status_code}, {get_response.data}"
-    data = json.loads(get_response.data)
-    assert data["details"][0]["name"] == project_name
-    assert data["user"][0]["email"] == mocked_user_email
+        # GET the project by name
+        get_response = client.get(
+            f"/api/v1/projects/{project_name}", headers={"Authorization": f"{mock_token}"}
+        )
+        assert (
+            get_response.status_code == 200
+        ), f"Unexpected status code: {get_response.status_code}, {get_response.data}"
+        data = json.loads(get_response.data)
+        assert data["details"][0]["name"] == project_name
+        assert data["user"][0]["email"] == mocked_user_email
 
 
 # Test for "/verify" route

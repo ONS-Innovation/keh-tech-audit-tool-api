@@ -5,3 +5,4 @@ domain                            = "sdp-prod"
 ecr_repository                    = "tech-audit-tool-api" # ECR repository name where the lambda image is stored
 service_subdomain                 = "tech-audit-tool-api"
 container_ver                     = "container version"
+azure_secret_name                 = "sdp-keh-team-azure/secrets"

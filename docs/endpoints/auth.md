@@ -1,6 +1,6 @@
 # Authentication
 
-The API uses AWS Cognito for authentication. All API endpoints require a valid ID token in the Authorization header.
+The API uses AWS Cognito for authentication. This endpoint exchanges an authorization code for tokens and does not require an `Authorization` header.
 
 ## Verify Token
 
@@ -20,4 +20,3 @@ Exchange authorization code for tokens.
 |-----------|-------------|
 | `200` | Success. Response body contains the new ID token: `{"id_token": "<id_token>", "refresh_token": "<refresh_token>"}`. |
 | `400` | Bad Request |
-| `401` | Authorization is required |

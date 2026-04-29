@@ -1,58 +1,94 @@
 # Infrastructure
 
-## AWS Resources
+## Overview
 
-Before terraforming the API, you must have the API Python code containerised, using Docker, and have an elastic container registry (ECR) available.
+This API is deployed on AWS using Terraform modules in the `terraform/` directory.
 
-Please refer to the [deployment](deployment.md) guide for more information.
+Before applying Terraform:
 
-There are **5** AWS resources that are created by the terraform script:
+- Build and push the Lambda container image to ECR.
+- Ensure an ECR repository already exists.
 
-- Secrets Manager (Secrets)
-- S3 Bucket (Storage)
-- Cognito User Pool (Authentication)
-- Lambda Function (Lambda)
-- API Gateway (api_gateway)
+For container build and push steps, see the [deployment](deployment.md) guide.
 
-Go through the list and deploy each resource one by one.
+## Terraform Modules
 
-For each resource, you will need to set the `domain` and `service_subdomain` variables in the `tfvars` file.
+The Terraform configuration is split into five modules:
 
-### 1. ECR Repository
+- `terraform/secrets/` (Secrets Manager)
+- `terraform/storage/` (S3)
+- `terraform/authentication/` (Cognito)
+- `terraform/lambda/` (Lambda)
+- `terraform/api_gateway/` (API Gateway)
 
-Make sure you have an ECR repository created in the AWS account. This will be used in the `S3 bucket` and `Lambda function`.
+Each module has environment-specific files under `env/<environment>/`.
 
-### 2. Secrets Manager
+For each module, set `domain` and `service_subdomain` in the tfvars file for your target environment.
 
-Run like normal. Leave the `cognito_pool_id`, `cognito_client_id`, `cognito_client_secret`, and `redirect_uri` variables blank. 
+## Deployment Order
 
-### 3. S3 Bucket
+### 1. ECR Repository (prerequisite)
 
-Set the `ecr_repository_name` variable in the `tfvars` file. Then run the terraform script.
+Create the ECR repository first. It is referenced by the storage and lambda modules.
 
-### 4. Cognito User Pool
+### 2. Secrets Manager (`terraform/secrets/`)
 
-Run like normal.
+Apply this module first.
 
-### 5. Lambda Function
+For the first apply, leave these Cognito values blank in tfvars:
 
-The tech audit S3 bucket and the secrets manager secret are created by the terraform script. The aws cognito token url is set by the terraform script. Then run the terraform script for the lambda function and this data is set in the lambda function.
+- `cognito_pool_id`
+- `cognito_client_id`
+- `cognito_client_secret`
+- `redirect_uri`
 
-### 6. API Gateway
+### 3. Storage (`terraform/storage/`)
 
-Run like normal. Note down the URLs in the outputs.
+Set `ecr_repository_name` in tfvars, then apply.
 
-### 7. Secrets Manager Re-application
+### 4. Authentication (`terraform/authentication/`)
 
-Go back to the `Secrets Manager` resource and set the `cognito_pool_id`, `cognito_client_id`, `cognito_client_secret`, and `redirect_uri` variables.
+Apply the Cognito module and capture outputs required by the secrets module.
 
-### 8. Finished
+### 5. Lambda (`terraform/lambda/`)
+
+Set the following lambda-specific variables before apply:
+
+- `ecr_repository` (ECR repository containing the Lambda image)
+- `container_ver` (image tag to deploy)
+- `azure_secret_name` (Secrets Manager secret name for Teams alert credentials)
+- `branch_name` (alert gate: only `main` sends alerts)
+- `aws_account_name` (environment label shown in alert messages derived from domain)
+
+The secret referenced by `azure_secret_name` must contain JSON in this shape:
+
+```json
+{
+  "azure_tenant_id": "tenant-id",
+  "azure_client_id": "client-id",
+  "azure_client_secret": "client-secret",
+  "azure_scope": "https://graph.microsoft.com/.default",
+  "azure_webhook_url": "https://example.webhook.office.com/..."
+}
+```
+
+### 6. API Gateway (`terraform/api_gateway/`)
+
+Apply the API Gateway module and note output URLs.
+
+### 7. Re-apply Secrets Manager (`terraform/secrets/`)
+
+Update and re-apply secrets with Cognito values populated:
+
+- `cognito_pool_id`
+- `cognito_client_id`
+- `cognito_client_secret`
+- `redirect_uri`
+
+### 8. Complete
 
 ![AWS Resources](assets/explanation.png)
 
-## Terraform Configuration
-
-Flow chart explanation of the Terraform setup and infrastructure components.
+## Terraform Configuration Diagram
 
 ![Infrastructure Diagram](assets/creation_flow.png)
-

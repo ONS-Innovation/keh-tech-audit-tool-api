@@ -4,7 +4,7 @@
 
 `GET /api/v1/projects/{project_name}`
 
-Returns the project associated with the authenticated user.
+Returns the project matching the supplied project name.
 
 ### Authorization
 
@@ -27,6 +27,7 @@ Requires a valid Cognito ID token in the Authorization header.
 | `200`         | Returns a project object. |
 | `401`         | Authorization is required               |
 | `404`         | Project not found                       |
+| `500`         | Internal server error                   |
 
 
 ## Update a Project
@@ -170,7 +171,7 @@ Requires a valid Cognito ID token in the Authorization header.
             "string"
             ]
         },
-        "ui_tools": {
+        "user_interface": {
           "main": [
             "string"
           ],
@@ -178,7 +179,7 @@ Requires a valid Cognito ID token in the Authorization header.
             "string"
           ]
         },
-        "diagram_tools": {
+        "diagrams": {
           "main": [
             "string"
           ],
@@ -186,8 +187,8 @@ Requires a valid Cognito ID token in the Authorization header.
             "string"
           ]
         },
-        "project_tracking_tools": "string",
-        "documentation_tools": {
+        "project_tracking": "string",
+        "documentation": {
           "main": [
             "string"
           ],
@@ -195,7 +196,7 @@ Requires a valid Cognito ID token in the Authorization header.
             "string"
           ]
         },
-        "communication_tools": {
+        "communication": {
           "main": [
             "string"
           ],
@@ -203,7 +204,7 @@ Requires a valid Cognito ID token in the Authorization header.
             "string"
           ]
         },
-        "collaboration_tools": {
+        "collaboration": {
           "main": [
             "string"
           ],
@@ -211,7 +212,8 @@ Requires a valid Cognito ID token in the Authorization header.
             "string"
           ]
         },
-        "incident_management": "string"
+        "incident_management": "string",
+        "miscellaneous": []
       }
 }
 ```
@@ -221,6 +223,9 @@ Requires a valid Cognito ID token in the Authorization header.
 | Status Code | Description                             |
 |-------------|-----------------------------------------|
 | `200`         | Returns the same project object as the request body. |
+| `400`         | Invalid environments data               |
 | `401`         | Authorization is required               |
 | `404`         | Project not found                       |
 | `406`         | Missing JSON data                       |
+| `409`         | Project with the same name already exists |
+| `500`         | Internal server error                   |

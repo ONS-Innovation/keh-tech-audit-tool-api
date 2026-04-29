@@ -4,7 +4,7 @@
 
 `GET /api/v1/projects`
 
-Returns all projects associated with the authenticated user.
+Returns all projects currently stored by the API.
 
 ### Authorization
 
@@ -20,7 +20,7 @@ Requires a valid Cognito ID token in the Authorization header.
 |-------------|-----------------------------------------|
 | `200`         | Returns a list of project objects. |
 | `401`         | Authorization is required               |
-| `404`         | Projects not found |
+| `500`         | Internal server error |
 
 ## Create a Project
 
@@ -157,7 +157,7 @@ Requires a valid Cognito ID token in the Authorization header.
           "string"
           ]
       },
-      "ui_tools": {
+      "user_interface": {
         "main": [
           "string"
         ],
@@ -165,7 +165,7 @@ Requires a valid Cognito ID token in the Authorization header.
           "string"
         ]
       },
-      "diagram_tools": {
+      "diagrams": {
         "main": [
           "string"
         ],
@@ -173,8 +173,8 @@ Requires a valid Cognito ID token in the Authorization header.
           "string"
         ]
       },
-      "project_tracking_tools": "string",
-      "documentation_tools": {
+      "project_tracking": "string",
+      "documentation": {
         "main": [
           "string"
         ],
@@ -182,7 +182,7 @@ Requires a valid Cognito ID token in the Authorization header.
           "string"
         ]
       },
-      "communication_tools": {
+      "communication": {
         "main": [
           "string"
         ],
@@ -190,7 +190,7 @@ Requires a valid Cognito ID token in the Authorization header.
           "string"
         ]
       },
-      "collaboration_tools": {
+      "collaboration": {
         "main": [
           "string"
         ],
@@ -198,7 +198,8 @@ Requires a valid Cognito ID token in the Authorization header.
           "string"
         ]
       },
-      "incident_management": "string"
+      "incident_management": "string",
+      "miscellaneous": []
     }
 }
 ```

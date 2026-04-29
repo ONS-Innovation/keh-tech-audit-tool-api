@@ -3,20 +3,37 @@ import os
 import boto3
 import jwt
 import requests
+import logging
+from typing import Any
 from flask_restx import abort
 from botocore.exceptions import ClientError
 from jwt.algorithms import RSAAlgorithm
 
+try:
+    from keh_teams_alert import TeamsAlertClient
+except ModuleNotFoundError:
+    TeamsAlertClient = None
+
+# Setup Logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+# global logger
+logger = logging.getLogger(__name__)
+
 # Connecting to S3
 BUCKET_NAME = os.getenv("TECH_AUDIT_DATA_BUCKET", "sdp-dev-tech-audit-tool-api")
-SECRET_NAME = os.getenv("TECH_AUDIT_SECRET_MANAGER", "sdp-dev-tech-audit-tool-api/secrets")
+TA_SECRET_NAME = os.getenv("TECH_AUDIT_SECRET_MANAGER", "sdp-dev-tech-audit-tool-api/secrets")
 REGION_NAME = os.getenv("AWS_DEFAULT_REGION", "eu-west-2")
 OBJECT_NAME = "new_project_data.json"
+AWS_ENV = os.getenv("AWS_ACCOUNT_NAME")
+branch_name = os.getenv("BRANCH_NAME", "")
+ALERTS_AZURE_SECRET_NAME = os.getenv("AZURE_SECRET_NAME", "")
 
 # Create an S3 client
 s3 = boto3.client("s3", region_name=REGION_NAME)
 
-def read_cognito_data():
+def read_cognito_data(secret_name):
     """
     Reads and returns Cognito data from AWS Secrets Manager.
     This function creates a Secrets Manager client using boto3, retrieves the secret value
@@ -32,7 +49,7 @@ def read_cognito_data():
     client = session.client(service_name="secretsmanager", region_name=REGION_NAME)
 
     try:
-        get_secret_value_response = client.get_secret_value(SecretId=SECRET_NAME)
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
     except ClientError as e:
         # For a list of exceptions thrown, see
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
@@ -40,7 +57,9 @@ def read_cognito_data():
 
     return json.loads(get_secret_value_response["SecretString"])
 
-cognito_data = read_cognito_data()
+cognito_data = read_cognito_data(TA_SECRET_NAME)
+
+
 
 # Used for the view project or get projects routes. This reads the data from the S3 bucket.
 def read_data(object_name):
@@ -68,7 +87,8 @@ def read_data(object_name):
         if e.response["Error"]["Code"] == "NoSuchKey":
             data = {"projects": []}
         else:
-            abort(500, description=f"Error reading data: {e}")
+            logger.exception("Failed to read %s from S3", object_name)
+            abort(500, description="Internal server error")
     return data
 
 
@@ -91,7 +111,9 @@ def write_data(new_data, object_name):
             Body=json.dumps(new_data, indent=4).encode("utf-8"),
         )
     except ClientError as e:
-        abort(500, description=f"Error writing data: {e}")
+        logger.exception("S3 write failed for %s", object_name)
+        send_teams_alert(f"Failed to write data - {object_name} to S3 bucket")
+        abort(500, description="Internal server error")
 
 def get_cognito_jwks():
     """
@@ -168,3 +190,101 @@ def verify_cognito_token(id_token):
         abort(401, description="Token is expired")
     except jwt.InvalidTokenError as e:
         abort(401, description=f"Invalid token: {str(e)}")
+
+# Initialize Teams Alert Client
+tenant_id = ""
+client_id = ""
+client_secret = ""
+scope = ""
+alert_url = ""
+
+if ALERTS_AZURE_SECRET_NAME:
+    try:
+        logger.info("Attempting to read Azure credentials from Secrets Manager")
+        azure_secret_name = read_cognito_data(ALERTS_AZURE_SECRET_NAME)
+        if azure_secret_name:
+            logger.info("Azure credentials found. Initializing Teams Alert Client.")
+            tenant_id = azure_secret_name["azure_tenant_id"]
+            client_id = azure_secret_name["azure_client_id"]
+            client_secret = azure_secret_name["azure_client_secret"]
+            scope = azure_secret_name["azure_scope"]
+            alert_url = azure_secret_name["azure_webhook_url"]
+        else:
+            logger.warning("Azure credentials not found. Teams alerts will not be sent.")
+    except Exception as e:
+        logger.error(f"Error initializing Teams Alert Client: {e}, Teams alerts will not be sent.")
+else:
+    logger.warning("ALERTS_AZURE_SECRET_NAME environment variable not set. Teams alerts will not be sent.")
+
+
+def get_teams_alert_client() -> Any:
+    """Create and return a Teams alert client when the dependency is available.
+
+    Returns:
+        Any: An initialized ``TeamsAlertClient`` instance, or ``None`` when the
+        package is unavailable or client initialization fails.
+    """
+    if TeamsAlertClient is None:
+        logger.warning("keh_teams_alert is not installed. Teams alerts are disabled.")
+        return None
+
+    try:
+        logger.info("Creating TeamsAlertClient instance")
+        teams_alert_client = TeamsAlertClient(
+            tenant_id=tenant_id,
+            client_id=client_id,
+            client_secret=client_secret,
+            scope=scope,
+        )
+        return teams_alert_client
+    except Exception as e:
+        logger.error(f"Failed to initialize TeamsAlertClient: {e}")
+        return None
+
+
+def setup_alert_message(message: str, aws_env: str | None = None) -> dict:
+    """Build the payload sent to the Teams alert webhook.
+
+    Args:
+        message (str): The alert description body.
+        aws_env (str | None): Optional environment name override.
+
+    Returns:
+        dict: A webhook payload containing channel and formatted message fields.
+    """
+    env = aws_env or AWS_ENV or "Unknown Environment"
+    return {
+        "channel": "KEH Alerts",
+        "message": f"🚨 Tech Audit Tool API {env}🚨 <br> Description: {message}",
+    }
+
+
+def send_teams_alert(message) -> None:
+    """Send an alert message to Microsoft Teams when alerting is enabled.
+
+    Alerts are only sent when a Teams client can be initialized and the current
+    branch is ``main``.
+
+    Args:
+        message: The alert message body to send.
+    """
+    logger.info("Preparing to send alert to Teams Channel")
+    teams_alert_client = get_teams_alert_client()
+    if (
+        teams_alert_client and branch_name == "main"
+    ):  # Only send alerts if client is initialized and on main branch
+        try:
+            alert_message = setup_alert_message(message)
+            teams_alert_client.post_to_webhook(alert_url, alert_message)
+            logger.info("Alert sent successfully to Teams Channel")
+        except Exception as e:
+            logger.error(f"Failed to send alert to Teams alert: {e}")
+    else:
+        if not teams_alert_client:
+            logger.warning("TeamsAlertClient is not initialized. Cannot send alert.")
+        elif branch_name != "main":
+            logger.warning(
+                f"Current branch is '{branch_name}'. Alerts are only sent from 'main' branch. Alert not sent."
+            )
+        else:
+            logger.error("TeamsAlertClient is not available. Alert not sent.")

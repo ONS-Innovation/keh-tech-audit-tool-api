@@ -72,7 +72,10 @@ resource "aws_iam_role_policy" "lambda_additional_permissions" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = data.terraform_remote_state.secrets.outputs.secret_arn
+        Resource = [
+          data.terraform_remote_state.secrets.outputs.secret_arn,
+          "arn:aws:secretsmanager:${var.region}:${var.aws_account_id}:secret:${var.azure_secret_name}*"
+        ]
       },
       {
         Effect = "Allow"
@@ -169,6 +172,9 @@ resource "aws_lambda_function" "tech_audit_lambda" {
       AWS_COGNITO_TOKEN_URL      = "https://${var.domain}-${var.service_subdomain}.auth.eu-west-2.amazoncognito.com/oauth2/token"
       IMAGE_DIGEST               = data.aws_ecr_image.lambda_image.image_digest
       IMAGE_TAG                  = var.container_ver
+      AZURE_SECRET_NAME          = var.azure_secret_name
+      BRANCH_NAME                = var.branch_name
+      AWS_ACCOUNT_NAME           = var.aws_account_name
     }
   }
 

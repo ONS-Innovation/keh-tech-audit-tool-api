@@ -25,6 +25,12 @@ pylint = "^3.3.1"
 mypy = "^1.11.2"
 pytest = "^8.3.3"
 
+[tool.poetry.group.alerts]
+optional = true
+
+[tool.poetry.group.alerts.dependencies]
+keh-teams-alert = { git = "https://github.com/ONS-Innovation/keh-teams-alert", tag = "v0.1.0" }
+
 [tool.poetry.group.docs.dependencies]
 mkdocs = "1.6.1"
 mkdocs-material = "9.5.34"

@@ -4,7 +4,7 @@
 
 `GET /api/v1/user`
 
-Returns the email address of the authenticated user.
+Returns the email address and Cognito groups of the authenticated user.
 
 ### Authorization
 
@@ -17,6 +17,5 @@ Requires a valid Cognito ID token in the Authorization header.
 ### Responses
 | Status Code | Description |
 |--------|-------------|
-| `200` | Success. Returns the user's email address. ` { "email": "string" }` |
+| `200` | Success. Returns the user object. `{"email": "string", "groups": []}` |
 | `401` | Authorization is required |
-| `404` | User not found |

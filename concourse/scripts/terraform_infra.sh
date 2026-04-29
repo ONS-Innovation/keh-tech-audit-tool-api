@@ -8,6 +8,10 @@ domain=$(echo "$secrets" | jq -r .domain)
 
 service_subdomain=$(echo "$secrets" | jq -r .service_subdomain)
 ecr_repository=$(echo "$secrets" | jq -r .ecr_repository)
+azure_secret_name=$(echo "$secrets" | jq -r .azure_secret_name)
+aws_account_name=$(echo "$secrets" | jq -r .domain)
+
+branch_name=$branch
 
 export AWS_ACCESS_KEY_ID=$aws_access_key_id
 export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
@@ -39,6 +43,9 @@ terraform apply \
 -var "service_subdomain=$service_subdomain" \
 -var "container_ver=${tag}" \
 -var "ecr_repository=$ecr_repository" \
+-var "azure_secret_name=$azure_secret_name" \
+-var "branch_name=$branch_name" \
+-var "aws_account_name=$aws_account_name" \
 -auto-approve
 
 cd ../api_gateway

@@ -64,6 +64,26 @@ Run like normal.
 ### 5. Lambda Function
 The tech audit S3 bucket and the secrets manager secret are created by the terraform script. The aws cognito token url is set by the terraform script. Then run the terraform script for the lambda function and this data is set in the lambda function.
 
+Set these Lambda-specific variables in the `terraform/lambda/env/<environment>/<environment>.tfvars` file before applying:
+
+- `ecr_repository` - ECR repository containing the Lambda image
+- `container_ver` - image tag to deploy
+- `azure_secret_name` - Secrets Manager secret name containing the Teams alert Azure credentials
+- `branch_name` - branch identifier used to gate alert delivery (`main` sends alerts)
+- `aws_account_name` - environment label shown in the Teams alert message - derived from domain
+
+The secret referenced by `azure_secret_name` must contain JSON in this shape:
+
+```json
+{
+  "azure_tenant_id": "tenant-id",
+  "azure_client_id": "client-id",
+  "azure_client_secret": "client-secret",
+  "azure_scope": "https://graph.microsoft.com/.default",
+  "azure_webhook_url": "https://example.webhook.office.com/..."
+}
+```
+
 ### 6. API Gateway
 Run like normal. Note down the URLs in the outputs.
 
