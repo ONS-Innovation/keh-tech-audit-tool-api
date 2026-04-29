@@ -174,7 +174,7 @@ resource "aws_lambda_function" "tech_audit_lambda" {
       IMAGE_TAG                  = var.container_ver
       AZURE_SECRET_NAME          = var.azure_secret_name
       BRANCH_NAME                = var.branch_name
-      AWS_ACCOUNT_NAME           = var.domain
+      AWS_ACCOUNT_NAME           = var.aws_account_name
     }
   }
 

@@ -76,3 +76,8 @@ variable "branch_name" {
   description = "Branch name for the deployment"
   type        = string
 }
+
+variable "aws_account_name" {
+  description = "AWS account/environment name used by the Lambda runtime"
+  type        = string
+}

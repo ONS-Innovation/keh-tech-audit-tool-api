@@ -70,7 +70,7 @@ Set these Lambda-specific variables in the `terraform/lambda/env/<environment>/<
 - `container_ver` - image tag to deploy
 - `azure_secret_name` - Secrets Manager secret name containing the Teams alert Azure credentials
 - `branch_name` - branch identifier used to gate alert delivery (`main` sends alerts)
-- `aws_account_name` - environment label shown in the Teams alert message
+- `aws_account_name` - environment label shown in the Teams alert message - derived from domain
 
 The secret referenced by `azure_secret_name` must contain JSON in this shape:
 
