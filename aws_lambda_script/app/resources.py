@@ -12,6 +12,7 @@ from .utils import (
     verify_cognito_token,
     cognito_data,
     send_teams_alert,
+    logger,
 )
 
 # Set namespace as /api/ - each request has to be <url>/api/v1/<endpoint>
@@ -30,10 +31,6 @@ parser.add_argument(
 )
 
 required_param = {"Authorization": "ID Token required"}
-
-# Set logger for AWS cloudwatch to return just errors
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 def get_user_attributes(args):
     """Get user attributes from Cognito token.
@@ -377,7 +374,7 @@ class Filter(Resource):
             raise
         except Exception as error:
             logger.exception("Error filtering projects: %s", error)
-            send_teams_alert(f"Error filtering projects endpoint: {error}")
+            send_teams_alert("Error filtering projects endpoint.")
             abort(500, description="Internal server error")
 
 
@@ -397,7 +394,7 @@ class Projects(Resource):
             raise
         except Exception as error:
             logger.exception("Error fetching projects: %s", error)
-            send_teams_alert(f"Error in projects get endpoint: {error}")
+            send_teams_alert("Error in projects get endpoint.")
             abort(500, description="Internal server error")
 
     # Add a new project to the list of projects
@@ -492,7 +489,7 @@ class Projects(Resource):
             raise
         except Exception as error:
             logger.exception("Error creating project: %s", error)
-            send_teams_alert(f"Error in projects post endpoint: {error}")
+            send_teams_alert("Error in projects post endpoint")
             abort(500, description="Internal server error")
 
 
@@ -616,7 +613,7 @@ class ProjectDetail(Resource):
             raise
         except Exception as error:
             logger.exception("Error updating project detail: %s", error)
-            send_teams_alert(f"Error in project detail put endpoint: {error}")
+            send_teams_alert("Error in project detail put endpoint.")
             abort(500, description="Internal server error")
 
 

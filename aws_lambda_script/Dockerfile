@@ -9,6 +9,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Github token needed to install Github private dependencies, then token deleted.
 RUN --mount=type=secret,id=github_token \
     set -e; \
     if [ -f /run/secrets/github_token ]; then \

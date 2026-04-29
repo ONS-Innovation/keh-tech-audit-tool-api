@@ -36,28 +36,8 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
 
-      - name: Remove private alert dependency for CI
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          
-          pyproject = Path("pyproject.toml")
-          pyproject.write_text(
-              "\n".join(
-                  line
-                  for line in pyproject.read_text().splitlines()
-                  if "keh-teams-alert" not in line
-              )
-              + "\n"
-          )
-          
-          lockfile = Path("poetry.lock")
-          if lockfile.exists():
-              lockfile.unlink()
-          PY
-
       - name: Install dependencies
-        run: poetry install --with dev --no-root
+        run: poetry install --with dev --without alerts --no-root
 
       - name: Lint Python
         run: make lint

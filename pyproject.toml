@@ -17,7 +17,6 @@ botocore = "^1.35.38"
 pyjwt = "^2.12.0"
 cryptography = "^46.0.5"
 python-dotenv = "^1.1.1"
-keh-teams-alert = { git = "https://github.com/ONS-Innovation/keh-teams-alert", tag = "v0.1.0" }
 
 [tool.poetry.group.dev.dependencies]
 black = "^26.3.1"
@@ -25,6 +24,12 @@ ruff = "^0.6.9"
 pylint = "^3.3.1"
 mypy = "^1.11.2"
 pytest = "^8.3.3"
+
+[tool.poetry.group.alerts]
+optional = true
+
+[tool.poetry.group.alerts.dependencies]
+keh-teams-alert = { git = "https://github.com/ONS-Innovation/keh-teams-alert", tag = "v0.1.0" }
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "1.6.1"

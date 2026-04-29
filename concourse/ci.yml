@@ -107,10 +107,11 @@ notify-azure-webhook-task: &notify-azure-webhook-task
             --data-urlencode "grant_type=client_credentials" \
             --data-urlencode "scope=${AZURE_SCOPE}")"
 
-          access_token="$(printf '%s' "$token_json" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')"
+          access_token="$(printf '%s' "$token_json" | jq -r '.access_token // empty')"
           if [ -z "$access_token" ]; then
-            echo "Failed to get access token. Response:"
-            echo "$token_json"
+            error_code="$(printf '%s' "$token_json" | jq -r '.error // "unknown_error"')"
+            error_description="$(printf '%s' "$token_json" | jq -r '.error_description // "No error description provided"')"
+            echo "Failed to get access token. error=${error_code}; description=${error_description}"
             exit 1
           fi
 

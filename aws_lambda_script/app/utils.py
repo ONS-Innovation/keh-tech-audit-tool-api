@@ -198,24 +198,32 @@ client_secret = ""
 scope = ""
 alert_url = ""
 
-try:
-    logger.info("Attempting to read Azure credentials from Secrets Manager")
-    azure_secret_name = read_cognito_data(ALERTS_AZURE_SECRET_NAME)
-    if azure_secret_name:
-        logger.info("Azure credentials found. Initializing Teams Alert Client.")
-        tenant_id = azure_secret_name["azure_tenant_id"]
-        client_id = azure_secret_name["azure_client_id"]
-        client_secret = azure_secret_name["azure_client_secret"]
-        scope = azure_secret_name["azure_scope"]
-        alert_url = azure_secret_name["azure_webhook_url"]
-    else:
-        logger.warning("Azure credentials not found. Teams alerts will not be sent.")
-except Exception as e:
-    logger.error(f"Error initializing Teams Alert Client: {e}, Teams alerts will not be sent.")
-
+if ALERTS_AZURE_SECRET_NAME:
+    try:
+        logger.info("Attempting to read Azure credentials from Secrets Manager")
+        azure_secret_name = read_cognito_data(ALERTS_AZURE_SECRET_NAME)
+        if azure_secret_name:
+            logger.info("Azure credentials found. Initializing Teams Alert Client.")
+            tenant_id = azure_secret_name["azure_tenant_id"]
+            client_id = azure_secret_name["azure_client_id"]
+            client_secret = azure_secret_name["azure_client_secret"]
+            scope = azure_secret_name["azure_scope"]
+            alert_url = azure_secret_name["azure_webhook_url"]
+        else:
+            logger.warning("Azure credentials not found. Teams alerts will not be sent.")
+    except Exception as e:
+        logger.error(f"Error initializing Teams Alert Client: {e}, Teams alerts will not be sent.")
+else:
+    logger.warning("ALERTS_AZURE_SECRET_NAME environment variable not set. Teams alerts will not be sent.")
 
 
 def get_teams_alert_client() -> Any:
+    """Create and return a Teams alert client when the dependency is available.
+
+    Returns:
+        Any: An initialized ``TeamsAlertClient`` instance, or ``None`` when the
+        package is unavailable or client initialization fails.
+    """
     if TeamsAlertClient is None:
         logger.warning("keh_teams_alert is not installed. Teams alerts are disabled.")
         return None
@@ -235,6 +243,15 @@ def get_teams_alert_client() -> Any:
 
 
 def setup_alert_message(message: str, aws_env: str | None = None) -> dict:
+    """Build the payload sent to the Teams alert webhook.
+
+    Args:
+        message (str): The alert description body.
+        aws_env (str | None): Optional environment name override.
+
+    Returns:
+        dict: A webhook payload containing channel and formatted message fields.
+    """
     env = aws_env or AWS_ENV or "Unknown Environment"
     return {
         "channel": "KEH Alerts",
@@ -243,6 +260,14 @@ def setup_alert_message(message: str, aws_env: str | None = None) -> dict:
 
 
 def send_teams_alert(message) -> None:
+    """Send an alert message to Microsoft Teams when alerting is enabled.
+
+    Alerts are only sent when a Teams client can be initialized and the current
+    branch is ``main``.
+
+    Args:
+        message: The alert message body to send.
+    """
     logger.info("Preparing to send alert to Teams Channel")
     teams_alert_client = get_teams_alert_client()
     if (
