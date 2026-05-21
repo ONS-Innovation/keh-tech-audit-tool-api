@@ -47,6 +47,18 @@ Install dev dependencies to run linting tools
 make install-dev
 ```
 
+Sign in with AWS SSO, and export the correct profile for this service:
+
+```bash
+aws sso login
+
+export AWS_PROFILE=keh-tech-audit-tool-api
+```
+
+This allows you to assume the AWS IAM role for the service, enabling the most secure development experience. This also means you will have limited permissions until you exit out of the profile.
+
+**Note:** See the Developer Onboarding Guide on the "Using AWS SSO for Local Development" page on Confluence to set up service profile selection on your local machine.
+
 Set environment variables:
 
 ```bash
