@@ -5,5 +5,5 @@ flask-restx==1.3.2
 aws-wsgi==0.2.7
 pyjwt>=2.12.1
 requests==2.33.1
-cryptography==46.0.7
+cryptography==48.0.1
 keh-teams-alert @ git+https://github.com/ONS-Innovation/keh-teams-alert@v0.1.0
