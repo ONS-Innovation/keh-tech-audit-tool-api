@@ -32,3 +32,8 @@ output "cloudwatch_log_group_name" {
   description = "Name of the CloudWatch Log Group for API Gateway errors"
   value       = aws_cloudwatch_log_group.api_gateway.name
 }
+
+output "waf_internal_ip_only_arn" {
+  description = "ARN of the internal IP-only WAF Web ACL (null when disabled)"
+  value       = aws_wafv2_web_acl.internal_ip_only[0].arn
+}

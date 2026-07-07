@@ -72,3 +72,9 @@ variable "log_retention_days" {
   type        = number
   default     = 365
 }
+
+variable "internal_allowed_ip_cidrs" {
+  description = "Internal CIDR ranges allowed to access the API when internal IP only WAF is enabled"
+  type        = list(string)
+  default     = []
+}

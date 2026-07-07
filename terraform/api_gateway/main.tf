@@ -421,3 +421,66 @@ resource "aws_api_gateway_base_path_mapping" "api" {
   stage_name  = aws_api_gateway_stage.main.stage_name
   domain_name = aws_api_gateway_domain_name.api.domain_name
 }
+
+# Internal IP allowlist for API access
+resource "aws_wafv2_ip_set" "internal_allowlist" {
+  name               = "${var.service_subdomain}-${var.stage_name}-internal-allowlist"
+  description        = "Allowed internal CIDR ranges for API access"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = var.internal_allowed_ip_cidrs
+
+  tags = {
+    Project       = var.project_tag
+    TeamOwner     = var.team_owner_tag
+    BusinessOwner = var.business_owner_tag
+  }
+}
+
+resource "aws_wafv2_web_acl" "internal_ip_only" {
+  name        = "${var.service_subdomain}-${var.stage_name}-internal-ip-only"
+  description = "Block all requests except approved internal IPs"
+  scope       = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name     = "allow-internal-ips"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.internal_allowlist[0].arn
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "allow-internal-ips"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.service_subdomain}-${var.stage_name}-internal-ip-only"
+    sampled_requests_enabled   = true
+  }
+
+  tags = {
+    Project       = var.project_tag
+    TeamOwner     = var.team_owner_tag
+    BusinessOwner = var.business_owner_tag
+  }
+}
+
+resource "aws_wafv2_web_acl_association" "api_stage" {
+  resource_arn = "arn:aws:apigateway:${var.region}::/restapis/${aws_api_gateway_rest_api.main.id}/stages/${aws_api_gateway_stage.main.stage_name}"
+  web_acl_arn  = aws_wafv2_web_acl.internal_ip_only[0].arn
+}
