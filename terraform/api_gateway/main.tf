@@ -456,7 +456,7 @@ resource "aws_wafv2_web_acl" "internal_ip_only" {
 
     statement {
       ip_set_reference_statement {
-        arn = aws_wafv2_ip_set.internal_allowlist[0].arn
+        arn = aws_wafv2_ip_set.internal_allowlist.arn
       }
     }
 
@@ -482,5 +482,5 @@ resource "aws_wafv2_web_acl" "internal_ip_only" {
 
 resource "aws_wafv2_web_acl_association" "api_stage" {
   resource_arn = "arn:aws:apigateway:${var.region}::/restapis/${aws_api_gateway_rest_api.main.id}/stages/${aws_api_gateway_stage.main.stage_name}"
-  web_acl_arn  = aws_wafv2_web_acl.internal_ip_only[0].arn
+  web_acl_arn  = aws_wafv2_web_acl.internal_ip_only.arn
 }

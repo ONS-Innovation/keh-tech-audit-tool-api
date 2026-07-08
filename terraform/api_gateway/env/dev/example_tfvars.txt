@@ -4,4 +4,6 @@ aws_secret_access_key = "<your_secret_access_key>"
 domain                = "sdp-dev"
 
 # Replace with ONS internal CIDR ranges when enabling the WAF.
-internal_allowed_ip_cidrs = []
+internal_allowed_ip_cidrs = [
+	"10.0.0.0/8"
+]

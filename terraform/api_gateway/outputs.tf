@@ -34,6 +34,6 @@ output "cloudwatch_log_group_name" {
 }
 
 output "waf_internal_ip_only_arn" {
-  description = "ARN of the internal IP-only WAF Web ACL (null when disabled)"
-  value       = aws_wafv2_web_acl.internal_ip_only[0].arn
+  description = "ARN of the internal IP-only WAF Web ACL"
+  value       = aws_wafv2_web_acl.internal_ip_only.arn
 }

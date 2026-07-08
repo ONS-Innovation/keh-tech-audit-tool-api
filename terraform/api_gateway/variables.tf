@@ -77,4 +77,9 @@ variable "internal_allowed_ip_cidrs" {
   description = "Internal CIDR ranges allowed to access the API when internal IP only WAF is enabled"
   type        = list(string)
   default     = []
+
+  validation {
+    condition     = length(var.internal_allowed_ip_cidrs) > 0 && alltrue([for cidr in var.internal_allowed_ip_cidrs : can(cidrnetmask(cidr))])
+    error_message = "Set internal_allowed_ip_cidrs to at least one valid IPv4 CIDR (for example: 10.0.0.0/8)."
+  }
 }
