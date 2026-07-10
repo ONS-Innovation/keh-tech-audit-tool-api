@@ -381,6 +381,71 @@ resource "aws_route53_record" "api" {
   }
 }
 
+# Create WAF IP set for allowed IPs (from sdp-infrastructure)
+resource "aws_wafv2_ip_set" "allowed_ips" {
+  name               = "${var.service_subdomain}-allowed-ips"
+  description        = "Allowed IP ranges for tech-audit-tool-api (from sdp-infrastructure)"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = data.terraform_remote_state.sdp_infrastructure.outputs.ons_only_allowed_ips
+
+  tags = {
+    Project       = var.project_tag
+    TeamOwner     = var.team_owner_tag
+    BusinessOwner = var.business_owner_tag
+  }
+}
+
+# Create WAF Web ACL for API Gateway
+resource "aws_wafv2_web_acl" "api_gateway_waf" {
+  name        = "${var.service_subdomain}-api-waf"
+  description = "WAF for tech-audit-tool-api API Gateway"
+  scope       = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name     = "allow-ons-ips"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.allowed_ips.arn
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "allow-ons-ips"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.service_subdomain}-api-waf"
+    sampled_requests_enabled   = true
+  }
+
+  tags = {
+    Project       = var.project_tag
+    TeamOwner     = var.team_owner_tag
+    BusinessOwner = var.business_owner_tag
+  }
+}
+
+# Associate WAF with API Gateway stage
+resource "aws_wafv2_web_acl_association" "api_gateway" {
+  resource_arn = "arn:aws:apigateway:${var.region}::/restapis/${aws_api_gateway_rest_api.main.id}/stages/${aws_api_gateway_stage.main.stage_name}"
+  web_acl_arn  = aws_wafv2_web_acl.api_gateway_waf.arn
+}
+
 # Create ACM certificate
 resource "aws_acm_certificate" "cert" {
   domain_name       = "${var.service_subdomain}.${var.domain}.${var.domain_extension}"
@@ -420,67 +485,4 @@ resource "aws_api_gateway_base_path_mapping" "api" {
   api_id      = aws_api_gateway_rest_api.main.id
   stage_name  = aws_api_gateway_stage.main.stage_name
   domain_name = aws_api_gateway_domain_name.api.domain_name
-}
-
-# Internal IP allowlist for API access
-resource "aws_wafv2_ip_set" "internal_allowlist" {
-  name               = "${var.service_subdomain}-${var.stage_name}-internal-allowlist"
-  description        = "Allowed internal CIDR ranges for API access"
-  scope              = "REGIONAL"
-  ip_address_version = "IPV4"
-  addresses          = var.internal_allowed_ip_cidrs
-
-  tags = {
-    Project       = var.project_tag
-    TeamOwner     = var.team_owner_tag
-    BusinessOwner = var.business_owner_tag
-  }
-}
-
-resource "aws_wafv2_web_acl" "internal_ip_only" {
-  name        = "${var.service_subdomain}-${var.stage_name}-internal-ip-only"
-  description = "Block all requests except approved internal IPs"
-  scope       = "REGIONAL"
-
-  default_action {
-    block {}
-  }
-
-  rule {
-    name     = "allow-internal-ips"
-    priority = 1
-
-    action {
-      allow {}
-    }
-
-    statement {
-      ip_set_reference_statement {
-        arn = aws_wafv2_ip_set.internal_allowlist.arn
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "allow-internal-ips"
-      sampled_requests_enabled   = true
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = true
-    metric_name                = "${var.service_subdomain}-${var.stage_name}-internal-ip-only"
-    sampled_requests_enabled   = true
-  }
-
-  tags = {
-    Project       = var.project_tag
-    TeamOwner     = var.team_owner_tag
-    BusinessOwner = var.business_owner_tag
-  }
-}
-
-resource "aws_wafv2_web_acl_association" "api_stage" {
-  resource_arn = "arn:aws:apigateway:${var.region}::/restapis/${aws_api_gateway_rest_api.main.id}/stages/${aws_api_gateway_stage.main.stage_name}"
-  web_acl_arn  = aws_wafv2_web_acl.internal_ip_only.arn
 }

@@ -33,7 +33,7 @@ output "cloudwatch_log_group_name" {
   value       = aws_cloudwatch_log_group.api_gateway.name
 }
 
-output "waf_internal_ip_only_arn" {
-  description = "ARN of the internal IP-only WAF Web ACL"
-  value       = aws_wafv2_web_acl.internal_ip_only.arn
+output "waf_web_acl_arn" {
+  description = "ARN of the WAF Web ACL protecting the API Gateway"
+  value       = aws_wafv2_web_acl.api_gateway_waf.arn
 }

@@ -15,3 +15,12 @@ data "terraform_remote_state" "api_lambda" {
     region = "eu-west-2"
   }
 }
+
+data "terraform_remote_state" "sdp_infrastructure" {
+  backend = "s3"
+  config = {
+    bucket = "${var.domain}-tf-state"
+    key    = "${var.domain}-infra/terraform.tfstate"
+    region = "eu-west-2"
+  }
+}
