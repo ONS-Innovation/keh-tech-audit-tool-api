@@ -20,7 +20,7 @@ data "terraform_remote_state" "sdp_infrastructure" {
   backend = "s3"
   config = {
     bucket = "${var.domain}-tf-state"
-    key    = "${var.domain}-infra/terraform.tfstate"
+    key    = "${var.domain}-ecs-infra/terraform.tfstate"
     region = "eu-west-2"
   }
 }
