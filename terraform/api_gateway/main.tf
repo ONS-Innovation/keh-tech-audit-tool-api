@@ -381,20 +381,6 @@ resource "aws_route53_record" "api" {
   }
 }
 
-# Create WAF IP set for allowed IPs (from sdp-infrastructure)
-resource "aws_wafv2_ip_set" "allowed_ips" {
-  name               = "${var.service_subdomain}-allowed-ips"
-  description        = "Allowed IP ranges for tech-audit-tool-api (from sdp-infrastructure)"
-  scope              = "REGIONAL"
-  ip_address_version = "IPV4"
-  addresses          = data.terraform_remote_state.sdp_infrastructure.outputs.ons_only_allowed_ips
-
-  tags = {
-    Project       = var.project_tag
-    TeamOwner     = var.team_owner_tag
-    BusinessOwner = var.business_owner_tag
-  }
-}
 
 # Create WAF Web ACL for API Gateway
 resource "aws_wafv2_web_acl" "api_gateway_waf" {
@@ -416,7 +402,7 @@ resource "aws_wafv2_web_acl" "api_gateway_waf" {
 
     statement {
       ip_set_reference_statement {
-        arn = aws_wafv2_ip_set.allowed_ips.arn
+        arn = data.terraform_remote_state.sdp_infrastructure.outputs.allowed_ips_ons_only_arn
       }
     }
 
