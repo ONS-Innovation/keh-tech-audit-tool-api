@@ -42,6 +42,10 @@ resource "aws_api_gateway_domain_name" "api" {
     types           = ["PRIVATE"]
     ip_address_type = "dualstack"
   }
+
+  lifecycle {
+    ignore_changes = [policy]
+  }
 }
 
 resource "aws_api_gateway_domain_name_access_association" "api" {

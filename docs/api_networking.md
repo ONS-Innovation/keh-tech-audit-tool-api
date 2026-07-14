@@ -86,3 +86,20 @@ If these outputs are renamed in upstream stacks, update references in the API Ga
   - ECS tasks are using the expected security group output in `tat_ui` state.
   - Endpoint SG ingress still references that SG.
   - API resource policy still matches the VPC endpoint ID.
+
+## Known Terraform Limitations
+
+### Private custom domain policy drift
+
+The private custom domain resource (`aws_api_gateway_domain_name.api`) has `lifecycle { ignore_changes = [policy] }` set in [terraform/api_gateway/domain.tf](../terraform/api_gateway/domain.tf).
+
+**Why:** AWS always normalises the resource policy ARN after creation. Terraform stores the value it computed. This causes a drift on every apply, forcing a change to be applied even though the policy is correct.
+
+**Why `ignore_changes` is the right fix:** There is no separate `aws_api_gateway_domain_name_policy` resource in the AWS Terraform provider (unlike REST APIs which have `aws_api_gateway_rest_api_policy`). The `policy` attribute must be inline, but referencing the domain's own `domain_name_id` attribute creates a dependency cycle. Constructing the ARN from variables avoids the cycle but cannot prevent AWS normalisation drift.
+
+**Impact:** The policy is applied correctly on first create. Subsequent applies will not update it. If the domain policy needs to be changed:
+
+1. Temporarily remove `ignore_changes = [policy]` from `domain.tf`.
+2. Apply.
+3. Restore `ignore_changes = [policy]`.
+4. Commit.

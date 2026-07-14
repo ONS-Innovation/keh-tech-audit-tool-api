@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "domain_private_access" {
     ]
 
     resources = [
-      "execute-api:/*"
+      "arn:aws:execute-api:${var.region}:${var.aws_account_id}:/domainnames/${var.service_subdomain}.${var.domain}.${var.domain_extension}*"
     ]
 
     condition {
