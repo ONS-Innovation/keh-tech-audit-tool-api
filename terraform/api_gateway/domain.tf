@@ -36,6 +36,7 @@ resource "aws_acm_certificate_validation" "cert_validation" {
 resource "aws_api_gateway_domain_name" "api" {
   domain_name     = "${var.service_subdomain}.${var.domain}.${var.domain_extension}"
   certificate_arn = aws_acm_certificate_validation.cert_validation.certificate_arn
+  policy          = data.aws_iam_policy_document.domain_private_access.json
 
   endpoint_configuration {
     types           = ["PRIVATE"]

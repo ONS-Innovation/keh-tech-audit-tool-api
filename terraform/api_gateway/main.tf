@@ -308,7 +308,13 @@ resource "aws_api_gateway_deployment" "main" {
   // Since the API routes are defined in this file, any changes to the routes will trigger a redeployment
   triggers = {
     redeployment = sha1(jsonencode([
-      file("main.tf")
+      file("main.tf"),
+      file("iam.tf"),
+      file("domain.tf"),
+      file("network.tf"),
+      file("cloudwatch.tf"),
+      file("data.tf"),
+      file("variables.tf"),
     ]))
   }
 }
