@@ -83,4 +83,3 @@ If these outputs are renamed in upstream stacks, update references in the API Ga
   - ECS tasks are using the expected security group output in `tat_ui` state.
   - Endpoint SG ingress still references that SG.
   - API resource policy still matches the VPC endpoint ID.
-

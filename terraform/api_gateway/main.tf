@@ -11,8 +11,7 @@ terraform {
 
 # Create the API Gateway REST API
 resource "aws_api_gateway_rest_api" "main" {
-  name   = "${var.domain}-${var.service_subdomain}"
-  policy = data.aws_iam_policy_document.api_private_access.json
+  name = "${var.domain}-${var.service_subdomain}"
 
   endpoint_configuration {
     types            = ["PRIVATE"]
@@ -297,7 +296,8 @@ resource "aws_api_gateway_deployment" "main" {
   depends_on = [
     aws_api_gateway_integration.lambda_integration,
     aws_api_gateway_integration.verify_integration,
-    aws_api_gateway_integration.root_lambda_integration
+    aws_api_gateway_integration.root_lambda_integration,
+    aws_api_gateway_rest_api_policy.main
   ]
 
   lifecycle {

@@ -13,7 +13,7 @@ data "aws_iam_policy_document" "api_private_access" {
     ]
 
     resources = [
-      "execute-api:/*"
+      "${aws_api_gateway_rest_api.main.execution_arn}/*"
     ]
 
     condition {
@@ -22,4 +22,9 @@ data "aws_iam_policy_document" "api_private_access" {
       values   = [aws_vpc_endpoint.api_gateway.id]
     }
   }
+}
+
+resource "aws_api_gateway_rest_api_policy" "main" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  policy      = data.aws_iam_policy_document.api_private_access.json
 }
