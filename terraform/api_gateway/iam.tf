@@ -13,7 +13,8 @@ data "aws_iam_policy_document" "api_private_access" {
     ]
 
     resources = [
-      "${aws_api_gateway_rest_api.main.execution_arn}/*"
+      "${aws_api_gateway_rest_api.main.execution_arn}/*",
+      "arn:aws:execute-api:${var.region}:${var.aws_account_id}:/domainnames/${aws_api_gateway_domain_name.api.domain_name}+${aws_api_gateway_domain_name.api.domain_name_id}"
     ]
 
     condition {
