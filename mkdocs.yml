@@ -16,6 +16,7 @@ nav:
         - /filter: endpoints/filter.md
       - User: endpoints/user.md
   - Infrastructure: infrastructure.md
+  - API Networking: api_networking.md
   - Deployment: deployment.md
   - MkDocs:
     - Documentation: documentation.md
