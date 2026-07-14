@@ -20,10 +20,11 @@ For `sdp-prod` this resolves to:
 
 1. API Gateway REST API endpoint type is `PRIVATE`.
 2. A VPC interface endpoint for `com.amazonaws.${var.region}.execute-api` is created.
-3. API resource policy allows invocation only when `aws:SourceVpce` matches the managed endpoint.
-4. Endpoint security group allows inbound HTTPS only from the TAT UI ECS service security group.
-5. A private API custom domain is created and mapped to the API stage.
-6. Route53 alias record points the custom domain to the API Gateway private domain target.
+3. A resource policy on the REST API allows invocation only when `aws:SourceVpce` matches the managed endpoint.
+4. A separate resource policy on the private custom domain also enforces the same `aws:SourceVpce` condition. Both policies must allow a request for it to succeed.
+5. Endpoint security group allows inbound HTTPS only from the TAT UI ECS service security group.
+6. A private API custom domain is created and mapped to the API stage.
+7. Route53 CNAME record points the custom domain to the VPC endpoint DNS name.
 
 ## Terraform Layout
 
@@ -42,9 +43,11 @@ Two layers enforce access:
 - The VPC endpoint security group only permits port 443 from `data.terraform_remote_state.tat_ui.outputs.security_group_id`.
 - This restricts traffic to the intended ECS service SG.
 
-2. API layer (resource policy)
-- API Gateway policy requires `aws:SourceVpce` to match the managed endpoint ID.
-- Requests not routed through that endpoint are denied.
+2. API layer (resource policies)
+- The REST API has a resource policy requiring `aws:SourceVpce` to match the managed endpoint ID (Ensures that only requests from the approved VPC endpoint are allowed).
+- The private custom domain has its own separate resource policy with the same condition.
+- Both must allow the request — a deny on either will block access.
+- Requests not routed through the approved VPC endpoint are denied.
 
 ## Invocation URLs
 
