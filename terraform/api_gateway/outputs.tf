@@ -28,6 +28,11 @@ output "api_gateway_vpce_invoke_url" {
   value       = "https://${aws_api_gateway_rest_api.main.id}-${aws_vpc_endpoint.api_gateway.id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_stage.main.stage_name}"
 }
 
+output "api_custom_domain_url" {
+  description = "Stable private custom domain URL for the API"
+  value       = "https://${aws_api_gateway_domain_name.api.domain_name}"
+}
+
 output "api_gateway_execution_arn" {
   description = "Execution ARN of the API Gateway"
   value       = aws_api_gateway_rest_api.main.execution_arn
