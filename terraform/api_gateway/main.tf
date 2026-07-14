@@ -8,14 +8,84 @@ terraform {
   }
 
 }
+data "aws_iam_policy_document" "api_private_access" {
+  statement {
+    sid    = "AllowFromConfiguredVpcEndpoints"
+    effect = "Allow"
 
-data "aws_route53_zone" "domain" {
-  name = "${var.domain}.${var.domain_extension}"
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "execute-api:Invoke"
+    ]
+
+    resources = [
+      "execute-api:/*"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceVpce"
+      values   = [aws_vpc_endpoint.api_gateway.id]
+    }
+  }
+}
+
+resource "aws_security_group" "apigw_vpce" {
+  name        = "${var.domain}-${var.service_subdomain}-apigw-vpce-sg"
+  description = "Security group for API Gateway VPC endpoint"
+  vpc_id      = data.terraform_remote_state.sdp_infrastructure.outputs.vpc_id
+
+  ingress {
+    description     = "HTTPS access from the permitted ECS service"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [data.terraform_remote_state.tat_ui.outputs.security_group_id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Project       = var.project_tag
+    TeamOwner     = var.team_owner_tag
+    BusinessOwner = var.business_owner_tag
+  }
+}
+
+resource "aws_vpc_endpoint" "api_gateway" {
+  vpc_id              = data.terraform_remote_state.sdp_infrastructure.outputs.vpc_id
+  service_name        = "com.amazonaws.${var.region}.execute-api"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = data.terraform_remote_state.sdp_infrastructure.outputs.private_subnets
+  private_dns_enabled = true
+  security_group_ids  = [aws_security_group.apigw_vpce.id]
+
+  tags = {
+    Name          = "${var.domain}-${var.service_subdomain}-execute-api-vpce"
+    Project       = var.project_tag
+    TeamOwner     = var.team_owner_tag
+    BusinessOwner = var.business_owner_tag
+  }
 }
 
 # Create the API Gateway REST API
 resource "aws_api_gateway_rest_api" "main" {
-  name = "${var.domain}-${var.service_subdomain}"
+  name   = "${var.domain}-${var.service_subdomain}"
+  policy = data.aws_iam_policy_document.api_private_access.json
+
+  endpoint_configuration {
+    types            = ["PRIVATE"]
+    vpc_endpoint_ids = [aws_vpc_endpoint.api_gateway.id]
+  }
 
   tags = {
     Project       = var.project_tag
@@ -252,8 +322,8 @@ resource "aws_api_gateway_integration" "lambda_integration" {
     "projects_proxy_get"  = aws_api_gateway_method.projects_proxy_get
     "projects_proxy_put"  = aws_api_gateway_method.projects_proxy_put
     "projects_filter_get" = aws_api_gateway_method.projects_filter_get
-    "user_get"           = aws_api_gateway_method.user_get
-    "refresh_post"       = aws_api_gateway_method.refresh_post
+    "user_get"            = aws_api_gateway_method.user_get
+    "refresh_post"        = aws_api_gateway_method.refresh_post
   }
 
   rest_api_id             = aws_api_gateway_rest_api.main.id
@@ -356,119 +426,4 @@ resource "aws_lambda_permission" "api_gateway" {
   function_name = data.terraform_remote_state.api_lambda.outputs.lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
-}
-
-# Create API Gateway domain name
-resource "aws_api_gateway_domain_name" "api" {
-  domain_name              = "${var.service_subdomain}.${var.domain}.${var.domain_extension}"
-  regional_certificate_arn = aws_acm_certificate_validation.cert_validation.certificate_arn
-
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
-}
-
-# Create Route53 record
-resource "aws_route53_record" "api" {
-  name    = aws_api_gateway_domain_name.api.domain_name
-  type    = "A"
-  zone_id = data.aws_route53_zone.domain.zone_id
-
-  alias {
-    name                   = aws_api_gateway_domain_name.api.regional_domain_name
-    zone_id                = aws_api_gateway_domain_name.api.regional_zone_id
-    evaluate_target_health = true
-  }
-}
-
-
-# Create WAF Web ACL for API Gateway
-resource "aws_wafv2_web_acl" "api_gateway_waf" {
-  name        = "${var.service_subdomain}-api-waf"
-  description = "WAF for tech-audit-tool-api API Gateway"
-  scope       = "REGIONAL"
-
-  default_action {
-    block {}
-  }
-
-  rule {
-    name     = "allow-ons-ips"
-    priority = 1
-
-    action {
-      allow {}
-    }
-
-    statement {
-      ip_set_reference_statement {
-        arn = data.terraform_remote_state.sdp_infrastructure.outputs.allowed_ips_ons_only_arn
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "allow-ons-ips"
-      sampled_requests_enabled   = true
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = true
-    metric_name                = "${var.service_subdomain}-api-waf"
-    sampled_requests_enabled   = true
-  }
-
-  tags = {
-    Project       = var.project_tag
-    TeamOwner     = var.team_owner_tag
-    BusinessOwner = var.business_owner_tag
-  }
-}
-
-# Associate WAF with API Gateway stage
-resource "aws_wafv2_web_acl_association" "api_gateway" {
-  resource_arn = "arn:aws:apigateway:${var.region}::/restapis/${aws_api_gateway_rest_api.main.id}/stages/${aws_api_gateway_stage.main.stage_name}"
-  web_acl_arn  = aws_wafv2_web_acl.api_gateway_waf.arn
-}
-
-# Create ACM certificate
-resource "aws_acm_certificate" "cert" {
-  domain_name       = "${var.service_subdomain}.${var.domain}.${var.domain_extension}"
-  validation_method = "DNS"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-# Create Route53 record for certificate validation
-resource "aws_route53_record" "cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
-
-  allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
-  ttl             = 60
-  type            = each.value.type
-  zone_id         = data.aws_route53_zone.domain.zone_id
-}
-
-# Certificate validation
-resource "aws_acm_certificate_validation" "cert_validation" {
-  certificate_arn         = aws_acm_certificate.cert.arn
-  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
-}
-
-# Map custom domain to API Gateway stage
-resource "aws_api_gateway_base_path_mapping" "api" {
-  api_id      = aws_api_gateway_rest_api.main.id
-  stage_name  = aws_api_gateway_stage.main.stage_name
-  domain_name = aws_api_gateway_domain_name.api.domain_name
 }

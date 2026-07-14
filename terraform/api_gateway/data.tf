@@ -24,3 +24,12 @@ data "terraform_remote_state" "sdp_infrastructure" {
     region = "eu-west-2"
   }
 }
+
+data "terraform_remote_state" "tat_ui" {
+  backend = "s3"
+  config = {
+    bucket = "${var.domain}-tf-state"
+    key    = "${var.domain}-ecs-tech-audit-tool/terraform.tfstate"
+    region = "eu-west-2"
+  }
+}
