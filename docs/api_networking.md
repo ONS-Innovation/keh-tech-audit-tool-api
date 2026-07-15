@@ -26,6 +26,10 @@ For `sdp-prod` this resolves to:
 6. A private API custom domain is created and mapped to the API stage.
 7. Route53 CNAME record points the custom domain to the VPC endpoint DNS name.
 
+## Diagram
+
+![API Gateway Private REST API Architecture](./assets/TAT-API-Infra.drawio.png)
+
 ## Terraform Layout
 
 The API Gateway module is split by concern:

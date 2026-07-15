@@ -3,6 +3,8 @@
 
 A Flask and flask-restx API for the tech audit tool.
 
+This service is a dependency for the [Tech Audit Tool UI](https://github.com/ONS-Innovation/keh-tech-audit-tool) which **must** be deployed first due to using the UI's Terraform state to control API access.
+
 ## Contents
 
 - [Tech Audit Tool - API](#tech-audit-tool---api)
@@ -25,6 +27,10 @@ A Flask and flask-restx API for the tech audit tool.
     - [Get filtered projects](#get-filtered-projects)
     - [Edit a project](#edit-a-project)
   - [Authorization with Cognito and API Gateway](#authorization-with-cognito-and-api-gateway)
+    - [Deployments with Concourse](#deployments-with-concourse)
+      - [Allowlisting your IP](#allowlisting-your-ip)
+      - [Setting up a pipeline](#setting-up-a-pipeline)
+      - [Triggering a pipeline](#triggering-a-pipeline)
 
 
 ## Setting up & Running Locally
