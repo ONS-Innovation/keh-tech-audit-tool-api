@@ -58,7 +58,8 @@ Set the following lambda-specific variables before apply:
 - `container_ver` (image tag to deploy)
 - `azure_secret_name` (Secrets Manager secret name for Teams alert credentials)
 - `branch_name` (alert gate: only `main` sends alerts)
-- `aws_account_name` (environment label shown in alert messages derived from domain)
+
+`AWS_ACCOUNT_NAME` is derived from `domain`.
 
 The secret referenced by `azure_secret_name` must contain JSON in this shape:
 

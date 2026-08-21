@@ -1,4 +1,4 @@
-domain = "sdp-dev"
+domain = "sdp-prod"
 token_validity_values = {
   refresh_token = 28
   access_token  = 1
@@ -15,4 +15,3 @@ callback_urls = [
   "https://tech-audit-tool.<env>.aws.onsdigital.uk", # Production UI
   "https://tech-audit-tool-api.<env>.aws.onsdigital.uk/api/v1/verify" # Production API
 ]
-
