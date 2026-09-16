@@ -12,3 +12,5 @@ spec:
   type: service
   lifecycle: production
   owner: keh-dev
+  dependsOn:
+    - component:default/keh-tech-audit-tool
