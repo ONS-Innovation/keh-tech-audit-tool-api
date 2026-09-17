@@ -1,0 +1,24 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: keh-tech-audit-tool-api
+  description: Flask and Flask-RESTX API that supports the Tech Audit Tool UI and manages user project data.
+  annotations:
+    github.com/project-slug: ONS-Innovation/keh-tech-audit-tool-api
+  tags:
+    - python
+    - flask
+    - aws-lambda
+    - aws-api-gateway
+    - aws-cognito
+  links:
+    - url: https://ons-innovation.github.io/keh-tech-audit-tool-api
+      title: Tech Audit Tool API Documentation
+    - url: mailto:knowledge.exchange.hub@ons.gov.uk
+      title: Contact
+spec:
+  type: service
+  lifecycle: production
+  owner: keh-dev
+  dependsOn:
+    - component:default/keh-tech-audit-tool
